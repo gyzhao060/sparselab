@@ -15,7 +15,7 @@ sparselab.imdata
 
 sparselab.uvdata
 ================
-.. automodule:: sparselab.imdata
+.. automodule:: sparselab.uvdata
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,7 +23,7 @@ sparselab.uvdata
 
 sparselab.imaging
 ================
-.. automodule:: sparselab.imdata
+.. automodule:: sparselab.imaging
     :members:
     :undoc-members:
     :show-inheritance:
