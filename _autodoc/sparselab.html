@@ -1,0 +1,870 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>sparselab package &mdash; Sparselab 1.0beta documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Sparselab 1.0beta documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Sparselab
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <!-- Local TOC -->
+                <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">sparselab package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#sparselab-imagefits-module">sparselab.imagefits module</a></li>
+<li><a class="reference internal" href="#module-sparselab.imaging">sparselab.imaging module</a></li>
+<li><a class="reference internal" href="#module-sparselab.util">sparselab.util module</a></li>
+<li><a class="reference internal" href="#module-sparselab.uvdata">sparselab.uvdata module</a></li>
+<li><a class="reference internal" href="#module-sparselab">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Sparselab</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>sparselab package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/_autodoc/sparselab.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="sparselab-package">
+<h1>sparselab package<a class="headerlink" href="#sparselab-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="sparselab-imagefits-module">
+<h2>sparselab.imagefits module<a class="headerlink" href="#sparselab-imagefits-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-sparselab.imaging">
+<span id="sparselab-imaging-module"></span><h2>sparselab.imaging module<a class="headerlink" href="#module-sparselab.imaging" title="Permalink to this headline">¶</a></h2>
+<p>A python module sparselab.imaging</p>
+<p>This is a submodule of sparselab for imaging static images.</p>
+<dl class="function">
+<dt id="sparselab.imaging.calc_bparms">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">calc_bparms</code><span class="sig-paren">(</span><em>visdata</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.calc_bparms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Infer beam parameters (major size, minor size, position angle)</p>
+<dl class="docutils">
+<dt>keywords:</dt>
+<dd>visdata: input visibility data</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.calc_cbeam">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">calc_cbeam</code><span class="sig-paren">(</span><em>fitsdata</em>, <em>visdata</em>, <em>angunit='mas'</em>, <em>errweight=0.0</em>, <em>ftsign=1</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.calc_cbeam" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates an array and total flux of dirty beam
+from the input visibility data</p>
+<dl class="docutils">
+<dt>keywords:</dt>
+<dd><dl class="first last docutils">
+<dt>fitsdata:</dt>
+<dd>input imdata.IMFITS object</dd>
+<dt>visdata:</dt>
+<dd>input visibility data</dd>
+<dt>angunit (string):</dt>
+<dd>Angular unit (uas, mas, asec or arcsec, amin or arcmin, degree)</dd>
+<dt>errweight (float):</dt>
+<dd>index for errer weighting</dd>
+<dt>ftsign (integer):</dt>
+<dd>a sign for fourier matrix</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.calc_dbeam">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">calc_dbeam</code><span class="sig-paren">(</span><em>fitsdata</em>, <em>visdata</em>, <em>errweight=0</em>, <em>ftsign=1</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.calc_dbeam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate an array and total flux of dirty beam from the input visibility data</p>
+<dl class="docutils">
+<dt>keywords:</dt>
+<dd><dl class="first last docutils">
+<dt>fitsdata:</dt>
+<dd>input imdata.IMFITS object</dd>
+<dt>visdata:</dt>
+<dd>input visibility data</dd>
+<dt>errweight (float):</dt>
+<dd>index for errer weighting</dd>
+<dt>ftsign (integer):</dt>
+<dd>a sign for fourier matrix</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.fit_chisq">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">fit_chisq</code><span class="sig-paren">(</span><em>parms</em>, <em>X</em>, <em>Y</em>, <em>dbeam</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.fit_chisq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate residuals of two 2-D array</p>
+<dl class="docutils">
+<dt>keywords:</dt>
+<dd>parms: information of clean beam
+X: 2-D array of x-axis
+Y: 2-D array of y-axis
+dbeam: an array of dirty beam</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.gauss_func">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">gauss_func</code><span class="sig-paren">(</span><em>X</em>, <em>Y</em>, <em>maja</em>, <em>mina</em>, <em>PA</em>, <em>x0=0.0</em>, <em>y0=0.0</em>, <em>scale=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.gauss_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate 2-D gauss function</p>
+<dl class="docutils">
+<dt>keywords:</dt>
+<dd>X: 2-D array of x-axis
+Y: 2-D array of y-axis
+maja (float): major size of the gauss
+mina (float): minor size
+PA (float): position angle
+x0 (float): value of x-position at the center of the gauss
+y0 (float): value of y-position at the center of the gauss
+scale (float): scaling factor</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.get_uvlist">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">get_uvlist</code><span class="sig-paren">(</span><em>fcvtable=None</em>, <em>amptable=None</em>, <em>bstable=None</em>, <em>catable=None</em>, <em>thres=0.01</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.get_uvlist" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.iterative_imaging">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">iterative_imaging</code><span class="sig-paren">(</span><em>initimage</em>, <em>imageprm</em>, <em>Niter=10</em>, <em>dothres=True</em>, <em>threstype='hard'</em>, <em>threshold=0.3</em>, <em>doshift=True</em>, <em>shifttype='com'</em>, <em>doconv=True</em>, <em>convprm={}</em>, <em>save_totalflux=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.iterative_imaging" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.static_dft_imaging">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">static_dft_imaging</code><span class="sig-paren">(</span><em>initimage</em>, <em>imagewin=None</em>, <em>vistable=None</em>, <em>amptable=None</em>, <em>bstable=None</em>, <em>catable=None</em>, <em>lambl1=-1.0</em>, <em>lambtv=-1</em>, <em>lambtsv=-1</em>, <em>normlambda=True</em>, <em>nonneg=True</em>, <em>niter=1000</em>, <em>totalflux=None</em>, <em>fluxconst=False</em>, <em>istokes=0</em>, <em>ifreq=0</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.static_dft_imaging" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.static_dft_pipeline">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">static_dft_pipeline</code><span class="sig-paren">(</span><em>initimage, imagefunc=&lt;function iterative_imaging&gt;, imageprm={}, imagefargs={}, angunit='uas', uvunit='gl', workdir='./', sumtablefile='summary.csv', lambl1s=[-1.0], lambtvs=[-1.0], lambtsvs=[-1.0]</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.static_dft_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.static_dft_plots">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">static_dft_plots</code><span class="sig-paren">(</span><em>outimage</em>, <em>imageprm={}</em>, <em>filename=None</em>, <em>angunit='mas'</em>, <em>uvunit='ml'</em>, <em>plotargs={'ms': 1.0}</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.static_dft_plots" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="sparselab.imaging.static_dft_stats">
+<code class="descclassname">sparselab.imaging.</code><code class="descname">static_dft_stats</code><span class="sig-paren">(</span><em>initimage</em>, <em>imagewin=None</em>, <em>vistable=None</em>, <em>amptable=None</em>, <em>bstable=None</em>, <em>catable=None</em>, <em>lambl1=1.0</em>, <em>lambtv=-1</em>, <em>lambtsv=1</em>, <em>normlambda=True</em>, <em>totalflux=None</em>, <em>fluxconst=False</em>, <em>istokes=0</em>, <em>ifreq=0</em>, <em>fulloutput=True</em>, <em>**args</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.imaging.static_dft_stats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-sparselab.util">
+<span id="sparselab-util-module"></span><h2>sparselab.util module<a class="headerlink" href="#module-sparselab.util" title="Permalink to this headline">¶</a></h2>
+<p>A python module sparselab.util</p>
+<p>This is a submodule of sparselab. This module saves some common functions,
+variables, and data types in the sparselab module.</p>
+<dl class="function">
+<dt id="sparselab.util.matplotlibrc">
+<code class="descclassname">sparselab.util.</code><code class="descname">matplotlibrc</code><span class="sig-paren">(</span><em>nrows=1</em>, <em>ncols=1</em>, <em>width=250</em>, <em>height=250</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.util.matplotlibrc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-sparselab.uvdata">
+<span id="sparselab-uvdata-module"></span><h2>sparselab.uvdata module<a class="headerlink" href="#module-sparselab.uvdata" title="Permalink to this headline">¶</a></h2>
+<p>A python module sparselab.uvdata</p>
+<p>This is a submodule of sparselab handling various uvdata.</p>
+<dl class="class">
+<dt id="sparselab.uvdata.BSSeries">
+<em class="property">class </em><code class="descclassname">sparselab.uvdata.</code><code class="descname">BSSeries</code><span class="sig-paren">(</span><em>data=None</em>, <em>index=None</em>, <em>dtype=None</em>, <em>name=None</em>, <em>copy=False</em>, <em>fastpath=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.BSSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sparselab.uvdata._UVSeries</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sparselab.uvdata.BSTable">
+<em class="property">class </em><code class="descclassname">sparselab.uvdata.</code><code class="descname">BSTable</code><span class="sig-paren">(</span><em>data=None</em>, <em>index=None</em>, <em>columns=None</em>, <em>dtype=None</em>, <em>copy=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.BSTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sparselab.uvdata._UVTable</span></code></p>
+<dl class="attribute">
+<dt id="sparselab.uvdata.BSTable.bstable_columns">
+<code class="descname">bstable_columns</code><em class="property"> = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'u12', 'v12', 'w12', 'uvdist12', 'u23', 'v23', 'w23', 'uvdist23', 'u31', 'v31', 'w31', 'uvdist31', 'uvdistmin', 'uvdistmax', 'uvdistave', 'st1', 'st2', 'st3', 'ch', 'amp', 'phase', 'sigma']</em><a class="headerlink" href="#sparselab.uvdata.BSTable.bstable_columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sparselab.uvdata.BSTable.bstable_types">
+<code class="descname">bstable_types</code><em class="property"> = [&lt;type 'numpy.float64'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;]</em><a class="headerlink" href="#sparselab.uvdata.BSTable.bstable_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.BSTable.radplot">
+<code class="descname">radplot</code><span class="sig-paren">(</span><em>uvdtype='ave'</em>, <em>uvunit=None</em>, <em>errorbar=True</em>, <em>model=None</em>, <em>ls='none'</em>, <em>marker='.'</em>, <em>**plotargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.BSTable.radplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot closure phases as a function of baseline lengths on the current axes.
+This method uses matplotlib.pyplot.plot() or matplotlib.pyplot.errorbar().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>uvdtype</strong> (<em>str, default = &quot;ave&quot;</em>) &#8211; <dl class="docutils">
+<dt>The type of the baseline length plotted along the horizontal axis.</dt>
+<dd>&#8220;max&#8221;: maximum of three baselines (=self[&#8220;uvdistmax&#8221;])
+&#8220;min&#8221;: minimum of three baselines (=self[&#8220;uvdistmin&#8221;])
+&#8220;ave&#8221;: average of three baselines (=self[&#8220;uvdistave&#8221;])</dd>
+</dl>
+</li>
+<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+self.uvunit.</li>
+<li><strong>errorbar</strong> (<em>boolean, default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
+matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
+errorbars using matplotlib.pyplot.plot().</p>
+<p>If you plot model closure phases (i.e. model is not None),
+it will plot without errobars regardless of this parameter.</p>
+</li>
+<li><strong>model</strong> (<em>dict-like such as pd.DataFrame, pd.Series, default is None</em>) &#8211; Model data sets. Model closure phases must be given by model[&#8220;cpmod&#8221;].
+Otherwise, it will plot closure phases in the table (i.e. self[&#8220;phase&#8221;]).</li>
+<li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot() or
+matplotlib.pyplot.errorbars().
+Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.BSTable.uvplot">
+<code class="descname">uvplot</code><span class="sig-paren">(</span><em>uvunit=None</em>, <em>conj=True</em>, <em>ls='none'</em>, <em>marker='.'</em>, <em>**plotargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.BSTable.uvplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot uv-plot on the current axes.
+This method uses matplotlib.pyplot.plot().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+self.uvunit.</li>
+<li><strong>conj</strong> (<em>boolean, default = True</em>) &#8211; if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).</li>
+<li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot.
+Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sparselab.uvdata.BSTable.uvunit">
+<code class="descname">uvunit</code><em class="property"> = 'lambda'</em><a class="headerlink" href="#sparselab.uvdata.BSTable.uvunit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sparselab.uvdata.CASeries">
+<em class="property">class </em><code class="descclassname">sparselab.uvdata.</code><code class="descname">CASeries</code><span class="sig-paren">(</span><em>data=None</em>, <em>index=None</em>, <em>dtype=None</em>, <em>name=None</em>, <em>copy=False</em>, <em>fastpath=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.CASeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sparselab.uvdata._UVSeries</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sparselab.uvdata.CATable">
+<em class="property">class </em><code class="descclassname">sparselab.uvdata.</code><code class="descname">CATable</code><span class="sig-paren">(</span><em>data=None</em>, <em>index=None</em>, <em>columns=None</em>, <em>dtype=None</em>, <em>copy=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.CATable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sparselab.uvdata._UVTable</span></code></p>
+<dl class="attribute">
+<dt id="sparselab.uvdata.CATable.catable_columns">
+<code class="descname">catable_columns</code><em class="property"> = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'u1', 'v1', 'w1', 'uvdist1', 'u2', 'v2', 'w2', 'uvdist2', 'u3', 'v3', 'w3', 'uvdist3', 'u4', 'v4', 'w4', 'uvdist4', 'uvdistmin', 'uvdistmax', 'uvdistave', 'st1', 'st2', 'st3', 'st4', 'ch', 'amp', 'sigma', 'logamp', 'logsigma']</em><a class="headerlink" href="#sparselab.uvdata.CATable.catable_columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="sparselab.uvdata.CATable.catable_types">
+<code class="descname">catable_types</code><em class="property"> = [&lt;type 'numpy.float64'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.int32'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;, &lt;type 'numpy.float64'&gt;]</em><a class="headerlink" href="#sparselab.uvdata.CATable.catable_types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.CATable.radplot">
+<code class="descname">radplot</code><span class="sig-paren">(</span><em>uvdtype='ave'</em>, <em>uvunit=None</em>, <em>errorbar=True</em>, <em>model=None</em>, <em>ls='none'</em>, <em>marker='.'</em>, <em>**plotargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.CATable.radplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot log(closure amplitudes) as a function of baseline lengths
+on the current axes. This method uses matplotlib.pyplot.plot() or
+matplotlib.pyplot.errorbar().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>uvdtype</strong> (<em>str, default = &quot;ave&quot;</em>) &#8211; <dl class="docutils">
+<dt>The type of the baseline length plotted along the horizontal axis.</dt>
+<dd>&#8220;max&#8221;: maximum of four baselines (=self[&#8220;uvdistmax&#8221;])
+&#8220;min&#8221;: minimum of four baselines (=self[&#8220;uvdistmin&#8221;])
+&#8220;ave&#8221;: average of four baselines (=self[&#8220;uvdistave&#8221;])</dd>
+</dl>
+</li>
+<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+self.uvunit.</li>
+<li><strong>errorbar</strong> (<em>boolean, default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
+matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
+errorbars using matplotlib.pyplot.plot().</p>
+<p>If you plot model closure phases (i.e. model is not None),
+it will plot without errobars regardless of this parameter.</p>
+</li>
+<li><strong>model</strong> (<em>dict-like such as pd.DataFrame, pd.Series, default is None</em>) &#8211; Model data sets. Model closure amplitudes must be given by model[&#8220;camod&#8221;].
+Otherwise, it will plot closure amplitudes in the table (i.e. self[&#8220;logamp&#8221;]).</li>
+<li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot() or
+matplotlib.pyplot.errorbars().
+Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.CATable.uvplot">
+<code class="descname">uvplot</code><span class="sig-paren">(</span><em>uvunit=None</em>, <em>conj=True</em>, <em>ls='none'</em>, <em>marker='.'</em>, <em>**plotargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.CATable.uvplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot uv-plot on the current axes.
+This method uses matplotlib.pyplot.plot().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+self.uvunit.</li>
+<li><strong>conj</strong> (<em>boolean, default = True</em>) &#8211; if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).</li>
+<li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot.
+Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sparselab.uvdata.CATable.uvunit">
+<code class="descname">uvunit</code><em class="property"> = 'lambda'</em><a class="headerlink" href="#sparselab.uvdata.CATable.uvunit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sparselab.uvdata.UVFITS">
+<em class="property">class </em><code class="descclassname">sparselab.uvdata.</code><code class="descname">UVFITS</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.UVFITS" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sparselab.uvdata.UVFITS.make_vistable">
+<code class="descname">make_vistable</code><span class="sig-paren">(</span><em>flag=True</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.UVFITS.make_vistable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert visibility data to a two dimentional table.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>flag</strong> (<em>boolean</em>) &#8211; if flag=True, data with weights &lt;= 0 or sigma &lt;=0 will be ignored.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">uvdata.VisTable object</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.UVFITS.read_uvfits">
+<code class="descname">read_uvfits</code><span class="sig-paren">(</span><em>infile</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.UVFITS.read_uvfits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read the uvfits file. Currently, this function can read only
+single-source uvfits file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>infile</strong> (<em>string</em>) &#8211; input uvfits file</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.UVFITS.select_stokes">
+<code class="descname">select_stokes</code><span class="sig-paren">(</span><em>stokes='I'</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.UVFITS.select_stokes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pick up single polarization data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stokes</strong> (<em>string; default=&quot;I&quot;</em>) &#8211; Output stokes parameters.
+Availables are [&#8220;I&#8221;, &#8220;Q&#8221;, &#8220;U&#8221;, &#8220;V&#8221;, &#8220;LL&#8221;, &#8220;RR&#8221;, &#8220;RL&#8221;, &#8220;LR&#8221;].</td>
+</tr>
+</tbody>
+</table>
+<p>Output: uvdata.UVFITS object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.UVFITS.uvsort">
+<code class="descname">uvsort</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.UVFITS.uvsort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check station IDs of each visibility and switch its order if &#8220;st1&#8221; &gt; &#8220;st2&#8221;.
+Then, data will be TB-sorted.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.UVFITS.weightcal">
+<code class="descname">weightcal</code><span class="sig-paren">(</span><em>dofreq=0</em>, <em>solint=120.0</em>, <em>minpoint=2</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.UVFITS.weightcal" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method will recalculate sigmas and weights of data from scatter
+in full complex visibilities over specified frequency and time segments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>self</strong> (<em>uvarray.uvfits object</em>) &#8211; input uvfits data</li>
+<li><strong>dofreq</strong> (<em>int; default = 0</em>) &#8211; <dl class="docutils">
+<dt>Parameter for multi-frequency data.</dt>
+<dd>dofreq = 0: calculate weights and sigmas over IFs and channels
+dofreq = 1: calculate weights and sigmas over channels at each IF
+dofreq = 2: calculate weights and sigmas at each IF and Channel</dd>
+</dl>
+</li>
+<li><strong>solint</strong> (<em>float; default = 120.</em>) &#8211; solution interval in sec</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Output: uvdata.UVFITS object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sparselab.uvdata.VisSeries">
+<em class="property">class </em><code class="descclassname">sparselab.uvdata.</code><code class="descname">VisSeries</code><span class="sig-paren">(</span><em>data=None</em>, <em>index=None</em>, <em>dtype=None</em>, <em>name=None</em>, <em>copy=False</em>, <em>fastpath=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisSeries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sparselab.uvdata._UVSeries</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sparselab.uvdata.VisTable">
+<em class="property">class </em><code class="descclassname">sparselab.uvdata.</code><code class="descname">VisTable</code><span class="sig-paren">(</span><em>data=None</em>, <em>index=None</em>, <em>columns=None</em>, <em>dtype=None</em>, <em>copy=False</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sparselab.uvdata._UVTable</span></code></p>
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.fftshift">
+<code class="descname">fftshift</code><span class="sig-paren">(</span><em>fitsdata</em>, <em>fgfov=1</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.fftshift" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vistable</strong> (<em>pandas.Dataframe object</em>) &#8211; input visibility table</li>
+<li><strong>fitsdata</strong> (<em>imdata.IMFITS object</em>) &#8211; input imdata.IMFITS object</li>
+<li><strong>fgfov</strong> (<em>int</em>) &#8211; a number of gridded FOV/original FOV</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Output: pandas.Dataframe object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.gridding">
+<code class="descname">gridding</code><span class="sig-paren">(</span><em>fitsdata</em>, <em>fgfov</em>, <em>mu=1</em>, <em>mv=1</em>, <em>c=1</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.gridding" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vistable</strong> (<em>pandas.Dataframe object</em>) &#8211; input visibility table</li>
+<li><strong>fitsdata</strong> (<em>imdata.IMFITS object</em>) &#8211; input imdata.IMFITS object</li>
+<li><strong>fgfov</strong> (<em>int</em>) &#8211; a number of gridded FOV/original FOV</li>
+<li><strong>mu</strong> (<em>int; default = 1</em>) &#8211; </li>
+<li><strong>mv</strong> (<em>int; default = 1</em>) &#8211; parameter for spheroidal angular function
+a number of cells for gridding</li>
+<li><strong>c</strong> (<em>int; default = 1</em>) &#8211; parameter for spheroidal angular fuction
+this parameter decides steepness of the function</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">uvdata.VisTable object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.make_bstable">
+<code class="descname">make_bstable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.make_bstable" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates bi-spectra from a given visibility table</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>self</strong> (<em>pandas.DataFrame</em>) &#8211; visibility table</td>
+</tr>
+</tbody>
+</table>
+<p>Return (pandas.DataFrame): output bi-spectra table</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.make_catable">
+<code class="descname">make_catable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.make_catable" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function calculates closure amplitudes from a given visibility table</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>self</strong> (<em>pandas.DataFrame</em>) &#8211; visibility table</td>
+</tr>
+</tbody>
+</table>
+<p>Return (pandas.DataFrame): output closure amplitude table</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.make_gradvistable">
+<code class="descname">make_gradvistable</code><span class="sig-paren">(</span><em>normalize=True</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.make_gradvistable" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.radplot_amp">
+<code class="descname">radplot_amp</code><span class="sig-paren">(</span><em>uvunit=None</em>, <em>errorbar=True</em>, <em>model=None</em>, <em>modeltype='amp'</em>, <em>ls='none'</em>, <em>marker='.'</em>, <em>**plotargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.radplot_amp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot visibility amplitudes as a function of baseline lengths
+on the current axes. This method uses matplotlib.pyplot.plot() or
+matplotlib.pyplot.errorbar().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+self.uvunit.</li>
+<li><strong>errorbar</strong> (<em>boolean, default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
+matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
+errorbars using matplotlib.pyplot.plot().</p>
+<p>If you plot model closure phases (i.e. model is not None),
+it will plot without errobars regardless of this parameter.</p>
+</li>
+<li><strong>model</strong> (<em>dict-like such as pd.DataFrame, pd.Series, default is None</em>) &#8211; Model data sets. Model amplitudes must be given by model[&#8220;fcvampmod&#8221;]
+for full complex visibilities (modeltype=&#8221;fcv&#8221;) or model[&#8220;ampmod&#8221;]
+for visibility amplitudes (modeltype=&#8221;amp&#8221;).
+Otherwise, it will plot amplitudes in the table (i.e. self[&#8220;amp&#8221;]).</li>
+<li><strong>modeltype</strong> (<em>string, default = &quot;amp&quot;</em>) &#8211; The type of models. If you would plot model amplitudes, set modeltype=&#8221;amp&#8221;.
+Else if you would plot model full complex visibilities, set modeltype=&#8221;fcv&#8221;.</li>
+<li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot() or
+matplotlib.pyplot.errorbars().
+Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.radplot_phase">
+<code class="descname">radplot_phase</code><span class="sig-paren">(</span><em>uvunit=None</em>, <em>errorbar=True</em>, <em>model=None</em>, <em>ls='none'</em>, <em>marker='.'</em>, <em>**plotargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.radplot_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot visibility phases as a function of baseline lengths
+on the current axes. This method uses matplotlib.pyplot.plot() or
+matplotlib.pyplot.errorbar().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+self.uvunit.</li>
+<li><strong>errorbar</strong> (<em>boolean, default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
+matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
+errorbars using matplotlib.pyplot.plot().</p>
+<p>If you plot model closure phases (i.e. model is not None),
+it will plot without errobars regardless of this parameter.</p>
+</li>
+<li><strong>model</strong> (<em>dict-like such as pd.DataFrame, pd.Series, default is None</em>) &#8211; Model data sets. Model phases must be given by model[&#8220;fcvphamod&#8221;].
+Otherwise, it will plot amplitudes in the table (i.e. self[&#8220;phase&#8221;]).</li>
+<li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot() or
+matplotlib.pyplot.errorbars().
+Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.recalc_uvdist">
+<code class="descname">recalc_uvdist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.recalc_uvdist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-calculate the baseline length from self[&#8220;u&#8221;] and self[&#8220;v&#8221;].</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.uvplot">
+<code class="descname">uvplot</code><span class="sig-paren">(</span><em>uvunit=None</em>, <em>conj=True</em>, <em>ls='none'</em>, <em>marker='.'</em>, <em>**plotargs</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.uvplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot uv-plot on the current axes.
+This method uses matplotlib.pyplot.plot().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+self.uvunit.</li>
+<li><strong>conj</strong> (<em>boolean, default = True</em>) &#8211; if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).</li>
+<li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot.
+Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sparselab.uvdata.VisTable.uvsort">
+<code class="descname">uvsort</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.VisTable.uvsort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort uvdata. First, it will check station IDs of each visibility
+and switch its order if &#8220;st1&#8221; &gt; &#8220;st2&#8221;. Then, data will be TB-sorted.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sparselab.uvdata.read_bstable">
+<code class="descclassname">sparselab.uvdata.</code><code class="descname">read_bstable</code><span class="sig-paren">(</span><em>filename</em>, <em>uvunit=None</em>, <em>**args</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.read_bstable" title="Permalink to this definition">¶</a></dt>
+<dd><p>This fuction loads uvdata.BSTable from an input csv file using pd.read_csv().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; str, pathlib.Path, py._path.local.LocalPath or any object with a read()
+method (such as a file handle or StringIO)</li>
+<li><strong>uvunit</strong> (<em>str, default is None</em>) &#8211; units of uvdistance for plotting. If uvunit is None, uvunit will be
+inferred from the maximum baseline length. Availables are [&#8220;l[ambda]&#8221;,
+&#8220;kl[ambda]&#8221;, &#8220;ml[ambda]&#8221;, &#8220;gl[ambda]&#8221;, &#8220;m&#8221;, &#8220;km&#8221;].</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">uvdata.BSTable object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sparselab.uvdata.read_catable">
+<code class="descclassname">sparselab.uvdata.</code><code class="descname">read_catable</code><span class="sig-paren">(</span><em>filename</em>, <em>uvunit=None</em>, <em>**args</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.read_catable" title="Permalink to this definition">¶</a></dt>
+<dd><p>This fuction loads uvdata.CATable from an input csv file using pd.read_csv().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; str, pathlib.Path, py._path.local.LocalPath or any object with a read()
+method (such as a file handle or StringIO)</li>
+<li><strong>uvunit</strong> (<em>str, default is None</em>) &#8211; units of uvdistance for plotting. If uvunit is None, uvunit will be
+inferred from the maximum baseline length. Availables are [&#8220;l[ambda]&#8221;,
+&#8220;kl[ambda]&#8221;, &#8220;ml[ambda]&#8221;, &#8220;gl[ambda]&#8221;, &#8220;m&#8221;, &#8220;km&#8221;].</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">uvdata.CATable object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sparselab.uvdata.read_vistable">
+<code class="descclassname">sparselab.uvdata.</code><code class="descname">read_vistable</code><span class="sig-paren">(</span><em>filename</em>, <em>uvunit=None</em>, <em>**args</em><span class="sig-paren">)</span><a class="headerlink" href="#sparselab.uvdata.read_vistable" title="Permalink to this definition">¶</a></dt>
+<dd><p>This fuction loads uvdata.VisTable from an input csv file using pd.read_csv().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filename</strong> &#8211; str, pathlib.Path, py._path.local.LocalPath or any object with a read()
+method (such as a file handle or StringIO)</li>
+<li><strong>uvunit</strong> (<em>str, default is None</em>) &#8211; units of uvdistance for plotting. If uvunit is None, uvunit will be
+inferred from the maximum baseline length. Availables are [&#8220;l[ambda]&#8221;,
+&#8220;kl[ambda]&#8221;, &#8220;ml[ambda]&#8221;, &#8220;gl[ambda]&#8221;, &#8220;m&#8221;, &#8220;km&#8221;].</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">uvdata.VisTable object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sparselab">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-sparselab" title="Permalink to this headline">¶</a></h2>
+<p>A python module sparselab</p>
+<p>This is the core python module of Sparselab v2.0.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Sparselab Developper Team.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0beta',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
