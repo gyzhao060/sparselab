@@ -1,46 +1,29 @@
-sparselab package
-=================
+================================
+References for Sparselab Modules
+================================
 
-Submodules
-----------
+Sparselab consists of three core python modules, **imdata**, **uvdata** and **imaging**.
 
-sparselab.imagefits module
---------------------------
 
-.. automodule:: sparselab.imagefits
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-sparselab.imaging module
-------------------------
-
-.. automodule:: sparselab.imaging
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-sparselab.util module
----------------------
-
-.. automodule:: sparselab.util
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-sparselab.uvdata module
------------------------
-
-.. automodule:: sparselab.uvdata
+sparselab.imdata
+================
+.. automodule:: sparselab.imdata
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-Module contents
----------------
+sparselab.uvdata
+================
+.. automodule:: sparselab.imdata
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. automodule:: sparselab
+
+sparselab.imaging
+================
+.. automodule:: sparselab.imdata
     :members:
     :undoc-members:
     :show-inheritance:

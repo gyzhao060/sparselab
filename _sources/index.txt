@@ -1,22 +1,13 @@
-.. Sparselab documentation master file, created by
-   sphinx-quickstart on Tue Jun 13 12:51:50 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+=======================
+Sparselab Documentation
+=======================
+**Interferometric Imaging Library using Sparse Modeling**
 
-Welcome to Sparselab's documentation!
-=====================================
-
-Contents:
-
+Manuals
+=======
 .. toctree::
-   :maxdepth: 2
+  :maxdepth: 1
+  :numbered:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+  _static/install
+  _autodoc/sparselab
