@@ -6,17 +6,6 @@ A python module sparselab.util
 This is a submodule of sparselab. This module saves some common functions,
 variables, and data types in the sparselab module.
 '''
-__author__ = "Kazunori Akiyama"
-__version__ = "1.0"
-__date__ = "Jan 6 2017"
-
-# a default augument for pandas.Dataframe.to_csv()
-args_tocsv = {
-    'float_format': r"%22.16e",
-    'index': False,
-    'index_label': False
-}
-
 def matplotlibrc(nrows=1,ncols=1,width=250,height=250):
     import matplotlib
 

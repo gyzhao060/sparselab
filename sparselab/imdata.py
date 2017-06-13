@@ -6,6 +6,31 @@ A python module sparselab.imagefits
 This is a submodule of sparselab handling image fits data.
 '''
 #-------------------------------------------------------------------------------
+# Modules
+#-------------------------------------------------------------------------------
+# standard modules
+import os
+import copy
+import datetime as dt
+
+# numerical packages
+import numpy as np
+import pandas as pd
+import scipy.ndimage as sn
+import astropy.coordinates as coord
+import astropy.io.fits as pyfits
+from astropy.convolution import convolve_fft
+
+
+# matplotlib
+import matplotlib.pyplot as plt
+
+
+# internal
+import sparselab.fortlib as fortlib
+
+
+#-------------------------------------------------------------------------------
 # IMAGEFITS (Manupulating FITS FILES)
 #-------------------------------------------------------------------------------
 class IMFITS():
@@ -18,7 +43,7 @@ class IMFITS():
                  fov=None, nx=100, ny=None, angunit="mas", **args):
         '''
         Initialize the image data.
-        The order of priority for duplicated parameters is uvfitsfile (strongest),
+astropy        The order of priority for duplicated parameters is uvfitsfile (strongest),
         source, fitsfile, fov, other parameters (weakest).
 
         Arguments:
@@ -55,8 +80,6 @@ class IMFITS():
             object (string)
             dateobs (string)
         '''
-        import numpy as np
-
         # get conversion factor for angular scale
         angconv = self.angconv(angunit, "deg")
         self.angunit = angunit
@@ -117,8 +140,6 @@ class IMFITS():
 
     # Definition of Headers and their datatypes
     def init_header(self):
-        import numpy as np
-
         header = {}
         header_dtype = {}
 
@@ -179,9 +200,7 @@ class IMFITS():
 
 
     # set source name and source coordinates
-    def set_source(self, source="SgrA*"):
-        import astropy.coordinates as coord
-        
+    def set_source(self, source="SgrA*"):        
         srccoord = coord.SkyCoord.from_name(source)
         
         # Information
@@ -199,10 +218,7 @@ class IMFITS():
         Arguments:
           fitsfile (string): input image FITS file
         '''
-        from astropy.io import fits
-        import numpy as np
-
-        hdulist = fits.open(fitsfile)
+        hdulist = pyfits.open(fitsfile)
         self.hdulist = hdulist
 
         keyname = "OBJECT"
@@ -316,11 +332,7 @@ class IMFITS():
         Arguments:
           infits (string): input uv-fits file
         '''
-        from astropy.io import fits
-        import pandas as pd
-        import numpy as np
-
-        hdulist = fits.open(infits)
+        hdulist = pyfits.open(infits)
         hduinfos = hdulist.info(output=False)
         for hduinfo in hduinfos:
             idx = hduinfo[0]
@@ -399,13 +411,9 @@ class IMFITS():
         '''
         Reflect current self.data / self.header info to the image FITS data.
         '''
-        from astropy.io import fits
-        import numpy as np
-        import datetime as dt
-
         # CREATE HDULIST
-        hdu = fits.PrimaryHDU(self.data)
-        hdulist = fits.HDUList([hdu])
+        hdu = pyfits.PrimaryHDU(self.data)
+        hdulist = pyfits.HDUList([hdu])
 
         # GET Current Time
         dtnow = dt.datetime.now()
@@ -459,7 +467,6 @@ class IMFITS():
             outfitsfile (string): file name
             overwrite (boolean): It True, an existing file will be overwritten.
         '''
-        import os
         if os.path.isfile(outfitsfile):
             if overwrite:
                 os.system("rm -f %s" % (outfitsfile))
@@ -474,8 +481,6 @@ class IMFITS():
         return a conversion factor from unit1 to unit2
         Available angular units are uas, mas, asec or arcsec, amin or arcmin and degree.
         '''
-        import numpy as np
-
         if unit1 == unit2:
             return 1
 
@@ -526,8 +531,6 @@ class IMFITS():
           angunit (string): Angular unit (uas, mas, asec or arcsec, amin or arcmin, degree)
           twodim (boolean): It True, the 2D grids will be returned. Otherwise, the 1D arrays will be returned
         '''
-        import numpy as np
-        
         if angunit is None:
             angunit = self.angunit
         
@@ -550,8 +553,6 @@ class IMFITS():
         Arguments:
           angunit (string): Angular unit (uas, mas, asec or arcsec, amin or arcmin, degree)
         '''
-        import numpy as np
-
         if angunit is None:
             angunit = self.angunit
         
@@ -600,7 +601,6 @@ class IMFITS():
           istokes (integer): index for Stokes Parameter at which l1-norm will be calculated
           ifreq (integer): index for Frequency at which l1-norm will be calculated
         '''
-        import numpy as np
         return np.abs(self.data[istokes, ifreq]).sum()
 
     #---------------------------------------------------------------------------
@@ -617,9 +617,6 @@ class IMFITS():
           angunit (string): Angular Unit for the axis labels (pixel, uas, mas, asec or arcsec, amin or arcmin, degree)
           **imshow_args: Arguments will be input in matplotlib.pyplot.imshow
         '''
-        import matplotlib.pyplot as plt
-        import numpy as np
-        
         if angunit is None:
             angunit = self.angunit
         
@@ -675,9 +672,6 @@ class IMFITS():
           levels: contour level. This will be multiplied with cmul.
           **contour_args: Arguments will be input in matplotlib.pyplot.contour
         '''
-        import matplotlib.pyplot as plt
-        import numpy as np
-
         if angunit is None:
             angunit = self.angunit
         
@@ -748,7 +742,6 @@ class IMFITS():
           relative (boolean): If true, theshold value will be normalized with the peak intensity of the image.
           save_totalflux (boolean): If true, the total flux of the image will be conserved.
         '''
-        import numpy as np
         Nx = self.header["nx"]
         Ny = self.header["ny"]
         xg, yg = self.get_xygrid(angunit="mas")
@@ -782,7 +775,6 @@ class IMFITS():
     # Editing images
     #---------------------------------------------------------------------------
     def cpimage(self, fitsdata, save_totalflux=False):
-        import copy
         '''
         Copy the first image into the image grid specified in the secondaly input image.
 
@@ -791,9 +783,6 @@ class IMFITS():
           self: input imagefite.imagefits object specifying the image grid where the orgfits data will be copied.
           save_totalflux (boolean): If true, the total flux of the image will be conserved.
         '''
-        import scipy.ndimage as sn
-        import numpy as np
-
         # generate output imfits object
         outfits = copy.deepcopy(self)
 
@@ -847,10 +836,6 @@ class IMFITS():
           scale (float): The sizes will be multiplied by this value.
           save_totalflux (boolean): If true, the total flux of the image will be conserved.
         '''
-        import copy
-        import numpy as np
-        from astropy.convolution import convolve_fft
-
         if minsize is None:
             minsize = majsize
 
@@ -907,9 +892,6 @@ class IMFITS():
           regfile (string): input DS9 region file
           save_totalflux (boolean): If true, the total flux of the image will be conserved.
         '''
-        import numpy as np
-        import copy
-
         # create output fits
         outfits = copy.deepcopy(self)
 
@@ -938,8 +920,6 @@ class IMFITS():
         return outfits
 
     def read_cleanbox(self, regfile):
-        import numpy as np
-
         # Read DS9-region file
         f = open(regfile)
         lines = f.readlines()
@@ -1031,10 +1011,6 @@ class IMFITS():
         Returns:
           imdata.IMFITS object
         '''
-        import scipy.ndimage as sn
-        import numpy as np
-        import copy
-
         # create output fits
         outfits = copy.deepcopy(self)
         image = outfits.data[istokes, ifreq]
@@ -1071,10 +1047,6 @@ class IMFITS():
         Returns:
           imdata.IMFITS object
         '''
-        import scipy.ndimage as sn
-        import numpy as np
-        import copy
-
         # create output fits
         outfits = copy.deepcopy(self)
         image = outfits.data[istokes, ifreq]
@@ -1106,10 +1078,6 @@ class IMFITS():
         Returns:
           imdata.IMFITS object
         '''
-        #import scipy.ndimage as sn
-        import numpy as np
-        import copy
-        
         # create output fits
         outfits = copy.deepcopy(self)
         Nx = outfits.header["nx"]
@@ -1149,9 +1117,6 @@ class IMFITS():
           deg (boolean): It true, then the unit of angle will be degree. Otherwise, it will be radian.
           save_totalflux (boolean): If true, the total flux of the image will be conserved.
         '''
-        import scipy.ndimage as sn
-        import numpy as np
-        import copy
         # create output fits
         outfits = copy.deepcopy(self)
         if deg:
@@ -1195,9 +1160,6 @@ class IMFITS():
           relative (boolean): If true, theshold value will be normalized with the peak intensity of the image
           save_totalflux (boolean): If true, the total flux of the image will be conserved.
         '''
-        import scipy.ndimage as sn
-        import numpy as np
-        import copy
         # create output fits
         outfits = copy.deepcopy(self)
         if relative:
@@ -1229,9 +1191,6 @@ class IMFITS():
           relative (boolean): If true, theshold value will be normalized with the peak intensity of the image
           save_totalflux (boolean): If true, the total flux of the image will be conserved.
         '''
-        import scipy.ndimage as sn
-        import numpy as np
-        import copy
         # create output fits
         outfits = copy.deepcopy(self)
         if relative:
@@ -1256,9 +1215,6 @@ class IMFITS():
 
     def add_gauss(self, x0=0., y0=0., totalflux=1., majsize=1., minsize=None,
                   pa=0., istokes=0, ifreq=0, angunit=None):
-        import copy
-        import numpy as np
-
         if angunit is None:
             angunit = self.angunit
 
@@ -1319,8 +1275,6 @@ class IMFITS():
         Returns:
           imdata.IMFITS object
         '''
-        import copy
-        import numpy as np
         from skimage.filters import prewitt, sobel, scharr, roberts
         from skimage.feature import canny
         
@@ -1419,11 +1373,6 @@ class IMFITS():
           profile (pd.DataFrame): 
             The table for the peak profile Hr(r)=max_r(H(x,y,r)).
         '''
-        import fortlib
-        import numpy as np
-        import pandas as pd
-
-
         if angunit is None:
             angunit = self.angunit
 
@@ -1514,9 +1463,8 @@ def calc_metric(fitsdata, reffitsdata, metric="NRMSE", istokes1=0, ifreq1=0, ist
     Returns:
       ???
     '''
-    import numpy as np
-    import copy
     from skimage.filters import prewitt
+
     # adjust resolution and FOV
     fitsdata2 = copy.deepcopy(fitsdata)
     reffitsdata2 = copy.deepcopy(reffitsdata)
@@ -1553,7 +1501,6 @@ def calc_metric(fitsdata, reffitsdata, metric="NRMSE", istokes1=0, ifreq1=0, ist
 # Fllowings are subfunctions for ds9flag and read_cleanbox
 #-------------------------------------------------------------------------------
 def _get_flagpixels(regfile, X, Y):
-    import numpy as np
     # Read DS9-region file
     f = open(regfile)
     lines = f.readlines()
@@ -1618,7 +1565,6 @@ def _get_flagpixels(regfile, X, Y):
 
 
 def _region_box(X, Y, x0, y0, width, height, angle):
-    import numpy as np
     cosa = np.cos(np.deg2rad(angle))
     sina = np.sin(np.deg2rad(angle))
     dX = X - x0
@@ -1633,13 +1579,10 @@ def _region_box(X, Y, x0, y0, width, height, angle):
 
 
 def _region_circle(X, Y, x0, y0, radius):
-    import numpy as np
     return ((X - x0) * (X - x0) + (Y - y0) * (Y - y0) <= radius * radius)
 
 
 def _region_ellipse(X, Y, x0, y0, radius1, radius2, angle):
-    import numpy as np
-
     cosa = np.cos(np.deg2rad(angle))
     sina = np.sin(np.deg2rad(angle))
     dX = X - x0

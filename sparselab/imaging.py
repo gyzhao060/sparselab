@@ -5,10 +5,30 @@ A python module sparselab.imaging
 
 This is a submodule of sparselab for imaging static images.
 '''
-__author__ = "Kazunori Akiyama and Kazuki kuramochi"
-__version__ = "1.0"
-__maintainer__ = "Kazunori Akiyama"
-__date__ = "Jan 6 2017"
+#-------------------------------------------------------------------------------
+# Modules
+#-------------------------------------------------------------------------------
+# standard modules
+import os
+import copy
+import collections
+import itertools
+
+# numerical packages
+import numpy as np
+import pandas as pd
+
+# matplotlib
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.ticker import NullFormatter
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+# internal modules
+import sparselab.util as util
+import sparselab.fortlib as fortlib
+import sparselab.imdata as imdata
 
 #-------------------------------------------------------------------------------
 # Default Parameters
@@ -18,6 +38,8 @@ lbfgsbprms = {
     "factr": 1e1,
     "pgtol": 0.
 }
+
+
 
 #-------------------------------------------------------------------------------
 # Reconstract static imaging
@@ -29,13 +51,8 @@ def static_dft_imaging(
         totalflux=None, fluxconst=False,
         istokes=0, ifreq=0):
     '''
-
+    
     '''
-    import numpy as np
-    import pandas as pd
-    import fortlib
-    import copy
-
     # Check Arguments
     if ((vistable is None) and (amptable is None) and
             (bstable is None) and (catable is None)):
@@ -238,12 +255,6 @@ def static_dft_stats(
     '''
 
     '''
-    import numpy as np
-    import pandas as pd
-    import fortlib
-    import copy
-    import collections
-
     # Check Arguments
     if ((vistable is None) and (amptable is None) and
             (bstable is None) and (catable is None)):
@@ -511,8 +522,6 @@ def iterative_imaging(initimage, imageprm, Niter=10,
                       doshift=True, shifttype="com",
                       doconv=True, convprm={}, 
                       save_totalflux=False):
-    import numpy as np
-    
     outimage = static_dft_imaging(initimage,**imageprm)
     oldcost = static_dft_stats(outimage, fulloutput=False, **imageprm)["cost"]
     for i in np.arange(Niter-1):
@@ -555,13 +564,7 @@ def static_dft_pipeline(
         sumtablefile="summary.csv",
         lambl1s=[-1.],
         lambtvs=[-1.],
-        lambtsvs=[-1.]):
-    import itertools
-    import numpy as np
-    import pandas as pd
-    import os
-    import sparselab.util as util
-    
+        lambtsvs=[-1.]):    
     if not os.path.isdir(workdir):
         os.makedirs(workdir)
     
@@ -610,17 +613,6 @@ def static_dft_pipeline(
 
 def static_dft_plots(outimage, imageprm={}, filename=None, 
                      angunit="mas", uvunit="ml", plotargs={'ms':1.,}):
-    import matplotlib.pyplot as plt
-    import matplotlib
-    from matplotlib.backends.backend_pdf import PdfPages
-    from matplotlib.ticker import NullFormatter
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-    
-    import numpy as np
-    
-    from sparselab.util import matplotlibrc
-    from sparselab.uvdata import VisTable, BSTable, CATable
-    
     isinteractive = plt.isinteractive()
     backend = matplotlib.rcParams["backend"]
     
@@ -656,7 +648,7 @@ def static_dft_plots(outimage, imageprm={}, filename=None,
     
     # Save Image
     if filename is not None:
-        matplotlibrc(nrows=1,ncols=1,width=600,height=600)
+        util.matplotlibrc(nrows=1,ncols=1,width=600,height=600)
     else:
         matplotlib.rcdefaults()
 
@@ -669,7 +661,7 @@ def static_dft_plots(outimage, imageprm={}, filename=None,
     
     # Amplitude
     if stats["isfcv"]==True:
-        table = VisTable(imageprm["vistable"])
+        table = imageprm["vistable"]
         table["comp"] = table["amp"] * np.exp(1j*np.deg2rad(table["phase"]))
         table["real"] = np.real(table["comp"])
         table["imag"] = np.imag(table["comp"])
@@ -680,7 +672,7 @@ def static_dft_plots(outimage, imageprm={}, filename=None,
         N = len(normresid)
         
         if filename is not None:
-            matplotlibrc(nrows=3,ncols=1,width=600,height=200)
+            util.matplotlibrc(nrows=3,ncols=1,width=600,height=200)
         else:
             matplotlib.rcdefaults()
         
@@ -728,12 +720,12 @@ def static_dft_plots(outimage, imageprm={}, filename=None,
             plt.close()
     
     if stats["isamp"]==True:
-        table = VisTable(imageprm["amptable"])
+        table = imageprm["amptable"]
         normresid = stats["ampres"]/table["sigma"]
         N = len(normresid)
         
         if filename is not None:
-            matplotlibrc(nrows=2,ncols=1,width=600,height=300)
+            util.matplotlibrc(nrows=2,ncols=1,width=600,height=300)
         else:
             matplotlib.rcdefaults()
         
@@ -773,13 +765,13 @@ def static_dft_plots(outimage, imageprm={}, filename=None,
     
     # Closure Amplitude
     if stats["isca"]==True:
-        table = CATable(imageprm["catable"])
+        table = imageprm["catable"]
         # Amplitudes
         normresid = stats["cares"]/table["logsigma"]
         N = len(normresid)
         
         if filename is not None:
-            matplotlibrc(nrows=2,ncols=1,width=600,height=300)
+            util.matplotlibrc(nrows=2,ncols=1,width=600,height=300)
         else:
             matplotlib.rcdefaults()
         
@@ -819,12 +811,12 @@ def static_dft_plots(outimage, imageprm={}, filename=None,
     
     # Closure Phase
     if stats["iscp"]==True:
-        table = BSTable(imageprm["bstable"])
+        table = imageprm["bstable"]
         # Amplitudes
         normresid = stats["cpres"]/np.rad2deg(table["sigma"]/table["amp"])
         
         if filename is not None:
-            matplotlibrc(nrows=2,ncols=1,width=600,height=300)
+            util.matplotlibrc(nrows=2,ncols=1,width=600,height=300)
         else:
             matplotlib.rcdefaults()
         
@@ -876,8 +868,6 @@ def get_uvlist(fcvtable=None, amptable=None, bstable=None, catable=None, thres=1
     '''
 
     '''
-    import numpy as np
-
     if ((fcvtable is None) and (amptable is None) and
             (bstable is None) and (catable is None)):
         print("Error: No data are input.")
@@ -993,217 +983,3 @@ def get_uvlist(fcvtable=None, amptable=None, bstable=None, catable=None, thres=1
         uvidxca = uvidx[Nfcv + Namp + 3 * Ncp:Nfcv + Namp + 3 *
                         Ncp + 4 * Nca].reshape([Nca, 4], order="F").transpose()
     return (u, v, uvidxfcv, uvidxamp, uvidxcp, uvidxca)
-
-
-#-------------------------------------------------------------------------
-# Infer Beam Size
-#-------------------------------------------------------------------------
-def calc_dbeam(fitsdata, visdata, errweight=0, ftsign=+1):
-    '''
-    Calculate an array and total flux of dirty beam from the input visibility data
-
-    keywords:
-      fitsdata:
-        input imdata.IMFITS object
-      visdata:
-        input visibility data
-      errweight (float):
-        index for errer weighting
-      ftsign (integer):
-        a sign for fourier matrix
-    '''
-    import numpy as np
-    import pandas as pd
-    import copy
-    from scipy import linalg
-
-    # create output fits
-    outfitsdata = copy.deepcopy(fitsdata)
-
-    # read uv information
-    M = len(visdata)
-    U = np.float64(visdata["u"])
-    V = np.float64(visdata["v"])
-
-    # create visibilies and error weighting
-    Vis_point = np.ones(len(visdata), dtype=np.complex128)
-    if errweight != 0:
-        sigma = np.float64(visdata["sigma"])
-        weight = np.power(sigma, errweight)
-        Vis_point *= weight / np.sum(weight)
-
-    # create matrix of X and Y
-    Npix = outfitsdata.header["nx"] * outfitsdata.header["ny"]
-    X, Y = outfitsdata.get_xygrid(angunit="deg", twodim=True)
-    X = np.radians(X)
-    Y = np.radians(Y)
-    X = X.reshape(Npix)
-    Y = Y.reshape(Npix)
-
-    # create matrix of A
-    if ftsign > 0:
-        factor = 2 * np.pi
-    elif ftsign < 0:
-        factor = -2 * np.pi
-    A = linalg.blas.dger(factor, X, U)
-    A += linalg.blas.dger(factor, Y, V)
-    A = np.exp(1j * A) / M
-
-    # calculate synthesized beam
-    dbeam = np.real(A.dot(Vis_point))
-    dbtotalflux = np.sum(dbeam)
-    dbeam /= dbtotalflux
-
-    # save as fitsdata
-    dbeam = dbeam.reshape((outfitsdata.header["ny"], outfitsdata.header["nx"]))
-    for idxs in np.arange(outfitsdata.header["ns"]):
-        for idxf in np.arange(outfitsdata.header["nf"]):
-            outfitsdata.data[idxs, idxf] = dbeam[:]
-
-    outfitsdata.update_fits()
-    return outfitsdata, dbtotalflux
-
-
-def calc_bparms(visdata):
-    '''
-    Infer beam parameters (major size, minor size, position angle)
-
-    keywords:
-      visdata: input visibility data
-    '''
-    import numpy as np
-    import pandas as pd
-
-    # read uv information
-    U = np.float64(visdata["u"])
-    V = np.float64(visdata["v"])
-
-    # calculate minor size of the beam
-    uvdist = np.sqrt(U * U + V * V)
-    maxuvdist = np.max(uvdist)
-    mina = np.rad2deg(1 / maxuvdist) * 0.6
-
-    # calculate PA
-    index = np.argmax(uvdist)
-    angle = np.rad2deg(np.arctan2(U[index], V[index]))
-
-    # rotate uv coverage for calculating major size
-    PA = angle + 90
-    cosPA = np.cos(np.radians(PA))
-    sinPA = np.sin(np.radians(PA))
-    newU = U * cosPA - V * sinPA
-    newV = U * sinPA + V * cosPA
-
-    # calculate major size of the beam
-    maxV = np.max(np.abs(newV))
-    maja = np.rad2deg(1 / maxV) * 0.6
-
-    return maja, mina, PA
-
-
-def gauss_func(X, Y, maja, mina, PA, x0=0., y0=0., scale=1.):
-    '''
-    Calculate 2-D gauss function
-
-    keywords:
-      X: 2-D array of x-axis
-      Y: 2-D array of y-axis
-      maja (float): major size of the gauss
-      mina (float): minor size
-      PA (float): position angle
-      x0 (float): value of x-position at the center of the gauss
-      y0 (float): value of y-position at the center of the gauss
-      scale (float): scaling factor
-    '''
-    import numpy as np
-    import pandas as pd
-
-    # scaling
-    maja *= scale
-    mina *= scale
-
-    # calculate gauss function
-    cosPA = np.cos(np.radians(PA))
-    sinPA = np.sin(np.radians(PA))
-    L = ((X * sinPA + Y * cosPA)**2) / (maja**2) + \
-        ((X * cosPA - Y * sinPA)**2) / (mina**2)
-    return np.exp(-L * 4 * np.log(2))
-
-
-def fit_chisq(parms, X, Y, dbeam):
-    '''
-    Calculate residuals of two 2-D array
-
-    keywords:
-      parms: information of clean beam
-      X: 2-D array of x-axis
-      Y: 2-D array of y-axis
-      dbeam: an array of dirty beam
-    '''
-    import numpy as np
-
-    # get parameters of clean beam
-    (maja, mina, angle) = parms
-
-    # calculate clean beam and residuals
-    cbeam = gauss_func(X, Y, maja, mina, angle)
-    cbeam /= np.max(cbeam)
-    if cbeam.size == dbeam.size:
-        return (dbeam - cbeam).reshape(dbeam.size)
-    else:
-        print("not equal the size of two beam array")
-
-
-def calc_cbeam(fitsdata, visdata, angunit="mas", errweight=0., ftsign=+1):
-    '''
-    This function calculates an array and total flux of dirty beam
-    from the input visibility data
-
-    keywords:
-      fitsdata:
-        input imdata.IMFITS object
-      visdata:
-        input visibility data
-      angunit (string):
-        Angular unit (uas, mas, asec or arcsec, amin or arcmin, degree)
-      errweight (float):
-        index for errer weighting
-      ftsign (integer):
-        a sign for fourier matrix
-    '''
-    import numpy as np
-    import pandas as pd
-    import copy
-    from scipy import optimize
-
-    # create output fits
-    dbfitsdata, dbflux = calc_dbeam(
-        fitsdata, visdata, errweight=errweight, ftsign=ftsign)
-
-    # infer the parameters of clean beam
-    parm0 = calc_bparms(visdata)
-    X, Y = fitsdata.get_xygrid(angunit="deg", twodim=True)
-    dbeam = dbfitsdata.data[0, 0]
-    dbeam /= np.max(dbeam)
-
-    parms = optimize.leastsq(fit_chisq, parm0, args=(X, Y, dbeam))
-
-    (maja, mina, PA) = parms[0]
-    maja = np.abs(maja)
-    mina = np.abs(mina)
-
-    # adjust these parameters
-    if maja < mina:
-        maja, mina = mina, maja
-        PA += 90
-    while np.abs(PA) > 90:
-        if PA > 90:
-            PA -= 90
-        elif PA < -90:
-            PA += 90
-
-    # return as parameters of gauss_convolve
-    factor = fitsdata.angconv("deg", angunit)
-    cb_parms = ({'majsize': maja * factor, 'minsize': mina *
-                 factor, 'angunit': angunit, 'pa': PA})
-    return cb_parms

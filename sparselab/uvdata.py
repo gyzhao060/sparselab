@@ -3,21 +3,47 @@
 '''
 A python module sparselab.uvdata
 
-This is a submodule of sparselab handling various uvdata.
+This is a submodule of sparselab handling various types of Visibility data sets.
 '''
 #-------------------------------------------------------------------------------
 # Modules
 #-------------------------------------------------------------------------------
+# standard modules
+import copy
+import itertools
+
+
+# numerical packages
 import numpy as np
+import scipy.special as ss
+from scipy import optimize
+from scipy import linalg
 import pandas as pd
+import xarray as xr
+import astropy.constants as ac
+import astropy.time as at
+import astropy.io.fits as pyfits
+
+
+# matplotlib
+import matplotlib.pyplot as plt
+
+
+# internal
+import sparselab.imdata as imdata
+
 
 #-------------------------------------------------------------------------------
-# UVFITS FILE
+# Classes for UVFITS FILE
 #-------------------------------------------------------------------------------
 class UVFITS():
+    '''
+    This is a class to load uvfits data and edit data sets before making tables 
+    for imaging.
+    '''
     def __init__(self, infile):
         '''
-        Read the uvfits file. Currently, this function can read only 
+        Load an uvfits file. Currently, this function can read only 
         single-source uvfits file. The data will be uv-sorted.
 
         Args:
@@ -38,17 +64,12 @@ class UVFITS():
         Args:
           infile (string): input uvfits file
         '''
-        from itertools import product
-        from astropy.time import Time
-        from astropy.io import fits
-        import numpy as np
-        import xarray as xr
-        import copy
+
 
         #-----------------------------------------------------------------------
         # open uvfits file
         #-----------------------------------------------------------------------
-        hdulist = fits.open(infile)
+        hdulist = pyfits.open(infile)
         print('CONTENTS OF INPUT FITS FILE:')
         hdulist.info()
 
@@ -139,7 +160,7 @@ class UVFITS():
             coord["integ"] = ("data", np.float64(integ))  # integration time
 
         # Time Tag
-        timeobj = Time(np.float64(jd), format='jd', scale='utc')
+        timeobj = at.Time(np.float64(jd), format='jd', scale='utc')
         datetime = timeobj.datetime
         gsthour = timeobj.sidereal_time(
             kind="mean", longitude="greenwich", model=None).hour
@@ -172,7 +193,7 @@ class UVFITS():
                       grouphdu.header['NAXIS5'], grouphdu.header['NAXIS4']])
         uv = np.zeros([grouphdu.header['GCOUNT'],
                        grouphdu.header['NAXIS5'], grouphdu.header['NAXIS4']])
-        for iif, ich in product(np.arange(grouphdu.header['NAXIS5']),
+        for iif, ich in itertools.product(np.arange(grouphdu.header['NAXIS5']),
                                 np.arange(grouphdu.header['NAXIS4'])):
             freq[iif, ich] = freqif[iif] + freqch[ich]
             u[:, iif, ich] = freq[iif, ich] * usec[:]
@@ -214,9 +235,6 @@ class UVFITS():
         Check station IDs of each visibility and switch its order if "st1" > "st2".
         Then, data will be TB-sorted.
         '''
-
-        import numpy as np
-
         # check station IDs
         select = np.asarray(self.data["st1"] > self.data["st2"])
         if True in select:
@@ -264,12 +282,6 @@ class UVFITS():
         Returns:
           uvdata.VisTable object
         '''
-
-        from itertools import product
-        from astropy.time import Time
-        import pandas as pd
-        import numpy as np
-
         outdata = VisTable()
 
         # Get size of data
@@ -277,7 +289,7 @@ class UVFITS():
 
         # Get time
         # DOY, HH, MM, SS
-        yday = Time(np.float64(self.data["jd"]), format='jd', scale='utc').yday
+        yday = at.Time(np.float64(self.data["jd"]), format='jd', scale='utc').yday
         year = np.zeros(Ndata, dtype=np.int32)
         doy = np.zeros(Ndata, dtype=np.int32)
         hour = np.zeros(Ndata, dtype=np.int32)
@@ -291,7 +303,7 @@ class UVFITS():
             minute[idata] = np.int32(time[3])
             sec[idata] = np.int32(np.float64(time[4]))
 
-        for idec, ira, iif, ich, istokes in product(np.arange(Ndec),
+        for idec, ira, iif, ich, istokes in itertools.product(np.arange(Ndec),
                                                     np.arange(Nra),
                                                     np.arange(Nif),
                                                     np.arange(Nch),
@@ -373,9 +385,6 @@ class UVFITS():
 
         Output: uvdata.UVFITS object
         '''
-        import copy
-        import numpy as np
-
         # get stokes data
         stokesids = np.asarray(self.data["stokes"], dtype=np.int64)
 
@@ -594,11 +603,6 @@ class UVFITS():
 
         Output: uvdata.UVFITS object
         '''
-        import copy
-        import numpy as np
-        import astropy.time as at
-        from itertools import product
-
         # Default Averaging alldata
         doif = True
         doch = True
@@ -623,7 +627,7 @@ class UVFITS():
                 dataidx1 = np.where(np.abs(unix - unix[idata]) < solint)
                 dataidx2 = np.where(baseline[dataidx1] == baseline[idata])
                 seldata = self.data.data[dataidx1][dataidx2]
-                for idec, ira, istokes in product(np.arange(Ndec),
+                for idec, ira, istokes in itertools.product(np.arange(Ndec),
                                                   np.arange(Nra),
                                                   np.arange(Nstokes)):
                     vreal = seldata[:, idec, ira, :, :, istokes, 0]
@@ -661,7 +665,7 @@ class UVFITS():
                 dataidx1 = np.where(np.abs(unix - unix[idata]) < solint)
                 dataidx2 = np.where(baseline[dataidx1] == baseline[idata])
                 seldata = self.data.data[dataidx1][dataidx2]
-                for idec, ira, iif, istokes in product(np.arange(Ndec),
+                for idec, ira, iif, istokes in itertools.product(np.arange(Ndec),
                                                        np.arange(Nra),
                                                        np.arange(Nif),
                                                        np.arange(Nstokes)):
@@ -700,7 +704,7 @@ class UVFITS():
                 dataidx1 = np.where(np.abs(unix - unix[idata]) < solint)
                 dataidx2 = np.where(baseline[dataidx1] == baseline[idata])
                 seldata = self.data.data[dataidx1][dataidx2]
-                for idec, ira, iif, ich, istokes in product(np.arange(Ndec),
+                for idec, ira, iif, ich, istokes in itertools.product(np.arange(Ndec),
                                                             np.arange(Nra),
                                                             np.arange(Nif),
                                                             np.arange(Nch),
@@ -742,7 +746,7 @@ class UVFITS():
 
 
 #-------------------------------------------------------------------------------
-# Visibility Table
+# Visibility Tables
 #-------------------------------------------------------------------------------
 class _UVTable(pd.DataFrame):
     '''
@@ -772,9 +776,6 @@ class _UVTable(pd.DataFrame):
         Returns:
           conversion factor from unit1 to unit2 in float.
         '''
-        import numpy as np
-        import astropy.constants as c
-
         if unit1 == unit2:
             return 1.
 
@@ -788,9 +789,9 @@ class _UVTable(pd.DataFrame):
         elif unit1.lower().find("gl") == 0:
             conv = 1e9
         elif unit1.lower().find("m") == 0:
-            conv = c.c.si.value / self["freq"]
+            conv = ac.c.si.value / self["freq"]
         elif unit1.lower().find("km") == 0:
-            conv = c.c.si.value / self["freq"] / 1e3
+            conv = ac.c.si.value / self["freq"] / 1e3
         else:
             print("Error: unit1=%s is not supported" % (unit1))
             return -1
@@ -805,9 +806,9 @@ class _UVTable(pd.DataFrame):
         elif unit2.lower().find("gl") == 0:
             conv /= 1e9
         elif unit2.lower().find("m") == 0:
-            conv /= c.c.si.value / self["freq"]
+            conv /= ac.c.si.value / self["freq"]
         elif unit2.lower().find("km") == 0:
-            conv /= c.c.si.value / self["freq"] / 1e3
+            conv /= ac.c.si.value / self["freq"] / 1e3
         else:
             print("Error: unit2=%s is not supported" % (unit2))
             return -1
@@ -868,13 +869,19 @@ class _UVTable(pd.DataFrame):
 
 
 class VisTable(_UVTable):
+    '''
+    This class is for handling two dimentional tables of full complex visibilities
+    and amplitudes. The class inherits pandas.DataFrame class, so you can use this
+    class like pandas.DataFrame. The class also has additional methods to edit,
+    visualize and convert data.
+    '''
     @property
     def _constructor(self):
         return VisTable
 
     @property
     def _constructor_sliced(self):
-        return VisSeries
+        return _VisSeries
 
     def uvsort(self):
         '''
@@ -901,8 +908,57 @@ class VisTable(_UVTable):
         '''
         Re-calculate the baseline length from self["u"] and self["v"].
         '''
-        import numpy as np
         self["uvdist"] = np.sqrt(self["u"]*self["u"]+self["v"]*self["v"])
+
+
+    def fit_beam(self, angunit="mas", errweight=0., ftsign=+1):
+        '''
+        This function estimates the synthesized beam size at natural weighting.
+
+        keywords:
+          angunit (string):
+            Angular unit (uas, mas, asec or arcsec, amin or arcmin, degree)
+          errweight (float; experimental):
+            index for errer weighting
+          ftsign (integer):
+            a sign for fourier matrix
+        '''
+        # infer the parameters of clean beam
+        parm0 = _calc_bparms(self)
+
+        # generate a small image 4 times larger than the expected major axis size of the beam
+        fitsdata = imdata.IMFITS(fov=[parm0[0],-parm0[0], -parm0[0], parm0[0]],
+                                 nx=20, ny=20, angunit="deg")
+
+        # create output fits
+        dbfitsdata, dbflux = _calc_dbeam(
+            fitsdata, self, errweight=errweight, ftsign=ftsign)
+
+        X, Y = fitsdata.get_xygrid(angunit="deg", twodim=True)
+        dbeam = dbfitsdata.data[0, 0]
+        dbeam /= np.max(dbeam)
+
+        parms = optimize.leastsq(_fit_chisq, parm0, args=(X, Y, dbeam))
+
+        (maja, mina, PA) = parms[0]
+        maja = np.abs(maja)
+        mina = np.abs(mina)
+
+        # adjust these parameters
+        if maja < mina:
+            maja, mina = mina, maja
+            PA += 90
+        while np.abs(PA) > 90:
+            if PA > 90:
+                PA -= 90
+            elif PA < -90:
+                PA += 90
+
+        # return as parameters of gauss_convolve
+        factor = fitsdata.angconv("deg", angunit)
+        cb_parms = ({'majsize': maja * factor, 'minsize': mina *
+                     factor, 'angunit': angunit, 'pa': PA})
+        return cb_parms
 
 
     def fftshift(self, fitsdata, fgfov=1):
@@ -919,10 +975,6 @@ class VisTable(_UVTable):
 
         Output: pandas.Dataframe object
         '''
-        import copy
-        import numpy as np
-        import pandas as pd
-
         # Copy vistable for edit
         vistable = copy.deepcopy(self)
 
@@ -975,19 +1027,16 @@ class VisTable(_UVTable):
             "ugidx", "vgidx", "u", "v", "orgu", "orgv", "amp", "phase", "weight", "sigma"])
         return outtable
 
+
     def make_bstable(self):
         '''
-        This function calculates bi-spectra from a given visibility table
+        This function calculates bi-spectra from full complex visibility data.
+        It will output uvdata.BSTable object.
 
-        Arguments: 
-          self (pandas.DataFrame): visibility table
+        Args: N/A
 
-        Return (pandas.DataFrame): output bi-spectra table
+        Returns: uvdata.BSTable object
         '''
-        import numpy as np
-        import itertools
-        import pandas as pd
-
         # Get Number of Data
         Ndata = len(self["u"])
 
@@ -1156,16 +1205,13 @@ class VisTable(_UVTable):
 
     def make_catable(self):
         '''
-        This function calculates closure amplitudes from a given visibility table
+        This function calculates closure amplitudes from full complex visibility data.
+        It will output uvdata.CATable object.
 
-        Arguments: 
-          self (pandas.DataFrame): visibility table
+        Args: N/A
 
-        Return (pandas.DataFrame): output closure amplitude table
+        Returns: uvdata.CATable object
         '''
-        import numpy as np
-        import itertools
-        import pandas as pd
 
         # Get Number of Data
         Ndata = len(self["u"])
@@ -1259,9 +1305,7 @@ class VisTable(_UVTable):
 
         return catable
 
-    def make_gradvistable(self, normalize=True):
-        import numpy as np
-
+    def _make_gradvistable(self, normalize=True):
         gradself1 = self.copy()
         gradself2 = self.copy()
 
@@ -1313,12 +1357,6 @@ class VisTable(_UVTable):
         Returns: 
           uvdata.VisTable object
         '''
-        import copy
-        import numpy as np
-        import pandas as pd
-        import imdata
-        from scipy.special import pro_ang1
-
         # Copy vistable for edit
         vistable = copy.deepcopy(self)
 
@@ -1386,8 +1424,8 @@ class VisTable(_UVTable):
             # Calculate spheroidal angular function
             U = 2 * (ugrid - U) / (mu * du)
             V = 2 * (vgrid - V) / (mv * dv)
-            uSAF = pro_ang1(0, 0, c, U)[0]
-            vSAF = pro_ang1(0, 0, c, V)[0]
+            uSAF = ss.pro_ang1(0, 0, c, U)[0]
+            vSAF = ss.pro_ang1(0, 0, c, V)[0]
 
             # Convolutional gridding
             Vcomp_ave = np.sum(Vcomps * uSAF * vSAF) / np.sum(uSAF * vSAF)
@@ -1410,6 +1448,7 @@ class VisTable(_UVTable):
             "ugidx", "vgidx", "u", "v", "uvdist", "amp", "phase", "weight", "sigma"])
         return outtable
 
+
     #---------------------------------------------------------------------------
     # Plot Functions
     #---------------------------------------------------------------------------
@@ -1431,9 +1470,6 @@ class VisTable(_UVTable):
             You can set parameters of matplotlib.pyplot.plot.
             Defaults are {'ls': "none", 'marker': "."}
         '''
-        import matplotlib.pyplot as plt
-        import copy
-
         # Set Unit
         if uvunit is None:
             uvunit = self.uvunit
@@ -1461,6 +1497,7 @@ class VisTable(_UVTable):
         ylim = np.asarray(ax.get_ylim())
         ax.set_xlim(-np.sort(-xlim))
         ax.set_ylim(np.sort(ylim))
+
 
     def radplot_amp(self, uvunit=None, errorbar=True, model=None, modeltype="amp",
                     ls="none", marker=".", **plotargs):
@@ -1497,9 +1534,6 @@ class VisTable(_UVTable):
             matplotlib.pyplot.errorbars().
             Defaults are {'ls': "none", 'marker': "."}.
         '''
-        import matplotlib.pyplot as plt
-        import copy
-
         # Set Unit
         if uvunit is None:
             uvunit = self.uvunit
@@ -1558,9 +1592,6 @@ class VisTable(_UVTable):
             matplotlib.pyplot.errorbars().
             Defaults are {'ls': "none", 'marker': "."}.
         '''
-        import matplotlib.pyplot as plt
-        import copy
-
         # Set Unit
         if uvunit is None:
             uvunit = self.uvunit
@@ -1589,6 +1620,12 @@ class VisTable(_UVTable):
 
 
 class BSTable(_UVTable):
+    '''
+    This class is for handling two dimentional tables of Bi-spectrua of
+    visibilities. The class inherits pandas.DataFrame class, so you can use this
+    class like pandas.DataFrame. The class also has additional methods to edit,
+    visualize and convert data.
+    '''
     uvunit = "lambda"
 
     bstable_columns = ["jd", "year", "doy", "hour", "min", "sec",
@@ -1611,7 +1648,7 @@ class BSTable(_UVTable):
 
     @property
     def _constructor_sliced(self):
-        return BSSeries
+        return _BSSeries
 
     #---------------------------------------------------------------------------
     # Plot Functions
@@ -1632,9 +1669,6 @@ class BSTable(_UVTable):
             You can set parameters of matplotlib.pyplot.plot.
             Defaults are {'ls': "none", 'marker': "."}
         '''
-        import matplotlib.pyplot as plt
-        import copy
-
         # Set Unit
         if uvunit is None:
             uvunit = self.uvunit
@@ -1702,9 +1736,6 @@ class BSTable(_UVTable):
             matplotlib.pyplot.errorbars().
             Defaults are {'ls': "none", 'marker': "."}.
         '''
-        import matplotlib.pyplot as plt
-        import copy
-
         # Set Unit
         if uvunit is None:
             uvunit = self.uvunit
@@ -1723,8 +1754,10 @@ class BSTable(_UVTable):
             print("[Error] uvdtype=%s is not available." % (uvdtype))
             return -1
 
+
         # Label
         unitlabel = self.get_unitlabel(uvunit)
+
 
         # plotting data
         if model is not None:
@@ -1768,7 +1801,8 @@ class CATable(_UVTable):
 
     @property
     def _constructor_sliced(self):
-        return CASeries
+        return _CASeries
+
 
     #---------------------------------------------------------------------------
     # Plot Functions
@@ -1831,6 +1865,7 @@ class CATable(_UVTable):
         ax.set_xlim(-np.sort(-xlim))
         ax.set_ylim(np.sort(ylim))
 
+
     def radplot(self, uvdtype="ave", uvunit=None, errorbar=True, model=None,
                 ls="none", marker=".", **plotargs):
         '''
@@ -1862,9 +1897,6 @@ class CATable(_UVTable):
             matplotlib.pyplot.errorbars().
             Defaults are {'ls': "none", 'marker': "."}.
         '''
-        import matplotlib.pyplot as plt
-        import copy
-
         # Set Unit
         if uvunit is None:
             uvunit = self.uvunit
@@ -1909,32 +1941,32 @@ class _UVSeries(pd.Series):
         return _UVTable
 
 
-class VisSeries(_UVSeries):
+class _VisSeries(_UVSeries):
     @property
     def _constructor(self):
-        return VisSeries
+        return _VisSeries
 
     @property
     def _constructor_expanddim(self):
         return VisTable
 
 
-class BSSeries(_UVSeries):
+class _BSSeries(_UVSeries):
 
     @property
     def _constructor(self):
-        return BSSeries
+        return _BSSeries
 
     @property
     def _constructor_expanddim(self):
         return BSTable
 
 
-class CASeries(_UVSeries):
+class _CASeries(_UVSeries):
 
     @property
     def _constructor(self):
-        return CASeries
+        return _CASeries
 
     @property
     def _constructor_expanddim(self):
@@ -1943,8 +1975,6 @@ class CASeries(_UVSeries):
 #-------------------------------------------------------------------------------
 #  Read CSV table files
 #-------------------------------------------------------------------------------
-
-
 def read_vistable(filename, uvunit=None, **args):
     '''
     This fuction loads uvdata.VisTable from an input csv file using pd.read_csv().
@@ -2053,15 +2083,10 @@ def read_catable(filename, uvunit=None, **args):
 #-------------------------------------------------------------------------------
 # Subfunctions for UVFITS
 #-------------------------------------------------------------------------------
-
-
 def _bindstokes(dataarray, stokes, stokes1, stokes2, factr1, factr2):
     '''
     This is a subfunction for uvdata.UVFITS.
     '''
-    import numpy as np
-    import xarray as xr
-
     stokesids = np.asarray(dataarray["stokes"], dtype=np.int64)
     istokes1 = np.where(stokesids == stokes1)[0][0]
     istokes2 = np.where(stokesids == stokes2)[0][0]
@@ -2103,8 +2128,6 @@ def _bindstokes(dataarray, stokes, stokes1, stokes2, factr1, factr2):
 #-------------------------------------------------------------------------------
 # Subfunctions for VisTable
 #-------------------------------------------------------------------------------
-
-
 def _getblid(st1, st2, Nst):
     '''
     This function is a subfunction for uvdata.VisTable.
@@ -2238,3 +2261,145 @@ def _calc_caamp(vistable, catable, idx,
     matrix = tmpmatrix.copy()
 
     return catable, rank, Nca, matrix
+
+def _calc_dbeam(fitsdata, vistable, errweight=0, ftsign=+1):
+    '''
+    Calculate an array and total flux of dirty beam from the input visibility data
+
+    keywords:
+      fitsdata:
+        input imdata.IMFITS object
+      vistable:
+        input visibility data
+      errweight (float):
+        index for errer weighting
+      ftsign (integer):
+        a sign for fourier matrix
+    '''
+    # create output fits
+    outfitsdata = copy.deepcopy(fitsdata)
+
+    # read uv information
+    M = len(vistable)
+    U = np.float64(vistable["u"])
+    V = np.float64(vistable["v"])
+
+    # create visibilies and error weighting
+    Vis_point = np.ones(len(vistable), dtype=np.complex128)
+    if errweight != 0:
+        sigma = np.float64(vistable["sigma"])
+        weight = np.power(sigma, errweight)
+        Vis_point *= weight / np.sum(weight)
+
+    # create matrix of X and Y
+    Npix = outfitsdata.header["nx"] * outfitsdata.header["ny"]
+    X, Y = outfitsdata.get_xygrid(angunit="deg", twodim=True)
+    X = np.radians(X)
+    Y = np.radians(Y)
+    X = X.reshape(Npix)
+    Y = Y.reshape(Npix)
+
+    # create matrix of A
+    if ftsign > 0:
+        factor = 2 * np.pi
+    elif ftsign < 0:
+        factor = -2 * np.pi
+    A = linalg.blas.dger(factor, X, U)
+    A += linalg.blas.dger(factor, Y, V)
+    A = np.exp(1j * A) / M
+
+    # calculate synthesized beam
+    dbeam = np.real(A.dot(Vis_point))
+    dbtotalflux = np.sum(dbeam)
+    dbeam /= dbtotalflux
+
+    # save as fitsdata
+    dbeam = dbeam.reshape((outfitsdata.header["ny"], outfitsdata.header["nx"]))
+    for idxs in np.arange(outfitsdata.header["ns"]):
+        for idxf in np.arange(outfitsdata.header["nf"]):
+            outfitsdata.data[idxs, idxf] = dbeam[:]
+
+    outfitsdata.update_fits()
+    return outfitsdata, dbtotalflux
+
+
+def _calc_bparms(vistable):
+    '''
+    Infer beam parameters (major size, minor size, position angle)
+
+    keywords:
+      vistable: input visibility data
+    '''
+    # read uv information
+    U = np.float64(vistable["u"])
+    V = np.float64(vistable["v"])
+
+    # calculate minor size of the beam
+    uvdist = np.sqrt(U * U + V * V)
+    maxuvdist = np.max(uvdist)
+    mina = np.rad2deg(1 / maxuvdist) * 0.6
+
+    # calculate PA
+    index = np.argmax(uvdist)
+    angle = np.rad2deg(np.arctan2(U[index], V[index]))
+
+    # rotate uv coverage for calculating major size
+    PA = angle + 90
+    cosPA = np.cos(np.radians(PA))
+    sinPA = np.sin(np.radians(PA))
+    newU = U * cosPA - V * sinPA
+    newV = U * sinPA + V * cosPA
+
+    # calculate major size of the beam
+    maxV = np.max(np.abs(newV))
+    maja = np.rad2deg(1 / maxV) * 0.6
+
+    return maja, mina, PA
+
+
+def _gauss_func(X, Y, maja, mina, PA, x0=0., y0=0., scale=1.):
+    '''
+    Calculate 2-D gauss function
+
+    keywords:
+      X: 2-D array of x-axis
+      Y: 2-D array of y-axis
+      maja (float): major size of the gauss
+      mina (float): minor size
+      PA (float): position angle
+      x0 (float): value of x-position at the center of the gauss
+      y0 (float): value of y-position at the center of the gauss
+      scale (float): scaling factor
+    '''
+    # scaling
+    maja *= scale
+    mina *= scale
+
+    # calculate gauss function
+    cosPA = np.cos(np.radians(PA))
+    sinPA = np.sin(np.radians(PA))
+    L = ((X * sinPA + Y * cosPA)**2) / (maja**2) + \
+        ((X * cosPA - Y * sinPA)**2) / (mina**2)
+    return np.exp(-L * 4 * np.log(2))
+
+
+def _fit_chisq(parms, X, Y, dbeam):
+    '''
+    Calculate residuals of two 2-D array
+
+    keywords:
+      parms: information of clean beam
+      X: 2-D array of x-axis
+      Y: 2-D array of y-axis
+      dbeam: an array of dirty beam
+    '''
+    # get parameters of clean beam
+    (maja, mina, angle) = parms
+
+    # calculate clean beam and residuals
+    cbeam = _gauss_func(X, Y, maja, mina, angle)
+    cbeam /= np.max(cbeam)
+    if cbeam.size == dbeam.size:
+        return (dbeam - cbeam).reshape(dbeam.size)
+    else:
+        print("not equal the size of two beam array")
