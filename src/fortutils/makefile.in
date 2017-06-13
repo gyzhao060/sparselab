@@ -1,0 +1,153 @@
+#-------------------------------------------
+# INSTALLDIR
+LIBDIR=../../lib
+INCLUDEDIR=../../include
+BINDIR=../../bin
+SPARSELABDIR=../../sparselab
+
+#-------------------------------------------
+# Fortran
+FC=@FC@
+
+# command options for Open MP
+ifeq ($(FC),gfortran)
+	FCFLAGS_OMP=-fopenmp
+else
+	ifeq ($(FC),ifort)
+		FCFLAGS_OMP=-openmp -openmp-lib=compat
+	else
+		ifeq ($(FC),pgf95)
+			FCFLAGS_OMP=-mp=align,allcores -fastsse
+		else
+			FCFLAGS_OMP=-fopenmp
+		endif
+	endif
+endif
+
+# command options for optimization
+FCFLAGS_OPT=-O2
+
+# command options for Debugging
+DBG_FLAG=@dbg_flag@
+ifeq ($(DBG_FLAG),True)
+	FCFLAGS_DBG=-g -Wall -pedantic -fbounds-check -O -Wuninitialized -ffpe-trap=invalid,zero,overflow -fbacktrace
+else
+	FCFLAGS_DBG=
+endif
+
+# command options for BLAS, L-BFGS-B
+FCFLAGS_BLAS=@LDFLAGS@ @blaslib@
+FCFLAGS_LBFGSB=-L$(LIBDIR) -llbfgsb
+
+#    set command options
+FCFLAGS=-fPIC $(FCFLAGS_DBG) $(FCFLAGS_OPT) $(FCFLAGS_OMP)
+
+#-------------------------------------------
+# F2PY
+F2PY=@F2PY@
+
+#    FC setting
+ifeq ($(FC),gfortran)
+	F2PYFLAGS_FC=gfortran
+else
+	ifeq ($(FC),ifort)
+		F2PYFLAGS_FC=intelem
+	else
+		ifeq ($(FC),pgf95)
+			F2PYFLAGS_FC=pg
+		else
+			F2PYFLAGS_FC=gfortran
+		endif
+	endif
+endif
+
+#    other command options
+F2PYFLAGS_OPT=$(FCFLAGS_OPT)
+F2PYFLAGS_F90=-fPIC $(FCFLAGS_OMP) $(FCFLAGS_DBG) $(FCFLAGS_BLAS) $(FCFLAGS_LBFGSB) -L. -I.
+F2PYFLAGS_F77=-fPIC $(FCFLAGS_OMP) $(FCFLAGS_DBG) $(FCFLAGS_BLAS) $(FCFLAGS_LBFGSB) -L. -I.
+
+# command options for Open MP
+ifeq ($(FC),gfortran)
+	F2PYFLAGS_OMP=-lgomp
+else
+	ifeq ($(FC),ifort)
+		F2PYFLAGS_OMP=-liomp5
+	else
+		ifeq ($(FC),pgf95)
+			F2PYFLAGS_OMP=-lgomp
+		else
+			F2PYFLAGS_OMP=-lgomp
+		endif
+	endif
+endif
+
+#    BIDING ABOVE OPTIONS
+F2PYFLAGS=--fcompiler=$(F2PYFLAGS_FC) \
+		  --opt="$(F2PYFLAGS_OPT)" \
+		  --f90flags="$(F2PYFLAGS_F90)" \
+		  --f77flags="$(F2PYFLAGS_F77)" \
+		  $(F2PYFLAGS_OMP) $(FCFLAGS_BLAS) $(FCFLAGS_LBFGSB) -L. -I.
+
+#-------------------------------------------------------------------------------
+# Main description
+#-------------------------------------------------------------------------------
+all:\
+    houghlib.o phasecon.o static_imaging_dft.o \
+    fortlib.so
+    #fortlib.so
+
+# parameter module
+nrtype.o: nrtype.f90
+	$(FC) $(FCFLAGS) -c nrtype.f90
+
+# interpolation module
+interp.o: interp.f90 nrtype.o
+	$(FC) $(FCFLAGS) -c interp.f90
+
+# hough transform
+houghlib.o: houghlib.f90 interp.o nrtype.o
+	$(FC) $(FCFLAGS) -c houghlib.f90
+
+# phase congruency
+phasecon.o: phasecon.f90 nrtype.o
+	$(FC) $(FCFLAGS) -c phasecon.f90
+
+# L-BFGS-B Imager
+static_imaging_lib.o: static_imaging_lib.f90 nrtype.o
+	$(FC) $(FCFLAGS) -c static_imaging_lib.f90
+
+static_imaging_dft.o: static_imaging_dft.f90 static_imaging_lib.o nrtype.o
+	$(FC) $(FCFLAGS) $(FCFLAGS_BLAS) $(FCFLAGS_LBFGSB) -c static_imaging_dft.f90
+
+# generate f2py signature files
+fortlib.pyf: \
+	nrtype.f90 interp.f90 phasecon.f90 houghlib.f90 \
+	static_imaging_lib.f90 static_imaging_dft.f90
+	
+	$(F2PY) -m fortlib -h fortlib.pyf \
+	nrtype.f90 interp.f90 phasecon.f90 houghlib.f90 
+#	static_imaging_lib.f90 static_imaging_dft.f90
+
+# Python Fortlib Module
+fortlib.so: \
+	nrtype.f90 interp.f90 phasecon.f90 houghlib.f90 \
+	static_imaging_lib.f90 static_imaging_dft.f90
+	
+	$(F2PY) $(F2PYFLAGS) -m fortlib -c \
+	nrtype.f90 interp.f90 phasecon.f90 houghlib.f90 \
+	static_imaging_lib.f90 static_imaging_dft.f90
+
+install: all
+	mkdir -p $(SPARSELABDIR)
+	cp -rp fortlib.*so* $(SPARSELABDIR)
+	
+clean:
+	rm -rf fortlib.*so*
+	rm -f *__genmod.f90
+	rm -f *.mod
+	rm -f *.o
+	rm -f *.pyf
+
+uninstall: clean
+	rm -f makefile
+	rm -rf $(SPARSELABDIR)/fortlib.*so*

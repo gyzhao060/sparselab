@@ -1,0 +1,40 @@
+# INSTALLDIR
+PYTHONLIBDIR=./pythonlib
+LIBDIR=./lib
+INCLUDEDIR=./include
+BINDIR=./bin
+
+all:	install
+
+install:
+	cd src/lbfgsb; make install
+	cd src/slsqp; make install
+	cd src/mfista160422; make install
+	cd src/bsspm;make install
+	cd src/bfgs;make install
+	cd src/mkvabin; make install
+	cd src/fortutils; make install
+
+clean:
+	cd src/lbfgsb; make clean
+	cd src/slsqp; make clean
+	cd src/mfista160422; make clean
+	cd src/bsspm; make clean
+	cd src/bfgs; make clean
+	cd src/mkvabin; make clean
+	cd src/fortutils; make clean
+	rm -f $(PYTHONLIBDIR)/*.pyf
+
+uninstall: clean
+	cd src/lbfgsb; make uninstall
+	cd src/slsqp; make uninstall
+	cd src/mfista160422; make uninstall
+	cd src/bsspm; make uninstall
+	cd src/bfgs; make uninstall
+	cd src/mkvabin; make uninstall
+	cd src/fortutils; make uninstall
+	rm -rf autom4te.cache
+	rm -f config.log
+	rm -f config.status
+	rm -f configure
+	rm makefile

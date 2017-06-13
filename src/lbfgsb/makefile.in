@@ -1,0 +1,75 @@
+#-------------------------------------------
+# INSTALLDIR
+LIBDIR=../../lib
+INCLUDEDIR=../../include
+BINDIR=../../bin
+SPARSELABDIR=../../sparselab
+
+# Fortran Compiler
+FC=@FC@
+
+
+# command options for Open MP
+ifeq ($(FC),gfortran)
+	FCFLAGS_OMP=-fopenmp
+else
+	ifeq ($(FC),ifort)
+		FCFLAGS_OMP=-openmp -openmp-lib=compat
+	else
+		ifeq ($(FC),pgf95)
+			FCFLAGS_OMP=-mp=align,allcores -fastsse
+		else
+			FCFLAGS_OMP=-fopenmp
+		endif
+	endif
+endif
+
+
+# command options for optimization
+FCFLAGS_OPT=-O2
+
+
+# command options for Debugging
+DBG_FLAG=@dbg_flag@
+ifeq ($(DBG_FLAG),True)
+	FCFLAGS_DBG=-g -Wall -pedantic -fbounds-check -O -Wuninitialized -ffpe-trap=invalid,zero,overflow -fbacktrace
+else
+	FCFLAGS_DBG=
+endif
+
+
+# BLAS
+FCFLAGS_BLAS=@LDFLAGS@ @blaslib@
+
+
+# set command options
+FCFLAGS=-fPIC $(FCFLAGS_DBG) $(FCFLAGS_OPT) $(FCFLAGS_OMP)
+
+
+#-------------------------------------------------------------------------------
+# Main description
+#-------------------------------------------------------------------------------
+all: liblbfgsb.a 
+
+lbfgsb.o: lbfgsb.f linpack.o timer.o
+	$(FC) $(FCFLAGS) $(FCFLAGS_BLAS) -c lbfgsb.f
+
+timer.o: timer.f
+	$(FC) $(FCFLAGS) $(FCFLAGS_BLAS) -c timer.f
+
+linpack.o: linpack.f
+	$(FC) $(FCFLAGS) $(FCFLAGS_BLAS) -c linpack.f
+
+liblbfgsb.a: lbfgsb.o linpack.o timer.o
+	ar -r liblbfgsb.a lbfgsb.o linpack.o timer.o
+
+install: all
+	mkdir -p $(LIBDIR)
+	cp -p liblbfgsb.a $(LIBDIR)
+	
+clean:
+	rm -f *.o *.a
+
+uninstall: clean
+	rm -f makefile
+	rm -f $(LIBDIR)/liblbfgsb.a

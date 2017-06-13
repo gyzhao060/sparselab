@@ -1,0 +1,5 @@
+# please specify $SPLABDIR
+SPLABDIR=$LOCALDIR/sparselab
+
+export PATH=$PATH:$SPLABDIR/bin
+export PYTHONPATH=$PYTHONPATH:$SPLABDIR/pythonlib:$SPLABDIR
