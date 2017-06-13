@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT([bsspm.f90], [1], [kazu@haystack.mit.edu])
-AC_CONFIG_SRCDIR([./src/bsspm/bsspm.f90])
+AC_INIT([nrtype.f90], [1], [kakiyama@mit.edu])
+AC_CONFIG_SRCDIR([./src/fortutils])
 #
 AC_PREFIX_PROGRAM([gfortran])
 AC_LANG([C])
