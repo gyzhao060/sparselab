@@ -1,2 +1,0 @@
-# sparselab
-Sparse Modeling Library
