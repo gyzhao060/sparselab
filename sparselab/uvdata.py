@@ -84,15 +84,15 @@ class UVFITS():
                 aipsfq = hdulist[idx]
             elif hduinfo[1] == "AIPS AN":
                 aipsan = hdulist[idx]
-        if not 'grouphdu' in locals():
+        if 'grouphdu' not in locals():
             print("[Error]   %s does not contain the Primary HDU" % (infile))
 
-        if not 'aipsfq' in locals():
+        if 'aipsfq' not in locals():
             print("[Error]   %s does not contain AIPS FQ table" % (infile))
         else:
             self.aipsfq = aipsfq.copy()
 
-        if not 'aipsan' in locals():
+        if 'aipsan' not in locals():
             print("[WARNING] %s does not have any AIPS AN tables" % (infile))
         else:
             self.aipsan = aipsan.copy()
@@ -789,12 +789,12 @@ class _UVTable(pd.DataFrame):
         # Name
         out = collections.OrderedDict()
         for icv in np.arange(nfold):
-            trialkeyname = "t%d" % (icv)
+            trainkeyname = "t%d" % (icv)
             validkeyname = "v%d" % (icv)
-            trial = pd.concat([shuffled.loc[:Nval * icv, :],
+            train = pd.concat([shuffled.loc[:Nval * icv, :],
                                shuffled.loc[Nval * (icv + 1):, :]])
             valid = shuffled[Nval * icv:Nval * (icv + 1)]
-            out[trialkeyname] = trial
+            out[trainkeyname] = train
             out[validkeyname] = valid
         return out
 
