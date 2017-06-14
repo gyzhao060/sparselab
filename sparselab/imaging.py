@@ -5,9 +5,9 @@ A python module sparselab.imaging
 
 This is a submodule of sparselab for imaging static images.
 '''
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Modules
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # standard modules
 import os
 import copy
@@ -30,9 +30,9 @@ import sparselab.util as util
 import sparselab.fortlib as fortlib
 import sparselab.imdata as imdata
 
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Default Parameters
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 lbfgsbprms = {
     "m": 10,
     "factr": 1e1,
@@ -40,10 +40,9 @@ lbfgsbprms = {
 }
 
 
-
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Reconstract static imaging
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 def static_dft_imaging(
         initimage, imagewin=None,
         vistable=None, amptable=None, bstable=None, catable=None,
@@ -51,7 +50,7 @@ def static_dft_imaging(
         totalflux=None, fluxconst=False,
         istokes=0, ifreq=0):
     '''
-    
+
     '''
     # Check Arguments
     if ((vistable is None) and (amptable is None) and
@@ -518,20 +517,20 @@ def static_dft_stats(
 
 
 def iterative_imaging(initimage, imageprm, Niter=10,
-                      dothres=True, threstype="hard", threshold=0.3, 
+                      dothres=True, threstype="hard", threshold=0.3,
                       doshift=True, shifttype="com",
-                      doconv=True, convprm={}, 
+                      doconv=True, convprm={},
                       save_totalflux=False):
-    outimage = static_dft_imaging(initimage,**imageprm)
+    outimage = static_dft_imaging(initimage, **imageprm)
     oldcost = static_dft_stats(outimage, fulloutput=False, **imageprm)["cost"]
-    for i in np.arange(Niter-1):
+    for i in np.arange(Niter - 1):
         # Edit Images
         if dothres:
             if threstype == "soft":
-                outimage = outimage.soft_threshold(threshold=threshold, 
+                outimage = outimage.soft_threshold(threshold=threshold,
                                                    save_totalflux=save_totalflux)
             else:
-                outimage = outimage.hard_threshold(threshold=threshold, 
+                outimage = outimage.hard_threshold(threshold=threshold,
                                                    save_totalflux=save_totalflux)
         if doshift:
             if shifttype == "peak":
@@ -539,12 +538,14 @@ def iterative_imaging(initimage, imageprm, Niter=10,
             else:
                 outimage = outimage.comshift(save_totalflux=save_totalflux)
         if doconv:
-            outimage = outimage.gauss_convolve(save_totalflux=save_totalflux, **convprm)
-        
+            outimage = outimage.gauss_convolve(
+                save_totalflux=save_totalflux, **convprm)
+
         # Imaging Again
-        newimage = static_dft_imaging(outimage,**imageprm)
-        newcost = static_dft_stats(newimage, fulloutput=False, **imageprm)["cost"]
-        
+        newimage = static_dft_imaging(outimage, **imageprm)
+        newcost = static_dft_stats(
+            newimage, fulloutput=False, **imageprm)["cost"]
+
         if oldcost < newcost:
             print("No improvement in cost fucntions. Don't update image.")
         else:
@@ -564,91 +565,91 @@ def static_dft_pipeline(
         sumtablefile="summary.csv",
         lambl1s=[-1.],
         lambtvs=[-1.],
-        lambtsvs=[-1.]):    
+        lambtsvs=[-1.]):
     if not os.path.isdir(workdir):
         os.makedirs(workdir)
-    
+
     # Lambda Parameters
     lambl1s = -np.sort(-np.asarray(lambl1s))
     lambtvs = -np.sort(-np.asarray(lambtvs))
     lambtsvs = -np.sort(-np.asarray(lambtsvs))
     nl1 = len(lambl1s)
     ntv = len(lambtvs)
-    ntsv= len(lambtsvs)
-    
+    ntsv = len(lambtsvs)
+
     # Summary Data
     sumtable = pd.DataFrame()
-    
+
     # Start Imaging
-    for itsv,itv,il1 in itertools.product(np.arange(ntsv),
-                                          np.arange(ntv),
-                                          np.arange(nl1)):
-        header = "tsv%02d.tv%02d.l1%02d"%(itsv,itv,il1)
+    for itsv, itv, il1 in itertools.product(np.arange(ntsv),
+                                            np.arange(ntv),
+                                            np.arange(nl1)):
+        header = "tsv%02d.tv%02d.l1%02d" % (itsv, itv, il1)
         # output
-        imageprm["lambl1"]=lambl1s[il1]
-        imageprm["lambtv"]=lambtvs[itv]
-        imageprm["lambtsv"]=lambtsvs[itsv]
-        
+        imageprm["lambl1"] = lambl1s[il1]
+        imageprm["lambtv"] = lambtvs[itv]
+        imageprm["lambtsv"] = lambtsvs[itsv]
+
         # Imaging
         outimage = imagefunc(initimage, imageprm=imageprm, **imagefargs)
-        filename = header+".fits"
-        outimage.save_fits(os.path.join(workdir,filename))
-        
+        filename = header + ".fits"
+        outimage.save_fits(os.path.join(workdir, filename))
+
         # Statistics
         outstats = static_dft_stats(outimage, fulloutput=False, **imageprm)
         tmptable = pd.DataFrame([outstats.values()], columns=outstats.keys())
         tmptable["itsv"] = itsv
         tmptable["itv"] = itv
         tmptable["il1"] = il1
-        sumtable = pd.concat([sumtable,tmptable], ignore_index=True)
-        sumtable.to_csv(os.path.join(workdir,sumtablefile),**util.args_tocsv)
-        
+        sumtable = pd.concat([sumtable, tmptable], ignore_index=True)
+        sumtable.to_csv(os.path.join(workdir, sumtablefile), **util.args_tocsv)
+
         # Make Plots
-        filename = header+".summary.pdf"
-        filename = os.path.join(workdir,filename)
-        outstats = static_dft_plots(outimage, imageprm, filename=filename, 
-                   angunit=angunit, uvunit=uvunit)
+        filename = header + ".summary.pdf"
+        filename = os.path.join(workdir, filename)
+        outstats = static_dft_plots(outimage, imageprm, filename=filename,
+                                    angunit=angunit, uvunit=uvunit)
     return sumtable
 
 
-def static_dft_plots(outimage, imageprm={}, filename=None, 
-                     angunit="mas", uvunit="ml", plotargs={'ms':1.,}):
+def static_dft_plots(outimage, imageprm={}, filename=None,
+                     angunit="mas", uvunit="ml", plotargs={'ms': 1., }):
     isinteractive = plt.isinteractive()
     backend = matplotlib.rcParams["backend"]
-    
+
     if isinteractive:
         plt.ioff()
         matplotlib.use('Agg')
-    
+
     nullfmt = NullFormatter()
-    
+
     # Label
-    if uvunit.lower().find("l")==0:
+    if uvunit.lower().find("l") == 0:
         unitlabel = r"$\lambda$"
-    elif uvunit.lower().find("kl")==0:
+    elif uvunit.lower().find("kl") == 0:
         unitlabel = r"$10^3 \lambda$"
-    elif uvunit.lower().find("ml")==0:
+    elif uvunit.lower().find("ml") == 0:
         unitlabel = r"$10^6 \lambda$"
-    elif uvunit.lower().find("gl")==0:
+    elif uvunit.lower().find("gl") == 0:
         unitlabel = r"$10^9 \lambda$"
-    elif uvunit.lower().find("m")==0:
+    elif uvunit.lower().find("m") == 0:
         unitlabel = "m"
-    elif uvunit.lower().find("km")==0:
+    elif uvunit.lower().find("km") == 0:
         unitlabel = "km"
     else:
         print("Error: uvunit=%s is not supported" % (unit2))
         return -1
-    
+
     # Get model data
     stats = static_dft_stats(outimage, fulloutput=True, **imageprm)
-    
+
     # Open File
     if filename is not None:
         pdf = PdfPages(filename)
-    
+
     # Save Image
     if filename is not None:
-        util.matplotlibrc(nrows=1,ncols=1,width=600,height=600)
+        util.matplotlibrc(nrows=1, ncols=1, width=600, height=600)
     else:
         matplotlib.rcdefaults()
 
@@ -657,212 +658,221 @@ def static_dft_plots(outimage, imageprm={}, filename=None,
     if filename is not None:
         pdf.savefig()
         plt.close()
-    
-    
+
     # Amplitude
-    if stats["isfcv"]==True:
+    if stats["isfcv"] == True:
         table = imageprm["vistable"]
-        table["comp"] = table["amp"] * np.exp(1j*np.deg2rad(table["phase"]))
+        table["comp"] = table["amp"] * np.exp(1j * np.deg2rad(table["phase"]))
         table["real"] = np.real(table["comp"])
         table["imag"] = np.imag(table["comp"])
-        
-        normresidr = (stats["fcvrmod"]-table["real"])/table["sigma"]
-        normresidi = (stats["fcvimod"]-table["imag"])/table["sigma"]
-        normresid = np.concatenate([normresidr,normresidi])
+
+        normresidr = (stats["fcvrmod"] - table["real"]) / table["sigma"]
+        normresidi = (stats["fcvimod"] - table["imag"]) / table["sigma"]
+        normresid = np.concatenate([normresidr, normresidi])
         N = len(normresid)
-        
+
         if filename is not None:
-            util.matplotlibrc(nrows=3,ncols=1,width=600,height=200)
+            util.matplotlibrc(nrows=3, ncols=1, width=600, height=200)
         else:
             matplotlib.rcdefaults()
-        
-        fig, axs = plt.subplots(nrows=3,ncols=1,sharex=True)
+
+        fig, axs = plt.subplots(nrows=3, ncols=1, sharex=True)
         plt.subplots_adjust(hspace=0)
-        
+
         ax = axs[0]
         plt.sca(ax)
         table.radplot_amp(uvunit=uvunit, color="black", **plotargs)
-        table.radplot_amp(uvunit=uvunit, model=stats, modeltype="fcv", color="red", **plotargs)
+        table.radplot_amp(uvunit=uvunit, model=stats,
+                          modeltype="fcv", color="red", **plotargs)
         plt.xlabel("")
-        
+
         ax = axs[1]
         plt.sca(ax)
         table.radplot_phase(uvunit=uvunit, color="black", **plotargs)
-        table.radplot_phase(uvunit=uvunit, model=stats, color="red", **plotargs)
+        table.radplot_phase(uvunit=uvunit, model=stats,
+                            color="red", **plotargs)
         plt.xlabel("")
-        
-        ax = axs[2] 
+
+        ax = axs[2]
         plt.sca(ax)
-        plt.plot(table["uvdist"]*table.uvunitconv("lambda", uvunit),
+        plt.plot(table["uvdist"] * table.uvunitconv("lambda", uvunit),
                  normresidr, ls="none", marker=".", color="blue", label="real", **plotargs)
-        plt.plot(table["uvdist"]*table.uvunitconv("lambda", uvunit),
+        plt.plot(table["uvdist"] * table.uvunitconv("lambda", uvunit),
                  normresidi, ls="none", marker=".", color="red", label="imag", **plotargs)
-        plt.axhline(0,color="black",ls="--")
+        plt.axhline(0, color="black", ls="--")
         plt.ylabel("Normalized Residuals")
-        plt.xlabel(r"Baseline Length (%s)"%(unitlabel))
+        plt.xlabel(r"Baseline Length (%s)" % (unitlabel))
         plt.legend(ncol=2)
-        
-        divider = make_axes_locatable(ax) # Histgram
+
+        divider = make_axes_locatable(ax)  # Histgram
         cax = divider.append_axes("right", size="10%", pad=0.05)
-        ymin,ymax = ax.get_ylim()
+        ymin, ymax = ax.get_ylim()
         xmin = np.min(normresid)
         xmax = np.max(normresid)
-        y = np.linspace(ymin,ymax,1000)
-        x = 1/np.sqrt(2*np.pi) * np.exp(-y*y/2.)
-        cax.hist(normresid, bins=np.int(np.sqrt(N)), normed=True, orientation='horizontal')
-        cax.plot(x,y,color="red")
+        y = np.linspace(ymin, ymax, 1000)
+        x = 1 / np.sqrt(2 * np.pi) * np.exp(-y * y / 2.)
+        cax.hist(normresid, bins=np.int(np.sqrt(N)),
+                 normed=True, orientation='horizontal')
+        cax.plot(x, y, color="red")
         cax.set_ylim(ax.get_ylim())
-        cax.axhline(0,color="black",ls="--")
+        cax.axhline(0, color="black", ls="--")
         cax.yaxis.set_major_formatter(nullfmt)
         cax.xaxis.set_major_formatter(nullfmt)
         if filename is not None:
             pdf.savefig()
             plt.close()
-    
-    if stats["isamp"]==True:
+
+    if stats["isamp"] == True:
         table = imageprm["amptable"]
-        normresid = stats["ampres"]/table["sigma"]
+        normresid = stats["ampres"] / table["sigma"]
         N = len(normresid)
-        
+
         if filename is not None:
-            util.matplotlibrc(nrows=2,ncols=1,width=600,height=300)
+            util.matplotlibrc(nrows=2, ncols=1, width=600, height=300)
         else:
             matplotlib.rcdefaults()
-        
-        fig, axs = plt.subplots(nrows=2,ncols=1,sharex=True)
+
+        fig, axs = plt.subplots(nrows=2, ncols=1, sharex=True)
         plt.subplots_adjust(hspace=0)
-        
+
         ax = axs[0]
         plt.sca(ax)
         table.radplot_amp(uvunit=uvunit, color="black", **plotargs)
-        table.radplot_amp(uvunit=uvunit, model=stats, modeltype="amp", color="red", **plotargs)
+        table.radplot_amp(uvunit=uvunit, model=stats,
+                          modeltype="amp", color="red", **plotargs)
         plt.xlabel("")
-        
-        ax = axs[1] 
+
+        ax = axs[1]
         plt.sca(ax)
-        plt.plot(table["uvdist"]*table.uvunitconv("lambda", uvunit),
+        plt.plot(table["uvdist"] * table.uvunitconv("lambda", uvunit),
                  normresid, ls="none", marker=".", color="black", **plotargs)
-        plt.axhline(0,color="black",ls="--")
+        plt.axhline(0, color="black", ls="--")
         plt.ylabel("Normalized Residuals")
-        plt.xlabel(r"Baseline Length (%s)"%(unitlabel))
-        
-        divider = make_axes_locatable(ax) # Histgram
+        plt.xlabel(r"Baseline Length (%s)" % (unitlabel))
+
+        divider = make_axes_locatable(ax)  # Histgram
         cax = divider.append_axes("right", size="10%", pad=0.05)
-        ymin,ymax = ax.get_ylim()
+        ymin, ymax = ax.get_ylim()
         xmin = np.min(normresid)
         xmax = np.max(normresid)
-        y = np.linspace(ymin,ymax,1000)
-        x = 1/np.sqrt(2*np.pi) * np.exp(-y*y/2.)
-        cax.hist(normresid, bins=np.int(np.sqrt(N)), normed=True, orientation='horizontal')
-        cax.plot(x,y,color="red")
+        y = np.linspace(ymin, ymax, 1000)
+        x = 1 / np.sqrt(2 * np.pi) * np.exp(-y * y / 2.)
+        cax.hist(normresid, bins=np.int(np.sqrt(N)),
+                 normed=True, orientation='horizontal')
+        cax.plot(x, y, color="red")
         cax.set_ylim(ax.get_ylim())
-        cax.axhline(0,color="black",ls="--")
+        cax.axhline(0, color="black", ls="--")
         cax.yaxis.set_major_formatter(nullfmt)
         cax.xaxis.set_major_formatter(nullfmt)
         if filename is not None:
             pdf.savefig()
             plt.close()
-    
+
     # Closure Amplitude
-    if stats["isca"]==True:
+    if stats["isca"] == True:
         table = imageprm["catable"]
         # Amplitudes
-        normresid = stats["cares"]/table["logsigma"]
+        normresid = stats["cares"] / table["logsigma"]
         N = len(normresid)
-        
+
         if filename is not None:
-            util.matplotlibrc(nrows=2,ncols=1,width=600,height=300)
+            util.matplotlibrc(nrows=2, ncols=1, width=600, height=300)
         else:
             matplotlib.rcdefaults()
-        
-        fig, axs = plt.subplots(nrows=2,ncols=1,sharex=True)
+
+        fig, axs = plt.subplots(nrows=2, ncols=1, sharex=True)
         plt.subplots_adjust(hspace=0)
-        
+
         ax = axs[0]
         plt.sca(ax)
         table.radplot(uvunit=uvunit, uvdtype="ave", color="black", **plotargs)
-        table.radplot(uvunit=uvunit, uvdtype="ave", model=stats, color="red", **plotargs)
+        table.radplot(uvunit=uvunit, uvdtype="ave",
+                      model=stats, color="red", **plotargs)
         plt.xlabel("")
-        
-        ax = axs[1] 
+
+        ax = axs[1]
         plt.sca(ax)
-        plt.plot(table["uvdistave"]*table.uvunitconv("lambda", uvunit),
+        plt.plot(table["uvdistave"] * table.uvunitconv("lambda", uvunit),
                  normresid, ls="none", marker=".", color="black", **plotargs)
-        plt.axhline(0,color="black",ls="--")
+        plt.axhline(0, color="black", ls="--")
         plt.ylabel("Normalized Residuals")
-        plt.xlabel(r"Baseline Length (%s)"%(unitlabel))
-        
-        divider = make_axes_locatable(ax) # Histgram
+        plt.xlabel(r"Baseline Length (%s)" % (unitlabel))
+
+        divider = make_axes_locatable(ax)  # Histgram
         cax = divider.append_axes("right", size="10%", pad=0.05)
-        ymin,ymax = ax.get_ylim()
+        ymin, ymax = ax.get_ylim()
         xmin = np.min(normresid)
         xmax = np.max(normresid)
-        y = np.linspace(ymin,ymax,1000)
-        x = 1/np.sqrt(2*np.pi) * np.exp(-y*y/2.)
-        cax.hist(normresid, bins=np.int(np.sqrt(N)), normed=True, orientation='horizontal')
-        cax.plot(x,y,color="red")
+        y = np.linspace(ymin, ymax, 1000)
+        x = 1 / np.sqrt(2 * np.pi) * np.exp(-y * y / 2.)
+        cax.hist(normresid, bins=np.int(np.sqrt(N)),
+                 normed=True, orientation='horizontal')
+        cax.plot(x, y, color="red")
         cax.set_ylim(ax.get_ylim())
-        cax.axhline(0,color="black",ls="--")
+        cax.axhline(0, color="black", ls="--")
         cax.yaxis.set_major_formatter(nullfmt)
         cax.xaxis.set_major_formatter(nullfmt)
         if filename is not None:
             pdf.savefig()
             plt.close()
-    
+
     # Closure Phase
-    if stats["iscp"]==True:
+    if stats["iscp"] == True:
         table = imageprm["bstable"]
         # Amplitudes
-        normresid = stats["cpres"]/np.rad2deg(table["sigma"]/table["amp"])
-        
+        normresid = stats["cpres"] / np.rad2deg(table["sigma"] / table["amp"])
+
         if filename is not None:
-            util.matplotlibrc(nrows=2,ncols=1,width=600,height=300)
+            util.matplotlibrc(nrows=2, ncols=1, width=600, height=300)
         else:
             matplotlib.rcdefaults()
-        
-        fig, axs = plt.subplots(nrows=2,ncols=1,sharex=True)
+
+        fig, axs = plt.subplots(nrows=2, ncols=1, sharex=True)
         plt.subplots_adjust(hspace=0)
-        
+
         ax = axs[0]
         plt.sca(ax)
         table.radplot(uvunit=uvunit, uvdtype="ave", color="black", **plotargs)
-        table.radplot(uvunit=uvunit, uvdtype="ave", model=stats, color="red", **plotargs)
+        table.radplot(uvunit=uvunit, uvdtype="ave",
+                      model=stats, color="red", **plotargs)
         plt.xlabel("")
-        
-        ax = axs[1] 
+
+        ax = axs[1]
         plt.sca(ax)
-        plt.plot(table["uvdistave"]*table.uvunitconv("lambda", uvunit),
+        plt.plot(table["uvdistave"] * table.uvunitconv("lambda", uvunit),
                  normresid, ls="none", marker=".", color="black", **plotargs)
-        plt.axhline(0,color="black",ls="--")
+        plt.axhline(0, color="black", ls="--")
         plt.ylabel("Normalized Residuals")
-        plt.xlabel(r"Baseline Length (%s)"%(unitlabel))
-        
-        divider = make_axes_locatable(ax) # Histgram
+        plt.xlabel(r"Baseline Length (%s)" % (unitlabel))
+
+        divider = make_axes_locatable(ax)  # Histgram
         cax = divider.append_axes("right", size="10%", pad=0.05)
-        ymin,ymax = ax.get_ylim()
+        ymin, ymax = ax.get_ylim()
         xmin = np.min(normresid)
         xmax = np.max(normresid)
-        y = np.linspace(ymin,ymax,1000)
-        x = 1/np.sqrt(2*np.pi) * np.exp(-y*y/2.)
-        cax.hist(normresid, bins=np.int(np.sqrt(N)), normed=True, orientation='horizontal')
-        cax.plot(x,y,color="red")
+        y = np.linspace(ymin, ymax, 1000)
+        x = 1 / np.sqrt(2 * np.pi) * np.exp(-y * y / 2.)
+        cax.hist(normresid, bins=np.int(np.sqrt(N)),
+                 normed=True, orientation='horizontal')
+        cax.plot(x, y, color="red")
         cax.set_ylim(ax.get_ylim())
-        cax.axhline(0,color="black",ls="--")
+        cax.axhline(0, color="black", ls="--")
         cax.yaxis.set_major_formatter(nullfmt)
         cax.xaxis.set_major_formatter(nullfmt)
         if filename is not None:
             pdf.savefig()
             plt.close()
-    
+
     # Close File
     if filename is not None:
         pdf.close()
     else:
         plt.show()
-    
+
     if isinteractive:
         plt.ion()
         matplotlib.use(backend)
+
 
 def get_uvlist(fcvtable=None, amptable=None, bstable=None, catable=None, thres=1e-2):
     '''

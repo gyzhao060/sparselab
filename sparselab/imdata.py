@@ -5,9 +5,9 @@ A python module sparselab.imagefits
 
 This is a submodule of sparselab handling image fits data.
 '''
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Modules
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # standard modules
 import os
 import copy
@@ -30,14 +30,14 @@ import matplotlib.pyplot as plt
 import sparselab.fortlib as fortlib
 
 
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # IMAGEFITS (Manupulating FITS FILES)
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 class IMFITS():
-    ds9=None
-    ds9region=None
+    ds9 = None
+    ds9region = None
     angunit = "mas"
-    
+
     # Initialization
     def __init__(self, fitsfile=None, uvfitsfile=None, source=None,
                  fov=None, nx=100, ny=None, angunit="mas", **args):
@@ -54,7 +54,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
           nx (integer): the number of pixels in the RA axis.
           ny (integer): the number of pixels in the Dec axis. Default value is same to nx.
           angunit (string): angular unit for fov, x, y, dx and dy.
-          
+
           **args: you can also specify other header information.
             x (float): the source RA at the reference pixel.
             nxref (float): the refernce pixel in RA direction. "1" will be the left-most pixel.
@@ -198,17 +198,15 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         self.header = header
         self.header_dtype = header_dtype
 
-
     # set source name and source coordinates
-    def set_source(self, source="SgrA*"):        
+    def set_source(self, source="SgrA*"):
         srccoord = coord.SkyCoord.from_name(source)
-        
+
         # Information
         self.header["object"] = source
         self.header["x"] = srccoord.ra.deg
         self.header["y"] = srccoord.dec.deg
         self.update_fits()
-
 
     # Read data from an image fits file
     def read_fits(self, fitsfile):
@@ -520,9 +518,9 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
 
         return conv
 
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Getting Some information about images
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     def get_xygrid(self, twodim=False, angunit=None):
         '''
         calculate the grid of the image
@@ -533,7 +531,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         if angunit is None:
             angunit = self.angunit
-        
+
         dx = self.header["dx"]
         dy = self.header["dy"]
         Nx = self.header["nx"]
@@ -555,7 +553,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         if angunit is None:
             angunit = self.angunit
-        
+
         dx = self.header["dx"]
         dy = self.header["dy"]
         Nx = self.header["nx"]
@@ -603,9 +601,9 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         return np.abs(self.data[istokes, ifreq]).sum()
 
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Plotting
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     def imshow(self, istokes=0, ifreq=0, logscale=False, angunit=None,
                vmin=None, **imshow_args):
         '''
@@ -619,7 +617,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         if angunit is None:
             angunit = self.angunit
-        
+
         # Get Image Axis
         if angunit == "pixel":
             imextent = None
@@ -640,17 +638,17 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
                        vmin=vmin, **imshow_args)
 
         # Axis Label
-        if angunit.lower().find("pixel")==0:
+        if angunit.lower().find("pixel") == 0:
             unit = "pixel"
-        elif angunit.lower().find("uas")==0:
+        elif angunit.lower().find("uas") == 0:
             unit = r"$\rm \mu$as"
-        elif angunit.lower().find("mas")==0:
+        elif angunit.lower().find("mas") == 0:
             unit = "mas"
-        elif angunit.lower().find("arcsec")*angunit.lower().find("asec")==0:
+        elif angunit.lower().find("arcsec") * angunit.lower().find("asec") == 0:
             unit = "arcsec"
-        elif angunit.lower().find("arcmin")*angunit.lower().find("amin")==0:
+        elif angunit.lower().find("arcmin") * angunit.lower().find("amin") == 0:
             unit = "arcmin"
-        elif angunit.lower().find("deg")==0:
+        elif angunit.lower().find("deg") == 0:
             unit = "deg"
         else:
             unit = "mas"
@@ -674,7 +672,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         if angunit is None:
             angunit = self.angunit
-        
+
         # Get Image Axis
         if angunit == "pixel":
             imextent = None
@@ -688,7 +686,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
             vmin = np.abs(image).max() * 0.01
         else:
             if relative:
-                vmin = cmul * np.abs(image).max() 
+                vmin = cmul * np.abs(image).max()
 
         if levels is None:
             clevels = np.power(2, np.arange(10))
@@ -701,35 +699,36 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         # plt.contour(image,extent=imextent,origin="lower",
         #            colors=colors,levels=-levels,ls="--",**contour_args)
         # Axis Label
-        if angunit.lower().find("pixel")==0:
+        if angunit.lower().find("pixel") == 0:
             unit = "pixel"
-        elif angunit.lower().find("uas")==0:
+        elif angunit.lower().find("uas") == 0:
             unit = r"$\rm \mu$as"
-        elif angunit.lower().find("mas")==0:
+        elif angunit.lower().find("mas") == 0:
             unit = "mas"
-        elif angunit.lower().find("arcsec")*angunit.lower().find("asec")==0:
+        elif angunit.lower().find("arcsec") * angunit.lower().find("asec") == 0:
             unit = "arcsec"
-        elif angunit.lower().find("arcmin")*angunit.lower().find("amin")==0:
+        elif angunit.lower().find("arcmin") * angunit.lower().find("amin") == 0:
             unit = "arcmin"
-        elif angunit.lower().find("deg")==0:
+        elif angunit.lower().find("deg") == 0:
             unit = "deg"
         else:
             unit = "mas"
-        
+
         plt.xlabel("Relative RA (%s)" % (unit))
         plt.ylabel("Relative Dec (%s)" % (unit))
 
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # DS9
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     def open_ds9(self):
         pass
-    
+
     def read_ds9reg(self):
         pass
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Output some information to files
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
+
     def to_difmapmod(self, outfile, threshold=None, relative=True,
                      istokes=0, ifreq=0):
         '''
@@ -771,9 +770,9 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
             f.write(line)
         f.close()
 
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     # Editing images
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     def cpimage(self, fitsdata, save_totalflux=False):
         '''
         Copy the first image into the image grid specified in the secondaly input image.
@@ -882,7 +881,6 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         outfits.update_fits()
         return outfits
 
-
     def ds9flag(self, regfile, save_totalflux=False):
         '''
         Flagging the image with DS9region file
@@ -968,23 +966,23 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
 
             if elements[0] == "box":
                 tmparea = _region_box(X, Y,
-                                     x0=np.float64(elements[1]),
-                                     y0=np.float64(elements[2]),
-                                     width=np.float64(elements[3]),
-                                     height=np.float64(elements[4]),
-                                     angle=np.float64(elements[5]))
+                                      x0=np.float64(elements[1]),
+                                      y0=np.float64(elements[2]),
+                                      width=np.float64(elements[3]),
+                                      height=np.float64(elements[4]),
+                                      angle=np.float64(elements[5]))
             elif elements[0] == "circle":
                 tmparea = _region_circle(X, Y,
-                                        x0=np.float64(elements[1]),
-                                        y0=np.float64(elements[2]),
-                                        radius=np.float64(elements[3]))
-            elif elements[0] == "ellipse":
-                tmparea = _region_ellipse(X, Y,
                                          x0=np.float64(elements[1]),
                                          y0=np.float64(elements[2]),
-                                         radius1=np.float64(elements[3]),
-                                         radius2=np.float64(elements[4]),
-                                         angle=np.float64(elements[5]))
+                                         radius=np.float64(elements[3]))
+            elif elements[0] == "ellipse":
+                tmparea = _region_ellipse(X, Y,
+                                          x0=np.float64(elements[1]),
+                                          y0=np.float64(elements[2]),
+                                          radius1=np.float64(elements[3]),
+                                          radius2=np.float64(elements[4]),
+                                          angle=np.float64(elements[5]))
             else:
                 print("[WARNING] The shape %s is not available." %
                       (elements[0]))
@@ -1007,7 +1005,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
             index for Frequency at which the image will be edited
           save_totalflux (boolean): 
             If true, the total flux of the image will be conserved.
-        
+
         Returns:
           imdata.IMFITS object
         '''
@@ -1043,7 +1041,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
             index for Frequency at which the image will be edited
           save_totalflux (boolean): 
             If true, the total flux of the image will be conserved.
-        
+
         Returns:
           imdata.IMFITS object
         '''
@@ -1074,7 +1072,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
           self: input imagefite.imagefits object
           Mx (integer): Number of pixels in RA (x) direction for the padded image.
           My (integer): Number of pixels in Dec(y) direction for the padded image.
-        
+
         Returns:
           imdata.IMFITS object
         '''
@@ -1097,14 +1095,14 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
                 newdata[istokes, ifreq, np.around(My / 2 - Ny / 2):np.around(My / 2 - Ny / 2) + Ny, np.around(
                     Mx / 2 - Nx / 2):np.around(Mx / 2 - Nx / 2) + Nx] = outfits.data[istokes, ifreq]
         outfits.data = newdata
-        
+
         # update pixel info
         outfits.header["nx"] = Mx
         outfits.header["ny"] = My
         outfits.header["nxref"] += Mx / 2 - Nx / 2
         outfits.header["nyref"] += My / 2 - Ny / 2
         outfits.update_fits()
-        
+
         return outfits
 
     def rotate(self, angle=0, deg=True, save_totalflux=False):
@@ -1271,16 +1269,16 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
             index for canny
           high_threshold (float): 
             index for canny
-        
+
         Returns:
           imdata.IMFITS object
         '''
         from skimage.filters import prewitt, sobel, scharr, roberts
         from skimage.feature import canny
-        
+
         # copy self (for output)
         outfits = copy.deepcopy(self)
-        
+
         # get information
         nstokes = outfits.header["ns"]
         nif = outfits.header["nf"]
@@ -1427,9 +1425,9 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         return H, profile
 
 
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Calculate Matrix Among Images
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 def calc_metric(fitsdata, reffitsdata, metric="NRMSE", istokes1=0, ifreq1=0, istokes2=0, ifreq2=0, edgeflag=False):
     '''
     Calculate metrics between two images
@@ -1437,29 +1435,29 @@ def calc_metric(fitsdata, reffitsdata, metric="NRMSE", istokes1=0, ifreq1=0, ist
     Arguments:
       fitsdata (imdata.IMFITS object): 
         input image
-      
+
       reffitsdata (imdata.IMFITS object): 
         reference image
-      
+
       metric (string): 
         type of a metric to be calculated.
         Availables are ["NRMSE","MSE","SSIM","DSSIM"]
-      
+
       istokes1 (integer): 
         index for the Stokes axis of the input image
-      
+
       ifreq1 (integer): 
         index for the frequency axis of the input image
-      
+
       istokes2 (integer): 
         index for the Stokes axis of the reference image
-      
+
       ifreq2 (integer): 
         index for the frequency axis of the reference image
-      
+
       edgeflag (boolean): 
         calculation of metric on image domain or image gradient domain
-    
+
     Returns:
       ???
     '''
@@ -1497,9 +1495,9 @@ def calc_metric(fitsdata, reffitsdata, metric="NRMSE", istokes1=0, ifreq1=0, ist
     return metrics
 
 
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # Fllowings are subfunctions for ds9flag and read_cleanbox
-#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 def _get_flagpixels(regfile, X, Y):
     # Read DS9-region file
     f = open(regfile)
@@ -1538,23 +1536,23 @@ def _get_flagpixels(regfile, X, Y):
             exclusion = False
         if elements[0] == "box":
             tmpkeep = _region_box(X, Y,
-                                 x0=np.float64(elements[1]),
-                                 y0=np.float64(elements[2]),
-                                 width=np.float64(elements[3]),
-                                 height=np.float64(elements[4]),
-                                 angle=np.float64(elements[5]))
+                                  x0=np.float64(elements[1]),
+                                  y0=np.float64(elements[2]),
+                                  width=np.float64(elements[3]),
+                                  height=np.float64(elements[4]),
+                                  angle=np.float64(elements[5]))
         elif elements[0] == "circle":
             tmpkeep = _region_circle(X, Y,
-                                    x0=np.float64(elements[1]),
-                                    y0=np.float64(elements[2]),
-                                    radius=np.float64(elements[3]))
-        elif elements[0] == "ellipse":
-            tmpkeep = _region_ellipse(X, Y,
                                      x0=np.float64(elements[1]),
                                      y0=np.float64(elements[2]),
-                                     radius1=np.float64(elements[3]),
-                                     radius2=np.float64(elements[4]),
-                                     angle=np.float64(elements[5]))
+                                     radius=np.float64(elements[3]))
+        elif elements[0] == "ellipse":
+            tmpkeep = _region_ellipse(X, Y,
+                                      x0=np.float64(elements[1]),
+                                      y0=np.float64(elements[2]),
+                                      radius1=np.float64(elements[3]),
+                                      radius2=np.float64(elements[4]),
+                                      angle=np.float64(elements[5]))
         else:
             print("[WARNING] The shape %s is not available." % (elements[0]))
         if not exclusion:
