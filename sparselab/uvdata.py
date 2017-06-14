@@ -5,12 +5,13 @@ A python module sparselab.uvdata
 
 This is a submodule of sparselab handling various types of Visibility data sets.
 '''
-#-------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Modules
-#-------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # standard modules
 import copy
 import itertools
+import collections
 
 
 # numerical packages
@@ -33,17 +34,17 @@ import matplotlib.pyplot as plt
 import sparselab.imdata as imdata
 
 
-#-------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Classes for UVFITS FILE
-#-------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class UVFITS():
     '''
-    This is a class to load uvfits data and edit data sets before making tables 
+    This is a class to load uvfits data and edit data sets before making tables
     for imaging.
     '''
     def __init__(self, infile):
         '''
-        Load an uvfits file. Currently, this function can read only 
+        Load an uvfits file. Currently, this function can read only
         single-source uvfits file. The data will be uv-sorted.
 
         Args:
@@ -58,7 +59,7 @@ class UVFITS():
 
     def read_uvfits(self, infile):
         '''
-        Read the uvfits file. Currently, this function can read only 
+        Read the uvfits file. Currently, this function can read only
         single-source uvfits file.
 
         Args:
@@ -276,7 +277,7 @@ class UVFITS():
         Convert visibility data to a two dimentional table.
 
         Args:
-          flag (boolean): 
+          flag (boolean):
             if flag=True, data with weights <= 0 or sigma <=0 will be ignored.
 
         Returns:
@@ -378,7 +379,7 @@ class UVFITS():
         '''
         Pick up single polarization data
 
-        Args: 
+        Args:
           stokes (string; default="I"):
             Output stokes parameters.
             Availables are ["I", "Q", "U", "V", "LL", "RR", "RL", "LR"].
@@ -763,10 +764,41 @@ class _UVTable(pd.DataFrame):
     def _constructor_sliced(self):
         return _UVSeries
 
+    def gencvtables(self, nfold=10, seed=0):
+        '''
+        This method generates data sets for N-fold cross varidations.
+
+        Args:
+            nfolds (int): the number of folds
+            seed (int): the seed number of pseudo ramdam numbers
+
+        Returns:
+
+        '''
+        Ndata = self.shape[0]  # Number of data points
+        Nval = Ndata//nfold    # Number of Varidation data
+
+        # Make shuffled data
+        shuffled = self.sample(Ndata,
+                               replace=False,
+                               random_state=np.int64(seed))
+
+        # Name
+        out = collections.OrderedDict()
+        for icv in np.arange(nfold):
+            trialkeyname = "t%d"%(icv)
+            validkeyname = "v%d"%(icv)
+            trial = pd.concat([shuffled.loc[:Nval*icv, :],
+                               shuffled.loc[Nval*(icv+1):, :]])
+            valid = shuffled[Nval*icv:Nval*(icv+1)]
+            out[trialkeyname] = trial
+            out[validkeyname] = valid
+        return out
+
     def uvunitconv(self, unit1="l", unit2="l"):
         '''
         Derive a conversion factor of units for the baseline length from unit1
-        to unit2. Available angular units are l[ambda], kl[ambda], ml[ambda], 
+        to unit2. Available angular units are l[ambda], kl[ambda], ml[ambda],
         gl[ambda], m[eter] and km[eter].
 
         Args:
@@ -818,7 +850,7 @@ class _UVTable(pd.DataFrame):
 
     def get_unitlabel(self, uvunit=None):
         '''
-        Get a unit label name for uvunits. 
+        Get a unit label name for uvunits.
         Available units are l[ambda], kl[ambda], ml[ambda], gl[ambda], m[eter]
         and km[eter].
 
@@ -831,7 +863,7 @@ class _UVTable(pd.DataFrame):
         '''
         if uvunit is None:
             uvunit = self.uvunit
-        
+
         if uvunit.lower().find("l") == 0:
             unitlabel = r"$\lambda$"
         elif uvunit.lower().find("kl") == 0:
@@ -847,13 +879,13 @@ class _UVTable(pd.DataFrame):
         else:
             print("Error: uvunit=%s is not supported" % (unit2))
             return -1
-        
+
         return unitlabel
 
     def to_csv(self, filename, float_format=r"%22.16e", index=False,
                index_label=False, **args):
         '''
-        Output table into csv files using pd.DataFrame.to_csv(). 
+        Output table into csv files using pd.DataFrame.to_csv().
         Default parameter will be
           float_format=r"%22.16e"
           index=False
@@ -885,7 +917,7 @@ class VisTable(_UVTable):
 
     def uvsort(self):
         '''
-        Sort uvdata. First, it will check station IDs of each visibility 
+        Sort uvdata. First, it will check station IDs of each visibility
         and switch its order if "st1" > "st2". Then, data will be TB-sorted.
         '''
         outdata = self.copy()
@@ -963,7 +995,7 @@ class VisTable(_UVTable):
 
     def fftshift(self, fitsdata, fgfov=1):
         '''
-        Arguments: 
+        Arguments:
           vistable (pandas.Dataframe object):
             input visibility table
 
@@ -1335,7 +1367,7 @@ class VisTable(_UVTable):
 
     def gridding(self, fitsdata, fgfov, mu=1, mv=1, c=1):
         '''
-        Args: 
+        Args:
           vistable (pandas.Dataframe object):
             input visibility table
 
@@ -1354,7 +1386,7 @@ class VisTable(_UVTable):
             parameter for spheroidal angular fuction
             this parameter decides steepness of the function
 
-        Returns: 
+        Returns:
           uvdata.VisTable object
         '''
         # Copy vistable for edit
@@ -1457,15 +1489,15 @@ class VisTable(_UVTable):
         '''
         Plot uv-plot on the current axes.
         This method uses matplotlib.pyplot.plot().
-        
+
         Args:
           uvunit (str, default = None):
             The unit of the baseline length. if uvunit is None, it will use
             self.uvunit.
-        
+
           conj (boolean, default = True):
             if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).
-        
+
           **plotargs:
             You can set parameters of matplotlib.pyplot.plot.
             Defaults are {'ls': "none", 'marker': "."}
@@ -1503,34 +1535,34 @@ class VisTable(_UVTable):
                     ls="none", marker=".", **plotargs):
         '''
         Plot visibility amplitudes as a function of baseline lengths
-        on the current axes. This method uses matplotlib.pyplot.plot() or 
+        on the current axes. This method uses matplotlib.pyplot.plot() or
         matplotlib.pyplot.errorbar().
-        
+
         Args:
           uvunit (str, default = None):
             The unit of the baseline length. if uvunit is None, it will use
             self.uvunit.
-            
+
           errorbar (boolean, default = True):
-            If errorbar is True, it will plot data with errorbars using 
+            If errorbar is True, it will plot data with errorbars using
             matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
-            errorbars using matplotlib.pyplot.plot(). 
-            
-            If you plot model closure phases (i.e. model is not None), 
+            errorbars using matplotlib.pyplot.plot().
+
+            If you plot model closure phases (i.e. model is not None),
             it will plot without errobars regardless of this parameter.
-            
+
           model (dict-like such as pd.DataFrame, pd.Series, default is None):
             Model data sets. Model amplitudes must be given by model["fcvampmod"]
             for full complex visibilities (modeltype="fcv") or model["ampmod"]
             for visibility amplitudes (modeltype="amp").
             Otherwise, it will plot amplitudes in the table (i.e. self["amp"]).
-            
+
           modeltype (string, default = "amp"):
             The type of models. If you would plot model amplitudes, set modeltype="amp".
             Else if you would plot model full complex visibilities, set modeltype="fcv".
-            
+
           **plotargs:
-            You can set parameters of matplotlib.pyplot.plot() or 
+            You can set parameters of matplotlib.pyplot.plot() or
             matplotlib.pyplot.errorbars().
             Defaults are {'ls': "none", 'marker': "."}.
         '''
@@ -1567,28 +1599,28 @@ class VisTable(_UVTable):
                       ls="none", marker=".", **plotargs):
         '''
         Plot visibility phases as a function of baseline lengths
-        on the current axes. This method uses matplotlib.pyplot.plot() or 
+        on the current axes. This method uses matplotlib.pyplot.plot() or
         matplotlib.pyplot.errorbar().
-        
+
         Args:
           uvunit (str, default = None):
             The unit of the baseline length. if uvunit is None, it will use
             self.uvunit.
-            
+
           errorbar (boolean, default = True):
-            If errorbar is True, it will plot data with errorbars using 
+            If errorbar is True, it will plot data with errorbars using
             matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
-            errorbars using matplotlib.pyplot.plot(). 
-            
-            If you plot model closure phases (i.e. model is not None), 
+            errorbars using matplotlib.pyplot.plot().
+
+            If you plot model closure phases (i.e. model is not None),
             it will plot without errobars regardless of this parameter.
-            
+
           model (dict-like such as pd.DataFrame, pd.Series, default is None):
             Model data sets. Model phases must be given by model["fcvphamod"].
             Otherwise, it will plot amplitudes in the table (i.e. self["phase"]).
-            
+
           **plotargs:
-            You can set parameters of matplotlib.pyplot.plot() or 
+            You can set parameters of matplotlib.pyplot.plot() or
             matplotlib.pyplot.errorbars().
             Defaults are {'ls': "none", 'marker': "."}.
         '''
@@ -1658,7 +1690,7 @@ class BSTable(_UVTable):
         '''
         Plot uv-plot on the current axes.
         This method uses matplotlib.pyplot.plot().
-        
+
         Args:
           uvunit (str, default = None):
             The unit of the baseline length. if uvunit is None, it will use
@@ -1678,7 +1710,7 @@ class BSTable(_UVTable):
 
         # Label
         unitlabel = self.get_unitlabel(uvunit)
-        
+
         plotargs2 = copy.deepcopy(plotargs)
         plotargs2["label"] = ""
 
@@ -1711,7 +1743,7 @@ class BSTable(_UVTable):
         '''
         Plot closure phases as a function of baseline lengths on the current axes.
         This method uses matplotlib.pyplot.plot() or matplotlib.pyplot.errorbar().
-        
+
         Args:
           uvdtype (str, default = "ave"):
             The type of the baseline length plotted along the horizontal axis.
@@ -1722,17 +1754,17 @@ class BSTable(_UVTable):
             The unit of the baseline length. if uvunit is None, it will use
             self.uvunit.
           errorbar (boolean, default = True):
-            If errorbar is True, it will plot data with errorbars using 
+            If errorbar is True, it will plot data with errorbars using
             matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
-            errorbars using matplotlib.pyplot.plot(). 
-            
-            If you plot model closure phases (i.e. model is not None), 
+            errorbars using matplotlib.pyplot.plot().
+
+            If you plot model closure phases (i.e. model is not None),
             it will plot without errobars regardless of this parameter.
           model (dict-like such as pd.DataFrame, pd.Series, default is None):
             Model data sets. Model closure phases must be given by model["cpmod"].
             Otherwise, it will plot closure phases in the table (i.e. self["phase"]).
           **plotargs:
-            You can set parameters of matplotlib.pyplot.plot() or 
+            You can set parameters of matplotlib.pyplot.plot() or
             matplotlib.pyplot.errorbars().
             Defaults are {'ls': "none", 'marker': "."}.
         '''
@@ -1812,7 +1844,7 @@ class CATable(_UVTable):
         '''
         Plot uv-plot on the current axes.
         This method uses matplotlib.pyplot.plot().
-        
+
         Args:
           uvunit (str, default = None):
             The unit of the baseline length. if uvunit is None, it will use
@@ -1823,7 +1855,7 @@ class CATable(_UVTable):
             You can set parameters of matplotlib.pyplot.plot.
             Defaults are {'ls': "none", 'marker': "."}
         '''
-        
+
         # Set Unit
         if uvunit is None:
             uvunit = self.uvunit
@@ -1870,9 +1902,9 @@ class CATable(_UVTable):
                 ls="none", marker=".", **plotargs):
         '''
         Plot log(closure amplitudes) as a function of baseline lengths
-        on the current axes. This method uses matplotlib.pyplot.plot() or 
+        on the current axes. This method uses matplotlib.pyplot.plot() or
         matplotlib.pyplot.errorbar().
-        
+
         Args:
           uvdtype (str, default = "ave"):
             The type of the baseline length plotted along the horizontal axis.
@@ -1883,17 +1915,17 @@ class CATable(_UVTable):
             The unit of the baseline length. if uvunit is None, it will use
             self.uvunit.
           errorbar (boolean, default = True):
-            If errorbar is True, it will plot data with errorbars using 
+            If errorbar is True, it will plot data with errorbars using
             matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
-            errorbars using matplotlib.pyplot.plot(). 
-            
-            If you plot model closure phases (i.e. model is not None), 
+            errorbars using matplotlib.pyplot.plot().
+
+            If you plot model closure phases (i.e. model is not None),
             it will plot without errobars regardless of this parameter.
           model (dict-like such as pd.DataFrame, pd.Series, default is None):
             Model data sets. Model closure amplitudes must be given by model["camod"].
             Otherwise, it will plot closure amplitudes in the table (i.e. self["logamp"]).
           **plotargs:
-            You can set parameters of matplotlib.pyplot.plot() or 
+            You can set parameters of matplotlib.pyplot.plot() or
             matplotlib.pyplot.errorbars().
             Defaults are {'ls': "none", 'marker': "."}.
         '''
@@ -1983,9 +2015,9 @@ def read_vistable(filename, uvunit=None, **args):
       filename:
         str, pathlib.Path, py._path.local.LocalPath or any object with a read()
         method (such as a file handle or StringIO)
-      uvunit (str, default is None): 
+      uvunit (str, default is None):
         units of uvdistance for plotting. If uvunit is None, uvunit will be
-        inferred from the maximum baseline length. Availables are ["l[ambda]", 
+        inferred from the maximum baseline length. Availables are ["l[ambda]",
         "kl[ambda]", "ml[ambda]", "gl[ambda]", "m", "km"].
 
     Returns:
@@ -2018,9 +2050,9 @@ def read_bstable(filename, uvunit=None, **args):
       filename:
         str, pathlib.Path, py._path.local.LocalPath or any object with a read()
         method (such as a file handle or StringIO)
-      uvunit (str, default is None): 
+      uvunit (str, default is None):
         units of uvdistance for plotting. If uvunit is None, uvunit will be
-        inferred from the maximum baseline length. Availables are ["l[ambda]", 
+        inferred from the maximum baseline length. Availables are ["l[ambda]",
         "kl[ambda]", "ml[ambda]", "gl[ambda]", "m", "km"].
 
     Returns:
@@ -2053,9 +2085,9 @@ def read_catable(filename, uvunit=None, **args):
       filename:
         str, pathlib.Path, py._path.local.LocalPath or any object with a read()
         method (such as a file handle or StringIO)
-      uvunit (str, default is None): 
+      uvunit (str, default is None):
         units of uvdistance for plotting. If uvunit is None, uvunit will be
-        inferred from the maximum baseline length. Availables are ["l[ambda]", 
+        inferred from the maximum baseline length. Availables are ["l[ambda]",
         "kl[ambda]", "ml[ambda]", "gl[ambda]", "m", "km"].
 
     Returns:
@@ -2134,7 +2166,7 @@ def _getblid(st1, st2, Nst):
     It calculates an id number of the baseline from a given set of
     station numbers and the total number of stations.
 
-    Arguments: 
+    Arguments:
       st1 (int): the first station ID number
       st2 (int): the second station ID number
       Nst (int): the total number of stations
