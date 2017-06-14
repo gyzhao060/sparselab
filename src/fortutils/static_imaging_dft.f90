@@ -356,7 +356,7 @@ subroutine calc_cost(&
                      uvidxamp,Vamp,Varamp,&
                      chisq,gradchisq,Npix,Nuv,Namp)
       !write(*,*) 'static_imaging_dft.calc_cost: chisq amp',chisq
-      cost = cost + chisq
+      cost = cost + chisq / Ndata
       call daxpy(Npix,1d0/Ndata,gradchisq(1:Npix),1,gradcost(1:Npix),1)
     end if
 
