@@ -7,7 +7,9 @@ Requirements
 
 Sparselab consists of python modules and Fortran/C internal libraries called from python modules. Here, we summarize required python packages and external packages for Sparselab.
 
-You will also need **autoconf** for compiling the library.
+You will also need **autoconf** and **`ds9`_** for compiling the library.
+
+.. ds9: http://ds9.si.edu/site/Home.html
 
 Python Packages and Modules
 ---------------------------
@@ -33,7 +35,7 @@ External Libraries
 Fortran/C internal libraries of Sparselab use following external libraries.
 
 1) BLAS
-  **We strongly recommend using OpenBLAS, which is the fastest library among publicly available BLAS implementations**. Our recommendation is to build up `OpenBLAS`_ by yourself with a compile option USE_OPENMP=1 and use it for our library. The option USE_OPENMP=1 enables OpenBLAS to perform paralleled multi-threads calculations, which will accelerate our library.
+  **We strongly recommend using OpenBLAS**, which is the fastest library among publicly-available BLAS implementations. Our recommendation is to build up `OpenBLAS`_ by yourself with a compile option USE_OPENMP=1 and use it for our library. The option USE_OPENMP=1 enables OpenBLAS to perform paralleled multi-threads calculations, which will accelerate our library.
 
 .. _OpenBLAS: https://github.com/xianyi/OpenBLAS
 
@@ -59,19 +61,19 @@ You can download the code from github.
 Installation
 ------------
 
-0) Go to your Sparselab directory.
+For compiling the whole library, you need to work in your Sparselab directory.
 
 .. code-block:: Bash
 
   cd (Your Sparselab Directory)
 
-1) Genarate a configure file with autoconf.
+A configure file can be generated with `autoconf`.
 
 .. code-block:: Bash
 
   autoconf
 
-2) Configure make files with `./configure`. You might need `LDFLAGS` for links to BLAS and LAPACK.
+Generate Makefiles with `./configure`. You might need `LDFLAGS` for links to BLAS and LAPACK.
 
 .. code-block:: Bash
 
@@ -81,34 +83,41 @@ Installation
   # If you don't have a PATH to BLAS and LAPACK, you can add links to them as follows
   ./configure LDFLAGS="-L(path-to-your-BLAS) -L(path-to-your-LAPACK)"
 
-3) Compile the library. The internal C/Fortran Library will be compiled into python modules.
+Make and compile the library. The internal C/Fortran Library will be compiled into python modules.
 
 .. code-block:: Bash
 
   make install
 
-4) Finally, add a PYTHONPATH to your Sparselab Directory. We recommend to add a following line into your `.bashrc` (`.bash_profile` for Mac OS X) file.
+Finally, please add a PYTHONPATH to your Sparselab Directory. We recommend to add a following line into your `.bashrc` (`.bash_profile` for Mac OS X) file.
 
 .. code-block:: Bash
 
   # Add a python path to Sparselab
   export PYTHONPATH=$PYTHONPATH:(Your Sparselab Directory)
 
+If you can load in your python interpretator, sparselab is probably installed successfully.
+
+.. code-block:: Python
+
+  # import sparselab
+  from sparselab import imdata, uvdata, imaging
+
 
 Updating Sparselab
 ==================
 
-1) Clean up the entire library before updating.
+We recommend cleaning up the entire library before updating.
 
 .. code-block:: Bash
 
   cd (Your Sparselab Directory)
   make uninstall
 
-2) Update the repository with `git pull`.
+Then, you can update the repository with `git pull`.
 
 .. code-block:: Bash
 
   git pull
 
-3) You can follow :ref:`Installation` for recompiling your Sparselab.
+Now, the repository has updated. You can follow :ref:`Installation` for recompiling your Sparselab.
