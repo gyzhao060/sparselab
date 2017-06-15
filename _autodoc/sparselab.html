@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -30,6 +32,9 @@
   
 
   
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="Sparselab 1.0beta documentation" href="../index.html"/>
         <link rel="prev" title="1. Installation" href="../_static/install.html"/> 
 
@@ -40,6 +45,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -80,7 +86,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../_static/install.html">1. Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">2. References for Sparselab Modules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-sparselab.imdata">2.1. sparselab.imdata</a></li>
@@ -100,8 +109,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">Sparselab</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Sparselab</a>
+        
       </nav>
 
 
@@ -110,23 +121,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>2. References for Sparselab Modules</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>2. References for Sparselab Modules</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/_autodoc/sparselab.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/_autodoc/sparselab.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -170,16 +198,16 @@ Available angular units are uas, mas, asec or arcsec, amin or arcmin and degree.
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>radius</strong> (<em>array</em>) &#8211; array for radii for which the circle Hough transform is
 calculated. The unit of the radius is specified with angunit.</li>
-<li><strong>Ntheta</strong> (<em>optional, integer</em>) &#8211; The number of circular shifts to be used in the circle Hough transform.
+<li><strong>Ntheta</strong> (<em>optional</em><em>, </em><em>integer</em>) &#8211; The number of circular shifts to be used in the circle Hough transform.
 For instance, ntheta=360 (default) gives circular shifts of every 1 deg.</li>
-<li><strong>angunit</strong> (<em>optional, string</em>) &#8211; The angular unit for radius and also the output peak profile</li>
+<li><strong>angunit</strong> (<em>optional</em><em>, </em><em>string</em>) &#8211; The angular unit for radius and also the output peak profile</li>
 <li><strong>istokes</strong> (<em>integer</em>) &#8211; index for Stokes Parameter at which the CHT to be performed</li>
 <li><strong>ifreq</strong> (<em>integer</em>) &#8211; index for Frequency at which the CHT to be performed</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt><strong>H</strong> &#8211;   The Circle Hough Accumulator. This is a three dimensional array of which</dt>
+<dt>The Circle Hough Accumulator. This is a three dimensional array of which</dt>
 <dd><p class="first last">shape is [Nx, Ny, Nr] in <em>Fortran Order</em>.</p>
 </dd>
 <dt>profile (pd.DataFrame):</dt>
@@ -189,7 +217,7 @@ For instance, ntheta=360 (default) gives circular shifts of every 1 deg.</li>
 </p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">H (ndarray)</p>
 </td>
 </tr>
 </tbody>
@@ -230,7 +258,7 @@ For instance, ntheta=360 (default) gives circular shifts of every 1 deg.</li>
 <li><strong>istokes</strong> (<em>integer</em>) &#8211; index for Stokes Parameter at which the image will be plotted</li>
 <li><strong>ifreq</strong> (<em>integer</em>) &#8211; index for Frequency at which the image will be plotted</li>
 <li><strong>angunit</strong> (<em>string</em>) &#8211; Angular Unit for the axis labels (pixel, uas, mas, asec or arcsec, amin or arcmin, degree)</li>
-<li><strong>colors</strong> (<em>string, array-like</em>) &#8211; colors of contour levels</li>
+<li><strong>colors</strong> (<em>string</em><em>, </em><em>array-like</em>) &#8211; colors of contour levels</li>
 <li><strong>cmul</strong> &#8211; The lowest contour level. Default value is 1% of the peak intensity.</li>
 <li><strong>levels</strong> &#8211; contour level. This will be multiplied with cmul.</li>
 <li><strong>**contour_args</strong> &#8211; Arguments will be input in matplotlib.pyplot.contour</li>
@@ -284,7 +312,7 @@ For instance, ntheta=360 (default) gives circular shifts of every 1 deg.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>method</strong> (<em>string, default=&quot;prewitt&quot;</em>) &#8211; Type of edge filters to be used.
+<li><strong>method</strong> (<em>string</em><em>, </em><em>default=&quot;prewitt&quot;</em>) &#8211; Type of edge filters to be used.
 Availables are [&#8220;prewitt&#8221;,&#8221;sobel&#8221;,&#8221;scharr&#8221;,&#8221;roberts&#8221;,&#8221;canny&#8221;].</li>
 <li><strong>mask</strong> (<em>array</em>) &#8211; array for masking</li>
 <li><strong>sigma</strong> (<em>integer</em>) &#8211; index for canny</li>
@@ -703,22 +731,22 @@ This method uses matplotlib.pyplot.plot() or matplotlib.pyplot.errorbar().</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>uvdtype</strong> (<em>str, default = &quot;ave&quot;</em>) &#8211; <dl class="docutils">
+<li><strong>uvdtype</strong> (<em>str</em><em>, </em><em>default = &quot;ave&quot;</em>) &#8211; <dl class="docutils">
 <dt>The type of the baseline length plotted along the horizontal axis.</dt>
 <dd>&#8220;max&#8221;: maximum of three baselines (=self[&#8220;uvdistmax&#8221;])
 &#8220;min&#8221;: minimum of three baselines (=self[&#8220;uvdistmin&#8221;])
 &#8220;ave&#8221;: average of three baselines (=self[&#8220;uvdistave&#8221;])</dd>
 </dl>
 </li>
-<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
 self.uvunit.</li>
-<li><strong>errorbar</strong> (<em>boolean, default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
+<li><strong>errorbar</strong> (<em>boolean</em><em>, </em><em>default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
 matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
 errorbars using matplotlib.pyplot.plot().</p>
 <p>If you plot model closure phases (i.e. model is not None),
 it will plot without errobars regardless of this parameter.</p>
 </li>
-<li><strong>model</strong> (<em>dict-like such as pd.DataFrame, pd.Series, default is None</em>) &#8211; Model data sets. Model closure phases must be given by model[&#8220;cpmod&#8221;].
+<li><strong>model</strong> (<em>dict-like such as pd.DataFrame</em><em>, </em><em>pd.Series</em><em>, </em><em>default is None</em>) &#8211; Model data sets. Model closure phases must be given by model[&#8220;cpmod&#8221;].
 Otherwise, it will plot closure phases in the table (i.e. self[&#8220;phase&#8221;]).</li>
 <li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot() or
 matplotlib.pyplot.errorbars().
@@ -740,9 +768,9 @@ This method uses matplotlib.pyplot.plot().</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
 self.uvunit.</li>
-<li><strong>conj</strong> (<em>boolean, default = True</em>) &#8211; if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).</li>
+<li><strong>conj</strong> (<em>boolean</em><em>, </em><em>default = True</em>) &#8211; if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).</li>
 <li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot.
 Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}</li>
 </ul>
@@ -790,22 +818,22 @@ matplotlib.pyplot.errorbar().</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>uvdtype</strong> (<em>str, default = &quot;ave&quot;</em>) &#8211; <dl class="docutils">
+<li><strong>uvdtype</strong> (<em>str</em><em>, </em><em>default = &quot;ave&quot;</em>) &#8211; <dl class="docutils">
 <dt>The type of the baseline length plotted along the horizontal axis.</dt>
 <dd>&#8220;max&#8221;: maximum of four baselines (=self[&#8220;uvdistmax&#8221;])
 &#8220;min&#8221;: minimum of four baselines (=self[&#8220;uvdistmin&#8221;])
 &#8220;ave&#8221;: average of four baselines (=self[&#8220;uvdistave&#8221;])</dd>
 </dl>
 </li>
-<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
 self.uvunit.</li>
-<li><strong>errorbar</strong> (<em>boolean, default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
+<li><strong>errorbar</strong> (<em>boolean</em><em>, </em><em>default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
 matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
 errorbars using matplotlib.pyplot.plot().</p>
 <p>If you plot model closure phases (i.e. model is not None),
 it will plot without errobars regardless of this parameter.</p>
 </li>
-<li><strong>model</strong> (<em>dict-like such as pd.DataFrame, pd.Series, default is None</em>) &#8211; Model data sets. Model closure amplitudes must be given by model[&#8220;camod&#8221;].
+<li><strong>model</strong> (<em>dict-like such as pd.DataFrame</em><em>, </em><em>pd.Series</em><em>, </em><em>default is None</em>) &#8211; Model data sets. Model closure amplitudes must be given by model[&#8220;camod&#8221;].
 Otherwise, it will plot closure amplitudes in the table (i.e. self[&#8220;logamp&#8221;]).</li>
 <li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot() or
 matplotlib.pyplot.errorbars().
@@ -827,9 +855,9 @@ This method uses matplotlib.pyplot.plot().</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
 self.uvunit.</li>
-<li><strong>conj</strong> (<em>boolean, default = True</em>) &#8211; if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).</li>
+<li><strong>conj</strong> (<em>boolean</em><em>, </em><em>default = True</em>) &#8211; if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).</li>
 <li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot.
 Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}</li>
 </ul>
@@ -1033,19 +1061,19 @@ matplotlib.pyplot.errorbar().</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
 self.uvunit.</li>
-<li><strong>errorbar</strong> (<em>boolean, default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
+<li><strong>errorbar</strong> (<em>boolean</em><em>, </em><em>default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
 matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
 errorbars using matplotlib.pyplot.plot().</p>
 <p>If you plot model closure phases (i.e. model is not None),
 it will plot without errobars regardless of this parameter.</p>
 </li>
-<li><strong>model</strong> (<em>dict-like such as pd.DataFrame, pd.Series, default is None</em>) &#8211; Model data sets. Model amplitudes must be given by model[&#8220;fcvampmod&#8221;]
+<li><strong>model</strong> (<em>dict-like such as pd.DataFrame</em><em>, </em><em>pd.Series</em><em>, </em><em>default is None</em>) &#8211; Model data sets. Model amplitudes must be given by model[&#8220;fcvampmod&#8221;]
 for full complex visibilities (modeltype=&#8221;fcv&#8221;) or model[&#8220;ampmod&#8221;]
 for visibility amplitudes (modeltype=&#8221;amp&#8221;).
 Otherwise, it will plot amplitudes in the table (i.e. self[&#8220;amp&#8221;]).</li>
-<li><strong>modeltype</strong> (<em>string, default = &quot;amp&quot;</em>) &#8211; The type of models. If you would plot model amplitudes, set modeltype=&#8221;amp&#8221;.
+<li><strong>modeltype</strong> (<em>string</em><em>, </em><em>default = &quot;amp&quot;</em>) &#8211; The type of models. If you would plot model amplitudes, set modeltype=&#8221;amp&#8221;.
 Else if you would plot model full complex visibilities, set modeltype=&#8221;fcv&#8221;.</li>
 <li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot() or
 matplotlib.pyplot.errorbars().
@@ -1068,15 +1096,15 @@ matplotlib.pyplot.errorbar().</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
 self.uvunit.</li>
-<li><strong>errorbar</strong> (<em>boolean, default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
+<li><strong>errorbar</strong> (<em>boolean</em><em>, </em><em>default = True</em>) &#8211; <p>If errorbar is True, it will plot data with errorbars using
 matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
 errorbars using matplotlib.pyplot.plot().</p>
 <p>If you plot model closure phases (i.e. model is not None),
 it will plot without errobars regardless of this parameter.</p>
 </li>
-<li><strong>model</strong> (<em>dict-like such as pd.DataFrame, pd.Series, default is None</em>) &#8211; Model data sets. Model phases must be given by model[&#8220;fcvphamod&#8221;].
+<li><strong>model</strong> (<em>dict-like such as pd.DataFrame</em><em>, </em><em>pd.Series</em><em>, </em><em>default is None</em>) &#8211; Model data sets. Model phases must be given by model[&#8220;fcvphamod&#8221;].
 Otherwise, it will plot amplitudes in the table (i.e. self[&#8220;phase&#8221;]).</li>
 <li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot() or
 matplotlib.pyplot.errorbars().
@@ -1104,9 +1132,9 @@ This method uses matplotlib.pyplot.plot().</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>uvunit</strong> (<em>str, default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default = None</em>) &#8211; The unit of the baseline length. if uvunit is None, it will use
 self.uvunit.</li>
-<li><strong>conj</strong> (<em>boolean, default = True</em>) &#8211; if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).</li>
+<li><strong>conj</strong> (<em>boolean</em><em>, </em><em>default = True</em>) &#8211; if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).</li>
 <li><strong>**plotargs</strong> &#8211; You can set parameters of matplotlib.pyplot.plot.
 Defaults are {&#8216;ls&#8217;: &#8220;none&#8221;, &#8216;marker&#8217;: &#8221;.&#8221;}</li>
 </ul>
@@ -1136,7 +1164,7 @@ and switch its order if &#8220;st1&#8221; &gt; &#8220;st2&#8221;. Then, data wil
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>filename</strong> &#8211; str, pathlib.Path, py._path.local.LocalPath or any object with a read()
 method (such as a file handle or StringIO)</li>
-<li><strong>uvunit</strong> (<em>str, default is None</em>) &#8211; units of uvdistance for plotting. If uvunit is None, uvunit will be
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default is None</em>) &#8211; units of uvdistance for plotting. If uvunit is None, uvunit will be
 inferred from the maximum baseline length. Availables are [&#8220;l[ambda]&#8221;,
 &#8220;kl[ambda]&#8221;, &#8220;ml[ambda]&#8221;, &#8220;gl[ambda]&#8221;, &#8220;m&#8221;, &#8220;km&#8221;].</li>
 </ul>
@@ -1160,7 +1188,7 @@ inferred from the maximum baseline length. Availables are [&#8220;l[ambda]&#8221
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>filename</strong> &#8211; str, pathlib.Path, py._path.local.LocalPath or any object with a read()
 method (such as a file handle or StringIO)</li>
-<li><strong>uvunit</strong> (<em>str, default is None</em>) &#8211; units of uvdistance for plotting. If uvunit is None, uvunit will be
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default is None</em>) &#8211; units of uvdistance for plotting. If uvunit is None, uvunit will be
 inferred from the maximum baseline length. Availables are [&#8220;l[ambda]&#8221;,
 &#8220;kl[ambda]&#8221;, &#8220;ml[ambda]&#8221;, &#8220;gl[ambda]&#8221;, &#8220;m&#8221;, &#8220;km&#8221;].</li>
 </ul>
@@ -1184,7 +1212,7 @@ inferred from the maximum baseline length. Availables are [&#8220;l[ambda]&#8221
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>filename</strong> &#8211; str, pathlib.Path, py._path.local.LocalPath or any object with a read()
 method (such as a file handle or StringIO)</li>
-<li><strong>uvunit</strong> (<em>str, default is None</em>) &#8211; units of uvdistance for plotting. If uvunit is None, uvunit will be
+<li><strong>uvunit</strong> (<em>str</em><em>, </em><em>default is None</em>) &#8211; units of uvdistance for plotting. If uvunit is None, uvunit will be
 inferred from the maximum baseline length. Availables are [&#8220;l[ambda]&#8221;,
 &#8220;kl[ambda]&#8221;, &#8220;ml[ambda]&#8221;, &#8220;gl[ambda]&#8221;, &#8220;m&#8221;, &#8220;km&#8221;].</li>
 </ul>
@@ -1320,13 +1348,16 @@ scale (float): scaling factor</dd>
 
 
            </div>
+           <div class="articleComments">
+            
+           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="../_static/install.html" class="btn btn-neutral" title="1. Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../_static/install.html" class="btn btn-neutral" title="1. Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -1360,7 +1391,8 @@ scale (float): scaling factor</dd>
             VERSION:'1.0beta',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="../_static/jquery.js"></script>

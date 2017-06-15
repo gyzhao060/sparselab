@@ -13,6 +13,8 @@
 
   
   
+  
+  
 
   
 
@@ -30,9 +32,12 @@
   
 
   
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="Sparselab 1.0beta documentation" href="../index.html"/>
         <link rel="next" title="2. References for Sparselab Modules" href="../_autodoc/sparselab.html"/>
-        <link rel="prev" title="Sparselab Documentation" href="../index.html"/> 
+        <link rel="prev" title="Sparselab" href="../index.html"/> 
 
   
   <script src="js/modernizr.min.js"></script>
@@ -41,6 +46,7 @@
 
 <body class="wy-body-for-nav" role="document">
 
+   
   <div class="wy-grid-for-nav">
 
     
@@ -81,7 +87,10 @@
           
             
             
-                <ul class="current">
+              
+            
+            
+              <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">1. Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">1.1. Requirements</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#python-packages-and-modules">1.1.1. Python Packages and Modules</a></li>
@@ -109,8 +118,10 @@
 
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">Sparselab</a>
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Sparselab</a>
+        
       </nav>
 
 
@@ -119,23 +130,40 @@
         <div class="rst-content">
           
 
- 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 <div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
-    <li>1. Installation</li>
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>1. Installation</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/_static/install.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/_static/install.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
@@ -146,7 +174,7 @@
 <div class="section" id="requirements">
 <h2>1.1. Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <p>Sparselab consists of python modules and Fortran/C internal libraries called from python modules. Here, we summarize required python packages and external packages for Sparselab.</p>
-<p>You will also need <strong>autoconf</strong> for compiling the library.</p>
+<p>You will also need <strong>autoconf</strong> and <strong>`ds9`_</strong> for compiling the library.</p>
 <div class="section" id="python-packages-and-modules">
 <h3>1.1.1. Python Packages and Modules<a class="headerlink" href="#python-packages-and-modules" title="Permalink to this headline">¶</a></h3>
 <p>Sparselab has been tested in Python 2.7. Sparselab uses <strong>numpy</strong>, <strong>scipy</strong>, <strong>matplotlib</strong>, <strong>pandas</strong>, <strong>astropy</strong>, <strong>xarrays</strong> and <strong>pyds9</strong>. Sparselab has been tested and developped in Python 2.7 environments provided by the <a class="reference external" href="https://www.continuum.io/anaconda-overview">Anaconda</a> package that includes required packages except <em>xarrays*</em> and <a href="#id1"><span class="problematic" id="id2">**</span></a>pyds9*. We recommend using Anaconda for Sparselab.</p>
@@ -163,7 +191,7 @@ pip install git+https://github.com/ericmandel/pyds9.git#egg<span class="o">=</sp
 <li>BLAS</li>
 </ol>
 <blockquote>
-<div><strong>We strongly recommend using OpenBLAS, which is the fastest library among publicly available BLAS implementations</strong>. Our recommendation is to build up <a class="reference external" href="https://github.com/xianyi/OpenBLAS">OpenBLAS</a> by yourself with a compile option USE_OPENMP=1 and use it for our library. The option USE_OPENMP=1 enables OpenBLAS to perform paralleled multi-threads calculations, which will accelerate our library.</div></blockquote>
+<div><strong>We strongly recommend using OpenBLAS</strong>, which is the fastest library among publicly-available BLAS implementations. Our recommendation is to build up <a class="reference external" href="https://github.com/xianyi/OpenBLAS">OpenBLAS</a> by yourself with a compile option USE_OPENMP=1 and use it for our library. The option USE_OPENMP=1 enables OpenBLAS to perform paralleled multi-threads calculations, which will accelerate our library.</div></blockquote>
 <ol class="arabic simple" start="2">
 <li>LAPACK</li>
 </ol>
@@ -183,21 +211,15 @@ git clone https://github.com/eht-jp/sparselab
 </div>
 <div class="section" id="id4">
 <h3>1.2.2. Installation<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
-<ol class="arabic simple" start="0">
-<li>Go to your Sparselab directory.</li>
-</ol>
+<p>For compiling the whole library, you need to work in your Sparselab directory.</p>
 <div class="highlight-Bash"><div class="highlight"><pre><span></span><span class="nb">cd</span> <span class="o">(</span>Your Sparselab Directory<span class="o">)</span>
 </pre></div>
 </div>
-<ol class="arabic simple">
-<li>Genarate a configure file with autoconf.</li>
-</ol>
+<p>A configure file can be generated with <cite>autoconf</cite>.</p>
 <div class="highlight-Bash"><div class="highlight"><pre><span></span>autoconf
 </pre></div>
 </div>
-<ol class="arabic simple" start="2">
-<li>Configure make files with <cite>./configure</cite>. You might need <cite>LDFLAGS</cite> for links to BLAS and LAPACK.</li>
-</ol>
+<p>Generate Makefiles with <cite>./configure</cite>. You might need <cite>LDFLAGS</cite> for links to BLAS and LAPACK.</p>
 <div class="highlight-Bash"><div class="highlight"><pre><span></span><span class="c1"># If you already have a library path to both BLAS and LAPACK.</span>
 ./configure
 
@@ -205,53 +227,51 @@ git clone https://github.com/eht-jp/sparselab
 ./configure <span class="nv">LDFLAGS</span><span class="o">=</span><span class="s2">&quot;-L(path-to-your-BLAS) -L(path-to-your-LAPACK)&quot;</span>
 </pre></div>
 </div>
-<ol class="arabic simple" start="3">
-<li>Compile the library. The internal C/Fortran Library will be compiled into python modules.</li>
-</ol>
+<p>Make and compile the library. The internal C/Fortran Library will be compiled into python modules.</p>
 <div class="highlight-Bash"><div class="highlight"><pre><span></span>make install
 </pre></div>
 </div>
-<ol class="arabic simple" start="4">
-<li>Finally, add a PYTHONPATH to your Sparselab Directory. We recommend to add a following line into your <cite>.bashrc</cite> (<cite>.bash_profile</cite> for Mac OS X) file.</li>
-</ol>
+<p>Finally, please add a PYTHONPATH to your Sparselab Directory. We recommend to add a following line into your <cite>.bashrc</cite> (<cite>.bash_profile</cite> for Mac OS X) file.</p>
 <div class="highlight-Bash"><div class="highlight"><pre><span></span><span class="c1"># Add a python path to Sparselab</span>
 <span class="nb">export</span> <span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$PYTHONPATH</span>:<span class="o">(</span>Your Sparselab Directory<span class="o">)</span>
+</pre></div>
+</div>
+<p>If you can load in your python interpretator, sparselab is probably installed successfully.</p>
+<div class="highlight-Python"><div class="highlight"><pre><span></span><span class="c1"># import sparselab</span>
+<span class="kn">from</span> <span class="nn">sparselab</span> <span class="kn">import</span> <span class="n">imdata</span><span class="p">,</span> <span class="n">uvdata</span><span class="p">,</span> <span class="n">imaging</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="updating-sparselab">
 <h2>1.3. Updating Sparselab<a class="headerlink" href="#updating-sparselab" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic simple">
-<li>Clean up the entire library before updating.</li>
-</ol>
+<p>We recommend cleaning up the entire library before updating.</p>
 <div class="highlight-Bash"><div class="highlight"><pre><span></span><span class="nb">cd</span> <span class="o">(</span>Your Sparselab Directory<span class="o">)</span>
 make uninstall
 </pre></div>
 </div>
-<ol class="arabic simple" start="2">
-<li>Update the repository with <cite>git pull</cite>.</li>
-</ol>
+<p>Then, you can update the repository with <cite>git pull</cite>.</p>
 <div class="highlight-Bash"><div class="highlight"><pre><span></span>git pull
 </pre></div>
 </div>
-<ol class="arabic simple" start="3">
-<li>You can follow <span class="xref std std-ref">Installation</span> for recompiling your Sparselab.</li>
-</ol>
+<p>Now, the repository has updated. You can follow <span class="xref std std-ref">Installation</span> for recompiling your Sparselab.</p>
 </div>
 </div>
 
 
+           </div>
+           <div class="articleComments">
+            
            </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../_autodoc/sparselab.html" class="btn btn-neutral float-right" title="2. References for Sparselab Modules" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../_autodoc/sparselab.html" class="btn btn-neutral float-right" title="2. References for Sparselab Modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../index.html" class="btn btn-neutral" title="Sparselab Documentation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../index.html" class="btn btn-neutral" title="Sparselab" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -285,7 +305,8 @@ make uninstall
             VERSION:'1.0beta',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
         };
     </script>
       <script type="text/javascript" src="jquery.js"></script>
