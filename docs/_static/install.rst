@@ -7,14 +7,14 @@ Requirements
 
 Sparselab consists of python modules and Fortran/C internal libraries called from python modules. Here, we summarize required python packages and external packages for Sparselab.
 
-You will also need **autoconf** and **`ds9`_** for compiling the library.
+You will also need **autoconf** and `ds9`_ for compiling the library.
 
-.. ds9: http://ds9.si.edu/site/Home.html
+.. _ds9: http://ds9.si.edu/site/Home.html
 
 Python Packages and Modules
 ---------------------------
 
-Sparselab has been tested in Python 2.7. Sparselab uses **numpy**, **scipy**, **matplotlib**, **pandas**, **astropy**, **xarrays** and **pyds9**. Sparselab has been tested and developped in Python 2.7 environments provided by the `Anaconda`_ package that includes required packages except *xarrays** and **pyds9*. We recommend using Anaconda for Sparselab.
+Sparselab uses **numpy**, **scipy**, **matplotlib**, **pandas**, **astropy**, **xarrays** and **pyds9**. Sparselab has been tested and developped in Python 2.7 environments provided by the `Anaconda`_ package that includes required packages except *xarrays** and **pyds9*. We recommend using Anaconda for Sparselab.
 
 .. _Anaconda: https://www.continuum.io/anaconda-overview
 
