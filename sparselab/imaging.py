@@ -915,7 +915,7 @@ def static_dft_pipeline(
         # Imaging and Plotting Results
         filename = header + ".fits"
         filename = os.path.join(workdir, filename)
-        if (skip is False) .or. (os.path.isfile(filename) is False):
+        if (skip is False) or (os.path.isfile(filename) is False):
             newimage = imagefunc(initimage, imageprm=imageprm, **imagefargs)
         newimage.save_fits(filename)
 
@@ -995,7 +995,7 @@ def static_dft_pipeline(
                 # Image Training Data
                 filename = cvheader + ".t.fits"
                 filename = os.path.join(workdir, filename)
-                if (skip is False) .or. (os.path.isfile(filename) is False):
+                if (skip is False) or (os.path.isfile(filename) is False):
                     cvnewimage = imagefunc(newimage, imageprm=cvimageprm,
                                            **imagefargs)
 
