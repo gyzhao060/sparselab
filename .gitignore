@@ -1,0 +1,17 @@
+*~
+.DS_Store
+*.pyc
+_build
+*.a
+sparselab/fortlib.so.dSYM
+src/fortutils/fortlib.so.dSYM
+config.log
+config.status
+configure
+src/*/makefile
+autom4te.cache
+include
+*.so
+*.mod
+*.o
+./makefile

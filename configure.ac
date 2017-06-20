@@ -50,4 +50,5 @@ AC_CONFIG_FILES([./makefile])
 AC_CONFIG_FILES([./src/lbfgsb/makefile])
 AC_CONFIG_FILES([./src/slsqp/makefile])
 AC_CONFIG_FILES([./src/fortutils/makefile])
+AC_CONFIG_FILES([./src/mfista/makefile])
 AC_OUTPUT

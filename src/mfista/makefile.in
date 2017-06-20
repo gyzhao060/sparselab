@@ -1,0 +1,34 @@
+# INSTALLDIR
+PYTHONLIBDIR=../../sparselab
+LIBDIR=../../lib
+INCLUDEDIR=../../include
+BINDIR=../../bin
+
+CC=@CC@
+CFLAGS=-O2
+CLIBS=@LDFLAGS@ @lapacklib@ @blaslib@ -lm
+
+targets = libmfista.so
+object_tools = mfista_tools.o
+object_l1 = mfista_lib.o
+object_tv = mfista_TV_lib.o
+object_tsv = mfista_TSV_lib.o
+
+all: $(targets)
+
+libmfista.so: mfista.o $(object_l1) $(object_tv) $(object_tsv) $(object_tools)
+	$(CC) $(CFLAGS) $(object_l1) $(object_tv) $(object_tsv) $(object_tools) mfista.o $(CLIBS) -shared -o libmfista.so
+
+.c.o:
+	$(CC) -c -O2 -Wall $(CFLAGS) -o $@ $<
+
+clean:
+	rm -f $(targets) *.o
+
+install: all
+	mkdir -p $(PYTHONLIBDIR)
+	cp -p libmfista.so $(PYTHONLIBDIR)
+
+uninstall: clean
+	rm -f makefile
+	rm -f $(PYTHONLIBDIR)/libmfista.so
