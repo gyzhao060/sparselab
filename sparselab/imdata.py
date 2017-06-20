@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-A python module sparselab.imagefits
-
-This is a submodule of sparselab handling image fits data.
+This is a sub-module of sparselab handling image fits data.
 '''
+__author__ = "Sparselab Developer Team"
 #-------------------------------------------------------------------------
 # Modules
 #-------------------------------------------------------------------------
@@ -27,13 +26,13 @@ import matplotlib.pyplot as plt
 
 
 # internal
-import sparselab.fortlib as fortlib
+import fortlib
 
 
 #-------------------------------------------------------------------------
 # IMAGEFITS (Manupulating FITS FILES)
 #-------------------------------------------------------------------------
-class IMFITS():
+class IMFITS(object):
     ds9 = None
     ds9region = None
     angunit = "mas"
@@ -42,43 +41,75 @@ class IMFITS():
     def __init__(self, fitsfile=None, uvfitsfile=None, source=None,
                  fov=None, nx=100, ny=None, angunit="mas", **args):
         '''
-        Initialize the image data.
-astropy        The order of priority for duplicated parameters is uvfitsfile (strongest),
-        source, fitsfile, fov, other parameters (weakest).
+        This is a class to handle image data, in particular, a standard image
+        FITS data sets.
 
-        Arguments:
-          fitsfile (string): input FITS file
-          uvfitsfile (string): input uv-fits file
-          source (string): The source of the image RA and Dec will be obtained from CDS
-          fov(array-like): Field of View of the image [xmin, xmax, ymin, ymax]
-          nx (integer): the number of pixels in the RA axis.
-          ny (integer): the number of pixels in the Dec axis. Default value is same to nx.
-          angunit (string): angular unit for fov, x, y, dx and dy.
+        The order of priority for duplicated parameters is
+            1 uvfitsfile (strongest),
+            2 source
+            3 fitsfile
+            4 fov
+            5 other parameters (weakest).
 
-          **args: you can also specify other header information.
-            x (float): the source RA at the reference pixel.
-            nxref (float): the refernce pixel in RA direction. "1" will be the left-most pixel.
-            dx (float): the grid size of the RA axis. MUST BE NEGATIVE for the astronomical image.
+        Args:
+            fitsfile (string):
+                input FITS file
+            uvfitsfile (string):
+                input uv-fits file
+            source (string):
+                The source of the image RA and Dec will be obtained from CDS
+            fov(array-like):
+                Field of View of the image [xmin, xmax, ymin, ymax]
+            nx (integer):
+                the number of pixels in the RA axis.
+            ny (integer):
+                the number of pixels in the Dec axis.
+                Default value is same to nx.
+            angunit (string):
+                angular unit for fov, x, y, dx and dy.
 
-            y (float): the source DEC at the reference pixel.
-            nyref (float): the refernce pixel of the DEC axis. "1" will be the bottom pixel.
-            dy (float): the grid size in the DEC axis. MUST BE POSITIVE for the astronomical image.
+            **args: you can also specify other header information.
+                x (float):
+                    The source RA at the reference pixel.
+                nxref (float):
+                    The reference pixel in RA direction.
+                    "1" will be the left-most pixel.
+                dx (float):
+                    The grid size of the RA axis.
+                    **MUST BE NEGATIVE** for the astronomical image.
+                y (float):
+                    The source DEC at the reference pixel.
+                nyref (float):
+                    the reference pixel of the DEC axis.
+                    "1" will be the bottom pixel.
+                dy (float):
+                    the grid size in the DEC axis.
+                    MUST BE POSITIVE for the astronomical image.
+                f (float):
+                    the reference frequency in Hz
+                nf (integer):
+                    the number of pixels in the Frequency axis
+                nfref (float):
+                    the reference pixel of the Frequency axis
+                df (float):
+                    the grid size of the Frequency axis
+                s (float):
+                    the reference Stokes parameter
+                ns (integer):
+                    the number of pixels in the Stokes axis
+                nsref (float):
+                    the reference pixel of the Stokes axis
+                ds (float):
+                    the grid size of the Stokes axis
 
-            f (float): the reference frequency in Hz
-            nf (integer): the number of pixels in the Frequency axis
-            nfref (float): the reference pixel of the Frequency axis
-            df (float): the grid size of the Frequency axis
+                observer (string)
+                telescope (string)
+                instrument (string)
+                object (string)
+                dateobs (string)
 
-            s (float): the reference Stokes parameter
-            ns (integer): the number of pixels in the Stokes axis
-            nsref (float): the reference pixel of the Stokes axis
-            ds (float): the grid size of the Stokes axis
-
-            observer (string)
-            telescope (string)
-            instrument (string)
-            object (string)
-            dateobs (string)
+        Returns:
+            imdata.IMFITS object
         '''
         # get conversion factor for angular scale
         angconv = self.angconv(angunit, "deg")
@@ -106,8 +137,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         # Initialize from FOV
         if fov is not None:
             fovarr = np.float64(np.asarray(fov))
-            self.header["dx"] = - \
-                np.abs(fovarr[0] - fovarr[1]) / (self.header["nx"] - 1)
+            self.header["dx"] = - np.abs(fovarr[0] - fovarr[1]) / (self.header["nx"] - 1)
             self.header["dy"] = np.abs(
                 fovarr[2] - fovarr[3]) / (self.header["ny"] - 1)
             self.header["nxref"] = 1. - fovarr[0:2].max() / self.header["dx"]
@@ -213,7 +243,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         Read data from the image FITS file
 
-        Arguments:
+        Args:
           fitsfile (string): input image FITS file
         '''
         hdulist = pyfits.open(fitsfile)
@@ -224,33 +254,37 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
             self.header["object"] = self.header_dtype["object"](
                 hdulist[0].header.get(keyname))
         except:
-            print("warning: FITS file doesn't have a header info of '%s'" % (keyname))
+            print("warning: FITS file doesn't have a header info of '%s'"
+                  % (keyname))
 
         keyname = "TELESCOP"
         try:
             self.header["telescope"] = self.header_dtype["telescope"](
                 hdulist[0].header.get(keyname))
         except:
-            print("warning: FITS file doesn't have a header info of '%s'" % (keyname))
+            print("warning: FITS file doesn't have a header info of '%s'"
+                  % (keyname))
 
         keyname = "INSTRUME"
         try:
             self.header["instrument"] = self.header_dtype["instrument"](
                 hdulist[0].header.get(keyname))
         except:
-            print("warning: FITS file doesn't have a header info of '%s'" % (keyname))
+            print("warning: FITS file doesn't have a header info of '%s'"
+                  % (keyname))
 
         keyname = "OBSERVER"
         try:
             self.header["observer"] = self.header_dtype["observer"](
                 hdulist[0].header.get(keyname))
         except:
-            print("warning: FITS file doesn't have a header info of '%s'" % (keyname))
+            print("warning: FITS file doesn't have a header info of '%s'"
+                  % (keyname))
 
         keyname = "DATE-OBS"
         try:
-            self.header["dateobs"] = self.header_dtype["dateobs"](
-                hdulist[0].header.get(keyname))
+            self.header["dateobs"] = \
+                self.header_dtype["dateobs"](hdulist[0].header.get(keyname))
         except:
             print("warning: FITS file doesn't have a header info of '%s'" % (keyname))
 
@@ -273,14 +307,14 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
                 iss = i + 1
 
         if isx != False:
-            self.header["nx"] = self.header_dtype["nx"](
-                hdulist[0].header.get("NAXIS%d" % (isx)))
-            self.header["x"] = self.header_dtype["x"](
-                hdulist[0].header.get("CRVAL%d" % (isx)))
-            self.header["dx"] = self.header_dtype["dx"](
-                hdulist[0].header.get("CDELT%d" % (isx)))
-            self.header["nxref"] = self.header_dtype["nxref"](
-                hdulist[0].header.get("CRPIX%d" % (isx)))
+            self.header["nx"] = \
+                self.header_dtype["nx"](hdulist[0].header.get("NAXIS%d" % (isx)))
+            self.header["x"] = \
+                self.header_dtype["x"](hdulist[0].header.get("CRVAL%d" % (isx)))
+            self.header["dx"] = \
+                self.header_dtype["dx"](hdulist[0].header.get("CDELT%d" % (isx)))
+            self.header["nxref"] = \
+                self.header_dtype["nxref"](hdulist[0].header.get("CRPIX%d" % (isx)))
         else:
             print("Warning: No image data along RA axis.")
 
@@ -327,7 +361,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         Read header information from uvfits file
 
-        Arguments:
+        Args:
           infits (string): input uv-fits file
         '''
         hdulist = pyfits.open(infits)
@@ -461,7 +495,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         save the image(s) to the image FITS file.
 
-        Arguments:
+        Args:
             outfitsfile (string): file name
             overwrite (boolean): It True, an existing file will be overwritten.
         '''
@@ -525,7 +559,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         calculate the grid of the image
 
-        Arguments:
+        Args:
           angunit (string): Angular unit (uas, mas, asec or arcsec, amin or arcmin, degree)
           twodim (boolean): It True, the 2D grids will be returned. Otherwise, the 1D arrays will be returned
         '''
@@ -548,7 +582,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         calculate the field of view of the image
 
-        Arguments:
+        Args:
           angunit (string): Angular unit (uas, mas, asec or arcsec, amin or arcmin, degree)
         '''
         if angunit is None:
@@ -570,7 +604,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         calculate the peak intensity of the image
 
-        Arguments:
+        Args:
           istokes (integer): index for Stokes Parameter at which the peak intensity will be calculated
           ifreq (integer): index for Frequency at which the peak intensity will be calculated
         '''
@@ -585,7 +619,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         calculate the total flux of the image
 
-        Arguments:
+        Args:
           istokes (integer): index for Stokes Parameter at which the total flux will be calculated
           ifreq (integer): index for Frequency at which the total flux will be calculated
         '''
@@ -595,7 +629,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         calculate l1-norm of the image
 
-        Arguments:
+        Args:
           istokes (integer): index for Stokes Parameter at which l1-norm will be calculated
           ifreq (integer): index for Frequency at which l1-norm will be calculated
         '''
@@ -609,7 +643,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         '''
         plot contours of the image
 
-        Arguments:
+        Args:
           istokes (integer): index for Stokes Parameter at which the image will be plotted
           ifreq (integer): index for Frequency at which the image will be plotted
           angunit (string): Angular Unit for the axis labels (pixel, uas, mas, asec or arcsec, amin or arcmin, degree)
@@ -999,11 +1033,11 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         Shift the image so that its center-of-mass position coincides with the reference pixel.
 
         Arguments:
-          istokes (integer): 
+          istokes (integer):
             index for Stokes Parameter at which the image will be edited
-          ifreq (integer): 
+          ifreq (integer):
             index for Frequency at which the image will be edited
-          save_totalflux (boolean): 
+          save_totalflux (boolean):
             If true, the total flux of the image will be conserved.
 
         Returns:
@@ -1035,11 +1069,11 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         Shift the image so that its peak position coincides with the reference pixel.
 
         Arg:
-          istokes (integer): 
+          istokes (integer):
             index for Stokes Parameter at which the image will be edited
-          ifreq (integer): 
+          ifreq (integer):
             index for Frequency at which the image will be edited
-          save_totalflux (boolean): 
+          save_totalflux (boolean):
             If true, the total flux of the image will be conserved.
 
         Returns:
@@ -1258,16 +1292,16 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         Output edge-highlighted images.
 
         Args:
-          method (string, default="prewitt"): 
+          method (string, default="prewitt"):
             Type of edge filters to be used.
             Availables are ["prewitt","sobel","scharr","roberts","canny"].
-          mask (array): 
+          mask (array):
             array for masking
-          sigma (integer): 
+          sigma (integer):
             index for canny
-          low_threshold (float): 
+          low_threshold (float):
             index for canny
-          high_threshold (float): 
+          high_threshold (float):
             index for canny
 
         Returns:
@@ -1353,7 +1387,7 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
         A function calculates the circle Hough transform (CHT) of the input image
 
         Args:
-          radius (array): 
+          radius (array):
             array for radii for which the circle Hough transform is
             calculated. The unit of the radius is specified with angunit.
           Ntheta (optional, integer):
@@ -1365,10 +1399,10 @@ astropy        The order of priority for duplicated parameters is uvfitsfile (st
           ifreq (integer): index for Frequency at which the CHT to be performed
 
         Returns:
-          H (ndarray): 
+          H (ndarray):
             The Circle Hough Accumulator. This is a three dimensional array of which
             shape is [Nx, Ny, Nr] in *Fortran Order*.
-          profile (pd.DataFrame): 
+          profile (pd.DataFrame):
             The table for the peak profile Hr(r)=max_r(H(x,y,r)).
         '''
         if angunit is None:
@@ -1432,30 +1466,30 @@ def calc_metric(fitsdata, reffitsdata, metric="NRMSE", istokes1=0, ifreq1=0, ist
     '''
     Calculate metrics between two images
 
-    Arguments:
-      fitsdata (imdata.IMFITS object): 
+    Args:
+      fitsdata (imdata.IMFITS object):
         input image
 
-      reffitsdata (imdata.IMFITS object): 
+      reffitsdata (imdata.IMFITS object):
         reference image
 
-      metric (string): 
+      metric (string):
         type of a metric to be calculated.
         Availables are ["NRMSE","MSE","SSIM","DSSIM"]
 
-      istokes1 (integer): 
+      istokes1 (integer):
         index for the Stokes axis of the input image
 
-      ifreq1 (integer): 
+      ifreq1 (integer):
         index for the frequency axis of the input image
 
-      istokes2 (integer): 
+      istokes2 (integer):
         index for the Stokes axis of the reference image
 
-      ifreq2 (integer): 
+      ifreq2 (integer):
         index for the frequency axis of the reference image
 
-      edgeflag (boolean): 
+      edgeflag (boolean):
         calculation of metric on image domain or image gradient domain
 
     Returns:
@@ -1577,7 +1611,7 @@ def _region_box(X, Y, x0, y0, width, height, angle):
 
 
 def _region_circle(X, Y, x0, y0, radius):
-    return ((X - x0) * (X - x0) + (Y - y0) * (Y - y0) <= radius * radius)
+    return (X - x0) * (X - x0) + (Y - y0) * (Y - y0) <= radius * radius
 
 
 def _region_ellipse(X, Y, x0, y0, radius1, radius2, angle):
@@ -1587,4 +1621,4 @@ def _region_ellipse(X, Y, x0, y0, radius1, radius2, angle):
     dY = Y - y0
     X1 = dX * cosa + dY * sina
     Y1 = -dX * sina + dY * cosa
-    return (X1 * X1 / radius1 / radius1 + Y1 * Y1 / radius2 / radius2 <= 1)
+    return X1 * X1 / radius1 / radius1 + Y1 * Y1 / radius2 / radius2 <= 1

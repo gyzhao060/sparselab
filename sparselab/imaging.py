@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-A python module sparselab.imaging
-
 This is a submodule of sparselab for imaging static images.
 '''
+__author__ = "Sparselab Developer Team"
 # -------------------------------------------------------------------------
 # Modules
 # -------------------------------------------------------------------------
@@ -26,9 +25,9 @@ from matplotlib.ticker import NullFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # internal modules
-import sparselab.util as util
-import sparselab.fortlib as fortlib
-import sparselab.imdata as imdata
+import util
+import fortlib
+import imdata
 
 #-------------------------------------------------------------------------
 # Default Parameters

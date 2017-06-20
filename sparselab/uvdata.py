@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-A python module sparselab.uvdata
-
 This is a submodule of sparselab handling various types of Visibility data sets.
 '''
+__author__ = "Sparselab Developer Team"
 # ------------------------------------------------------------------------------
 # Modules
 # ------------------------------------------------------------------------------
@@ -31,7 +30,7 @@ import matplotlib.pyplot as plt
 
 
 # internal
-import sparselab.imdata as imdata
+import imdata
 
 
 # ------------------------------------------------------------------------------
@@ -56,6 +55,7 @@ class UVFITS():
         '''
         self.read_uvfits(infile)
         self.uvsort()
+
 
     def read_uvfits(self, infile):
         '''
@@ -268,7 +268,8 @@ class UVFITS():
         else:
             print("Data are TB sorted correctly.")
         print("")
-
+    
+        
     def make_vistable(self, flag=True):
         '''
         Convert visibility data to a two dimentional table.
@@ -581,6 +582,7 @@ class UVFITS():
                 "[WARNING] Currently Stokes %s is not supported in this function." % (stokes))
 
         return outfits
+
 
     def weightcal(self, dofreq=0, solint=120., minpoint=2):
         '''
@@ -2121,7 +2123,7 @@ def _bindstokes(dataarray, stokes, stokes1, stokes2, factr1, factr2):
     stokesids = np.asarray(dataarray["stokes"], dtype=np.int64)
     istokes1 = np.where(stokesids == stokes1)[0][0]
     istokes2 = np.where(stokesids == stokes2)[0][0]
-    coords = dataarray.coords
+    coords = copy.deepcopy(dataarray.coords)
     coords["stokes"] = np.asarray([stokes], dtype=np.float64)
     outdata = xr.DataArray(dataarray.data[:, :, :, :, :, istokes1:istokes1 + 1, :],
                            coords=coords,

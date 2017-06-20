@@ -1,10 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-A python module sparselab
+This is the core python module of Sparselab.
+The module includes following submodules.
 
-This is the core python module of Sparselab v2.0.
+  sparselab.imdata
+    The sub-module handles image FITS data
+
+  sparselab.uvdata
+    The sub-module handles UVFITS data
+
+  sparselab.imaging
+    The sub-module includes functions of imaging
+
+  sparselab.util
+    The sub-module includes common fucntions for other submodules
+
+  sparselab.fortutil
+    This sud-module is compiled from forutran 90 codes by f2py.
 '''
-__author__ = "Kazunori Akiyama, Fumie Tazaki and Kazuki Kuramochi"
-__version__ = "1.0"
-__date__ = "Jan 6 2017"
+__author__ = "Sparselab Developper Team"
