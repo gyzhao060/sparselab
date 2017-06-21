@@ -777,28 +777,30 @@ def iterative_imaging(initimage, imageprm, Niter=10,
                       doshift=True, shifttype="com",
                       doconv=True, convprm={},
                       save_totalflux=False):
-    outimage = static_dft_imaging(initimage, **imageprm)
-    oldcost = static_dft_stats(outimage, fulloutput=False, **imageprm)["cost"]
+    oldimage = static_dft_imaging(initimage, **imageprm)
+    oldcost = static_dft_stats(oldimage, fulloutput=False, **imageprm)["cost"]
     for i in np.arange(Niter - 1):
+        newimage = copy.deepcopy(oldimage)
+
         # Edit Images
         if dothres:
             if threstype == "soft":
-                outimage = outimage.soft_threshold(threshold=threshold,
+                newimage = newimage.soft_threshold(threshold=threshold,
                                                    save_totalflux=save_totalflux)
             else:
-                outimage = outimage.hard_threshold(threshold=threshold,
+                newimage = newimage.hard_threshold(threshold=threshold,
                                                    save_totalflux=save_totalflux)
         if doshift:
             if shifttype == "peak":
-                outimage = outimage.peakshift(save_totalflux=save_totalflux)
+                newimage = newimage.peakshift(save_totalflux=save_totalflux)
             else:
-                outimage = outimage.comshift(save_totalflux=save_totalflux)
+                newimage = newimage.comshift(save_totalflux=save_totalflux)
         if doconv:
-            outimage = outimage.gauss_convolve(
+            newimage = newimage.gauss_convolve(
                 save_totalflux=save_totalflux, **convprm)
 
         # Imaging Again
-        newimage = static_dft_imaging(outimage, **imageprm)
+        newimage = static_dft_imaging(newimage, **imageprm)
         newcost = static_dft_stats(
             newimage, fulloutput=False, **imageprm)["cost"]
 
@@ -806,8 +808,8 @@ def iterative_imaging(initimage, imageprm, Niter=10,
             print("No improvement in cost fucntions. Don't update image.")
         else:
             oldcost = newcost
-            outimage = newimage
-    return outimage
+            oldimage = newimage
+    return oldimage
 
 
 def static_dft_pipeline(
