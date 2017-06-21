@@ -5,7 +5,7 @@ INCLUDEDIR=../../include
 BINDIR=../../bin
 
 CC=@CC@
-CFLAGS=-O2
+CFLAGS=-fPIC -O2
 CLIBS=@LDFLAGS@ @lapacklib@ @blaslib@ -lm
 
 targets = libmfista.so
@@ -20,7 +20,7 @@ libmfista.so: mfista.o $(object_l1) $(object_tv) $(object_tsv) $(object_tools)
 	$(CC) $(CFLAGS) $(object_l1) $(object_tv) $(object_tsv) $(object_tools) mfista.o $(CLIBS) -shared -o libmfista.so
 
 .c.o:
-	$(CC) -c -O2 -Wall $(CFLAGS) -o $@ $<
+	$(CC) -c $(CFLAGS) -o $@ $<
 
 clean:
 	rm -f $(targets) *.o
