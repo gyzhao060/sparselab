@@ -869,6 +869,11 @@ def static_dft_pipeline(
     if not os.path.isdir(workdir):
         os.makedirs(workdir)
 
+    cvworkdir = os.path.join(workdir,"cv")
+    if docv:
+        if not os.path.isdir(cvworkdir):
+            os.makedirs(cvworkdir)
+
     # Lambda Parameters
     lambl1s = -np.sort(-np.asarray(lambl1s))
     lambtvs = -np.sort(-np.asarray(lambtvs))
@@ -918,7 +923,9 @@ def static_dft_pipeline(
         filename = os.path.join(workdir, filename)
         if (skip is False) or (os.path.isfile(filename) is False):
             newimage = imagefunc(initimage, imageprm=imageprm, **imagefargs)
-        newimage.save_fits(filename)
+            newimage.save_fits(filename)
+        else:
+            newimage = imdata.IMFITS(filename)
 
         filename = header + ".summary.pdf"
         filename = os.path.join(workdir, filename)
@@ -933,7 +940,7 @@ def static_dft_pipeline(
         tmpsum["itv"] = itv
         tmpsum["il1"] = il1
         for key in newstats.keys():
-            tmpsum[key] = newstats.values()
+            tmpsum[key] = newstats[key]
 
         # Cross Validation
         if docv:
@@ -967,6 +974,7 @@ def static_dft_pipeline(
             tmpcvsum["vrchisqamp"] = np.zeros(nfold, dtype=np.float64)
             tmpcvsum["vrchisqcp"] = np.zeros(nfold, dtype=np.float64)
             tmpcvsum["vrchisqca"] = np.zeros(nfold, dtype=np.float64)
+            
             #    initialize some columns
             tmpcvsum.loc[:, "itsv"] = itsv
             tmpcvsum.loc[:, "itv"] = itv
@@ -981,7 +989,7 @@ def static_dft_pipeline(
             #  N-fold CV
             for icv in np.arange(nfold):
                 # Header of output files
-                cvheader = header+".cv%02d" % (nfold)
+                cvheader = header+".cv%02d" % (icv)
 
                 # Generate Data sets for imaging
                 if isvistable:
@@ -995,14 +1003,17 @@ def static_dft_pipeline(
 
                 # Image Training Data
                 filename = cvheader + ".t.fits"
-                filename = os.path.join(workdir, filename)
+                filename = os.path.join(cvworkdir, filename)
                 if (skip is False) or (os.path.isfile(filename) is False):
                     cvnewimage = imagefunc(newimage, imageprm=cvimageprm,
                                            **imagefargs)
+                    cvnewimage.save_fits(filename)
+                else:
+                    cvnewimage = imdata.IMFITS(filename)
 
                 # Make Plots
                 filename = cvheader + ".t.summary.pdf"
-                filename = os.path.join(workdir, filename)
+                filename = os.path.join(cvworkdir, filename)
                 static_dft_plots(cvnewimage, cvimageprm, filename=filename,
                                  angunit=angunit, uvunit=uvunit)
 
@@ -1023,7 +1034,7 @@ def static_dft_pipeline(
 
                 # Make Plots
                 filename = cvheader + ".v.summary.pdf"
-                filename = os.path.join(workdir, filename)
+                filename = os.path.join(cvworkdir, filename)
                 static_dft_plots(cvnewimage, cvimageprm, filename=filename,
                                  angunit=angunit, uvunit=uvunit)
 
@@ -1042,6 +1053,7 @@ def static_dft_pipeline(
                 tmpcvsum.loc[icv, "trchisqamp"] = trainstats["rchisqamp"]
                 tmpcvsum.loc[icv, "trchisqcp"] = trainstats["rchisqcp"]
                 tmpcvsum.loc[icv, "trchisqca"] = trainstats["rchisqca"]
+
                 tmpcvsum.loc[icv, "vchisq"] = validstats["chisq"]
                 tmpcvsum.loc[icv, "vrchisq"] = validstats["rchisq"]
                 tmpcvsum.loc[icv, "vchisqfcv"] = validstats["chisqfcv"]
@@ -1052,9 +1064,9 @@ def static_dft_pipeline(
                 tmpcvsum.loc[icv, "vrchisqamp"] = validstats["rchisqamp"]
                 tmpcvsum.loc[icv, "vrchisqcp"] = validstats["rchisqcp"]
                 tmpcvsum.loc[icv, "vrchisqca"] = validstats["rchisqca"]
-
-                cvsumtable = pd.concat([cvsumtable,tmpcvsum], ignore_index=True)
-                cvsumtable.to_csv(os.path.join(workdir, cvsumtablefile))
+            # add current cv summary to the log file.
+            cvsumtable = pd.concat([cvsumtable,tmpcvsum], ignore_index=True)
+            cvsumtable.to_csv(os.path.join(workdir, cvsumtablefile))
 
             # Average Varidation Errors and memorized them
             tmpsum["trchisq"] = np.mean(tmpcvsum["trchisq"])
