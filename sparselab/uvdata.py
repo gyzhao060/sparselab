@@ -268,8 +268,8 @@ class UVFITS():
         else:
             print("Data are TB sorted correctly.")
         print("")
-    
-        
+
+
     def make_vistable(self, flag=True):
         '''
         Convert visibility data to a two dimentional table.
@@ -793,8 +793,11 @@ class _UVTable(pd.DataFrame):
         for icv in np.arange(nfold):
             trainkeyname = "t%d" % (icv)
             validkeyname = "v%d" % (icv)
-            train = pd.concat([shuffled.loc[:Nval * icv, :],
-                               shuffled.loc[Nval * (icv + 1):, :]])
+            if Nval * (icv + 1) == Ndata:
+                train = shuffled.loc[:Nval * icv, :]
+            else:
+                train = pd.concat([shuffled.loc[:Nval * icv, :],
+                                   shuffled.loc[Nval * (icv + 1):, :]])
             valid = shuffled[Nval * icv:Nval * (icv + 1)]
             out[trainkeyname] = train
             out[validkeyname] = valid
