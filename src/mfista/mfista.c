@@ -44,6 +44,7 @@ void mfista(double* u,double* v,double* x,double* y,
 
 
   /* initialize matrix */
+  printf("Initialize A matrix\n");
   A = alloc_matrix(M, N);
   clear_matrix(A, M, N);
   calc_A(M, N, dftsign, u, v, x, y, A, Vsigma);
@@ -109,7 +110,7 @@ void mfista(double* u,double* v,double* x,double* y,
 
 
   /* copy xvec to Iout */
-  printf("Results copy to Iout.\n");
+  //printf("Results areeecopy to Iout.\n");
   dcopy_(&N, xvec, &inc, Iout, &inc);
   /* main loop end */
 
@@ -143,7 +144,7 @@ void calc_A(int M,int N,int dftsign,
 
   /* Calculate A */
   #ifdef _OPENMP
-    printf("  calculated by openmp\n");
+   //printf("  calculated by openmp\n");
    #pragma omp parallel for default(shared)\
     private(j,xfactor,yfactor)\
     firstprivate(factor,halfM,M,N,incx,incA)
@@ -155,5 +156,20 @@ void calc_A(int M,int N,int dftsign,
     daxpy_(&halfM, &xfactor, u, &incx, &A[j], &incA);
     yfactor = factor*y[i];
     daxpy_(&halfM, &yfactor, v, &incx, &A[j], &incA);
+  }
+
+
+  #ifdef _OPENMP
+   #pragma omp parallel for default(shared)\
+    private(j,k)\
+    firstprivate(Verr,halfM,M,N)
+  #endif
+  for (i=0; i<N; ++i) {
+    for (j=0; j<halfM; ++j) {
+      k = i*M;
+
+      A[k+j+halfM] = sin(A[k+j])/Verr[j];
+      A[k+j] = cos(A[k+j])/Verr[j];
+    }
   }
 }
