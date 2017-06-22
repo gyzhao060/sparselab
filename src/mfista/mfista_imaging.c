@@ -33,8 +33,8 @@ void mfista_imaging(
   int nonneg_flag, int looe_flag, double cinit,
   struct RESULT *mfista_result)
 {
-  int inc=1;
-  int N=NX*NY; /* Total number of Imaging Pixels */
+  int inc=1, iter,
+    N=NX*NY; /* Total number of Imaging Pixels */
   double *xvec,*yvec,*A;
 
 
@@ -98,7 +98,14 @@ void mfista_imaging(
     }
   }
   else if (lambda_tsv>0) {
-    mfista_L1_TSV_core(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tsv, cinit,
+    /*
+      mfista_L1_TSV_core(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tsv, cinit,
+                       xvec, nonneg_flag, looe_flag, mfista_result);
+    */
+    iter = mfista_L1_TSV_imag_core(yvec, A, &M, &N, NX,
+				   NY, lambda_l1, lambda_tsv, cinit,
+				   xvec, nonneg_flag, looe_flag);
+    mfista_L1_TSV_core(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tsv, iter,
                        xvec, nonneg_flag, looe_flag, mfista_result);
   }
 

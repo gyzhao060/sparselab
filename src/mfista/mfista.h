@@ -65,6 +65,7 @@ struct RESULT{
   double looe;
   double Hessian_positive;
   double finalcost;
+  double *residual;
 };
 
 /* memory allocation of matrix and vectors */
@@ -155,17 +156,32 @@ extern void mfista_L1_TSV_core(double *yvec, double *Amat,
 				double *xvec, int nonneg_flag, int looe_flag,
 				struct RESULT *mfista_result);
 
+extern int mfista_L1_TSV_imag_core(double *yvec, double *Amat,
+				   int *M, int *N, int NX, int NY,
+				   double lambda, double lambda_tv,
+				   double cinit,
+				   double *xvec, int nonneg_flag,
+				   int looe_flag);
+
+extern void mfista_L1_TSV_result(double *yvec, double *Amat,
+				 int *M, int *N, int NX, int NY,
+				 double lambda_l1, double lambda_tsv, int iter,
+				 double *xvec, int nonneg_flag, int looe_flag,
+				 struct RESULT *mfista_result);
+
 /* subroutines for calculating A matrix */
-extern void calc_A(int M,int N,int dftsign,
-             double *u,double *v,double *x,double *y,double *A,double *Verr);
+extern void calc_A(int M, int N, int dftsign,
+		   double *u, double *v, double *x, double *y,
+		   double *A, double *Verr);
 
 /* subroutines for mfista */
-extern void mfista_imaging(
-  double* Iin, double* Iout, double* x,double* y, int NX, int NY,
-  double* u, double* v, double* V,double* Vsigma, int M, int dftsign,
-  double lambda_l1, double lambda_tv, double lambda_tsv,
-  int nonneg_flag, int looe_flag, double cinit,
-  struct RESULT *mfista_result);
+extern void mfista_imaging(double* Iin, double* Iout,
+			   double* x,double* y, int NX, int NY,
+			   double* u, double* v, double* V, double* Vsigma,
+			   int M, int dftsign,
+			   double lambda_l1, double lambda_tv, double lambda_tsv,
+			   int nonneg_flag, int looe_flag, double cinit,
+			   struct RESULT *mfista_result);
 
 /* output */
 
