@@ -26,21 +26,21 @@
 #include "mfista.h"
 
 
-void mfista(double* u,double* v,double* x,double* y,
-            double* Iin,double* Iout,double* V,double* Vsigma,
-            int dftsign,int M,int N,int NX,int NY,
-            double cinit,double lambda_l1,double lambda_tv,double lambda_tsv,
-            int nonneg_flag,int rec_flag,int looe_flag,int log_flag,
-            char *log_fname,struct RESULT *mfista_result)
+void mfista_imaging(
+  double* Iin, double* Iout, double* x,double* y, int NX, int NY,
+  double* u, double* v, double* V,double* Vsigma, int M, int dftsign,
+  double lambda_l1, double lambda_tv, double lambda_tsv,
+  int nonneg_flag, int looe_flag, double cinit,
+  struct RESULT *mfista_result)
 {
-  int inc=1;
+  int inc=1, iter,
+    N=NX*NY; /* Total number of Imaging Pixels */
   double *xvec,*yvec,*A;
-  FILE* log_fid;
 
 
   /* size of data and output image */
-  printf("M (Number of Data)         is %d\n",M);
-  printf("N (Number of Image Pixels) is %d\n",N);
+  printf("Number of Data        : %d\n",M/2);
+  printf("Number of Image Pixels: %d = %d x %d\n",N,NX,NY);
 
 
   /* initialize matrix */
@@ -73,11 +73,6 @@ void mfista(double* u,double* v,double* x,double* y,
   }
   mfista_result->nonneg = nonneg_flag;
 
-  if (rec_flag==0) {
-    NX = (int)sqrt(N);
-  }
-  printf("NX is %d\n",NX);
-  NY = (int)N/NX;
 
   if (looe_flag==1)  {
     printf("Approximation of LOOE will be computed.\n\n");
@@ -86,40 +81,37 @@ void mfista(double* u,double* v,double* x,double* y,
     printf("\n");
   }
 
-  if(log_flag==1) {
-    printf("Log will be saved to %s.\n",log_fname);
-  }
 
-
-  /* preparation end */
-  /* main loop */
+  /* run mfista core-routine */
   if (lambda_tv<0 && lambda_tsv<0) {
-    mfista_L1_core(yvec, A, &M, &N, lambda_l1, cinit, xvec, nonneg_flag, looe_flag, mfista_result);
+    mfista_L1_core(yvec, A, &M, &N, lambda_l1, cinit,
+                   xvec, nonneg_flag, looe_flag, mfista_result);
   }
   else if (lambda_tv>0) {
     if(nonneg_flag==0) {
-      mfista_L1_TV_core(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tv, cinit, xvec, mfista_result);
+      mfista_L1_TV_core(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tv, cinit,
+                        xvec, mfista_result);
     }
     else if (nonneg_flag==1) {
-      mfista_L1_TV_core_nonneg(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tv, cinit, xvec, mfista_result);
+      mfista_L1_TV_core_nonneg(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tv,
+                               cinit, xvec, mfista_result);
     }
   }
   else if (lambda_tsv>0) {
-    mfista_L1_TSV_core(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tsv, cinit, xvec, nonneg_flag, looe_flag, mfista_result);
+    /*
+      mfista_L1_TSV_core(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tsv, cinit,
+                       xvec, nonneg_flag, looe_flag, mfista_result);
+    */
+    iter = mfista_L1_TSV_imag_core(yvec, A, &M, &N, NX,
+				   NY, lambda_l1, lambda_tsv, cinit,
+				   xvec, nonneg_flag, looe_flag);
+    mfista_L1_TSV_core(yvec, A, &M, &N, NX, NY, lambda_l1, lambda_tsv, iter,
+                       xvec, nonneg_flag, looe_flag, mfista_result);
   }
 
 
   /* copy xvec to Iout */
-  //printf("Results areeecopy to Iout.\n");
   dcopy_(&N, xvec, &inc, Iout, &inc);
-  /* main loop end */
-
-  /* output log */
-  if (log_flag==1) {
-    log_fid = fopenw(log_fname);
-    show_result(log_fid,log_fname,mfista_result);
-    fclose(log_fid);
-  }
 
   /* clear memory */
   free(A);
@@ -131,7 +123,10 @@ void mfista(double* u,double* v,double* x,double* y,
 void calc_A(int M,int N,int dftsign,
              double *u,double *v,double *x,double *y,double *A,double *Verr)
 {
-  int i,j,k,halfM=M/2,incx=1,incA=1;
+  int i,j,k;            /* loop variables */
+  int halfM=M/2;        /* actual data number */
+  int incx=1,incA=1;    /* increment of each vector */
+
   double factor,xfactor,yfactor;
 
   /* Define a factor for DFT */
@@ -142,9 +137,8 @@ void calc_A(int M,int N,int dftsign,
     factor = -2*M_PI;
   }
 
-  /* Calculate A */
+  /* Calculate Phase */
   #ifdef _OPENMP
-   //printf("  calculated by openmp\n");
    #pragma omp parallel for default(shared)\
     private(j,xfactor,yfactor)\
     firstprivate(factor,halfM,M,N,incx,incA)
@@ -158,7 +152,7 @@ void calc_A(int M,int N,int dftsign,
     daxpy_(&halfM, &yfactor, v, &incx, &A[j], &incA);
   }
 
-
+  /* Calculate Fourier Matrix */
   #ifdef _OPENMP
    #pragma omp parallel for default(shared)\
     private(j,k)\
@@ -167,7 +161,6 @@ void calc_A(int M,int N,int dftsign,
   for (i=0; i<N; ++i) {
     for (j=0; j<halfM; ++j) {
       k = i*M;
-
       A[k+j+halfM] = sin(A[k+j])/Verr[j];
       A[k+j] = cos(A[k+j])/Verr[j];
     }

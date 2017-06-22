@@ -1,12 +1,12 @@
-/* 
+/*
    Copyright (C) 2015   Shiro Ikeda <shiro@ism.ac.jp>
 
    This is file 'mfista.h'. An optimization algorithm for imaging of
    interferometry. The idea of the algorithm was from the following
    two papers,
 
-   Beck and Teboulle (2009) SIAM J. Imaging Sciences, 
-   Beck and Teboulle (2009) IEEE trans. on Image Processing 
+   Beck and Teboulle (2009) SIAM J. Imaging Sciences,
+   Beck and Teboulle (2009) IEEE trans. on Image Processing
 
 
    This program is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/ 
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,11 +35,11 @@
 #include "blas.h"
 #include "lapack.h"
 
-#define CINIT     10000 
+#define CINIT     10000
 #define MAXITER   50000
 #define MINITER   100
 #define FGPITER   100
-#define TD         50 
+#define TD         50
 #define ETA        1.1
 #define EPS        1.0e-5
 
@@ -65,6 +65,7 @@ struct RESULT{
   double looe;
   double Hessian_positive;
   double finalcost;
+  double *residual;
 };
 
 /* memory allocation of matrix and vectors */
@@ -90,17 +91,17 @@ extern double calc_F_part(int *M, int *N,
 			  double *yvec, double *Amatrix,
 			  double *xvec, int *inc, double *buffvec);
 
-extern double calc_Q_part(int *N, 
+extern double calc_Q_part(int *N,
 			  double *xvec1, double *xvec2,
 			  double c, int *inc,
 			  double *AyAz, double *buffxvec1);
-			  
+
 /* thresholding */
 
-extern void soft_threshold(double *vector, int length, double eta, 
+extern void soft_threshold(double *vector, int length, double eta,
 			   double *newvec);
 
-extern void soft_threshold_nonneg(double *vector, int length, double eta, 
+extern void soft_threshold_nonneg(double *vector, int length, double eta,
 				  double *newvec);
 
 extern int find_active_set(int N, double *xvec, int *indx_list);
@@ -120,20 +121,20 @@ extern double *shrink_A(int M, int N, int N_active, int *indx_list,
 
 extern int solve_lin_looe(int *NA, int *NB, double *Hessian, double *B);
 
-extern double compute_LOOE_core(int *M, int N_active, 
+extern double compute_LOOE_core(int *M, int N_active,
 				double *yvec, double *Amat, double *xvec,
 				double *yAx,  double *Amat_s, double *Hessian);
 
 /* subroutines for mfista_L1 */
 
-extern void mfista_L1_core(double *yvec, double *Amat, int *M, int *N, 
+extern void mfista_L1_core(double *yvec, double *Amat, int *M, int *N,
 			   double lambda, double cinit,
 			   double *xvec, int nonneg_flag, int looe_flag,
 			   struct RESULT *mfista_result);
 
 /* subroutines for mfista_L1_TV_nonneg */
 
-extern void mfista_L1_TV_core(double *yvec, double *Amat, 
+extern void mfista_L1_TV_core(double *yvec, double *Amat,
 			      int *M, int *N, int NX, int NY,
 			      double lambda, double lambda_tv, double cinit,
 			      double *xvec,
@@ -141,7 +142,7 @@ extern void mfista_L1_TV_core(double *yvec, double *Amat,
 
 /* subroutines for mfista_L1_TV_nonneg */
 
-extern void mfista_L1_TV_core_nonneg(double *yvec, double *Amat, 
+extern void mfista_L1_TV_core_nonneg(double *yvec, double *Amat,
 				     int *M, int *N, int NX, int NY,
 				     double lambda, double lambda_tv, double cinit,
 				     double *xvec,
@@ -149,25 +150,39 @@ extern void mfista_L1_TV_core_nonneg(double *yvec, double *Amat,
 
 /* subroutines for mfista_L1_sqTV_nonneg */
 
-extern void mfista_L1_TSV_core(double *yvec, double *Amat, 
+extern void mfista_L1_TSV_core(double *yvec, double *Amat,
 				int *M, int *N, int NX, int NY,
 				double lambda, double lambda_tv, double cinit,
 				double *xvec, int nonneg_flag, int looe_flag,
 				struct RESULT *mfista_result);
 
+extern int mfista_L1_TSV_imag_core(double *yvec, double *Amat,
+				   int *M, int *N, int NX, int NY,
+				   double lambda, double lambda_tv,
+				   double cinit,
+				   double *xvec, int nonneg_flag,
+				   int looe_flag);
+
+extern void mfista_L1_TSV_result(double *yvec, double *Amat,
+				 int *M, int *N, int NX, int NY,
+				 double lambda_l1, double lambda_tsv, int iter,
+				 double *xvec, int nonneg_flag, int looe_flag,
+				 struct RESULT *mfista_result);
+
 /* subroutines for calculating A matrix */
-extern void calc_A(int M,int N,int dftsign,
-             double *u,double *v,double *x,double *y,double *A,double *Verr);
+extern void calc_A(int M, int N, int dftsign,
+		   double *u, double *v, double *x, double *y,
+		   double *A, double *Verr);
 
 /* subroutines for mfista */
-extern void mfista(double* u,double* v,double* x,double* y,
-            double* Iin,double* Iout,double* V,double* Vsigma,
-            int dftsign,int M,int N,int NX,int NY,
-            double cinit,double lambda_l1,double lambda_tv,double lambda_tsv,
-            int nonneg_flag,int rec_flag,int looe_flag,int log_flag,
-            char *log_fname,struct RESULT *mfista_result);
+extern void mfista_imaging(double* Iin, double* Iout,
+			   double* x,double* y, int NX, int NY,
+			   double* u, double* v, double* V, double* Vsigma,
+			   int M, int dftsign,
+			   double lambda_l1, double lambda_tv, double lambda_tsv,
+			   int nonneg_flag, int looe_flag, double cinit,
+			   struct RESULT *mfista_result);
 
 /* output */
 
 extern void show_result(FILE *fid, char *fname, struct RESULT *mfista_result);
-

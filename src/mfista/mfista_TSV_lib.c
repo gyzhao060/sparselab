@@ -383,3 +383,221 @@ void mfista_L1_TSV_core(double *yvec, double *Amat,
   free(ytmp);
   free(zvec);
 }
+
+int mfista_L1_TSV_imag_core(double *yvec, double *Amat, 
+			    int *M, int *N, int NX, int NY,
+			    double lambda_l1, double lambda_tsv, double cinit,
+			    double *xvec, int nonneg_flag, int looe_flag)
+{
+  void (*soft_th)(double *vector, int length, double eta, double *newvec);
+  int i, iter, inc = 1;
+  double *xtmp, *xnew, *ytmp, *zvec, *dfdx,
+    Qcore, Fval, Qval, c, cinv, tmpa, l1cost, costtmp, *cost,
+    mu=1, munew, alpha = 1;
+
+  printf("computing image with MFISTA.\n");
+
+  /* allocate memory space start */ 
+
+  cost  = alloc_vector(MAXITER);
+  dfdx  = alloc_vector(*N);
+  xnew  = alloc_vector(*N);
+  xtmp  = alloc_vector(*N);
+  ytmp  = alloc_vector(*M);
+  zvec  = alloc_vector(*N);
+
+  /* defining soft_thresholding */
+  
+  if(nonneg_flag == 0)
+    soft_th=soft_threshold;
+  else if(nonneg_flag == 1)
+    soft_th=soft_threshold_nonneg;
+  else {
+    printf("nonneg_flag must be chosen properly.\n");
+    return(0);
+  }
+
+  /* initialize xvec */
+  dcopy_(N, xvec, &inc, zvec, &inc);
+
+  c = cinit;
+
+  costtmp = calc_F_TSV_part(M, N, NX, NY,
+			     yvec, Amat, xvec, lambda_tsv, &inc, ytmp);
+  l1cost = dasum_(N, xvec, &inc);
+  costtmp += lambda_l1*l1cost;
+
+  for(iter = 0; iter < MAXITER; iter++){
+
+    cost[iter] = costtmp;
+
+    if((iter % 100) == 0)
+      printf("%d cost = %f \n",(iter+1), cost[iter]);
+
+    dF_dx(M, N, NX, NY, yvec, Amat, zvec, lambda_tsv, &inc, ytmp, dfdx);
+
+    Qcore = calc_F_TSV_part(M, N, NX, NY,
+			     yvec, Amat, zvec, lambda_tsv, &inc, ytmp);
+
+    for( i = 0; i < MAXITER; i++){
+      dcopy_(N, dfdx, &inc, xtmp, &inc);
+      cinv = 1/c;
+      dscal_(N, &cinv, xtmp, &inc);
+      daxpy_(N, &alpha, zvec, &inc, xtmp, &inc);
+      soft_th(xtmp, *N, lambda_l1/c, xnew);
+      Fval = calc_F_TSV_part(M, N, NX, NY,
+			      yvec, Amat, xnew, lambda_tsv, &inc, ytmp);
+      Qval = calc_Q_part(N, xnew, zvec, c, &inc, dfdx, xtmp);
+      Qval += Qcore;
+
+      if(Fval<=Qval) break;
+
+      c *= ETA;
+    }
+
+    c /= ETA;
+
+    munew = (1+sqrt(1+4*mu*mu))/2;
+
+    l1cost = dasum_(N, xnew, &inc);
+
+    Fval += lambda_l1*l1cost;
+
+    if(Fval < cost[iter]){
+
+      costtmp = Fval;
+      dcopy_(N, xvec, &inc, zvec, &inc);
+
+      tmpa = (1-mu)/munew;
+      dscal_(N, &tmpa, zvec, &inc);
+
+      tmpa = 1+((mu-1)/munew);
+      daxpy_(N, &tmpa, xnew, &inc, zvec, &inc);
+	
+      dcopy_(N, xnew, &inc, xvec, &inc);
+	    
+    }	
+    else{
+      dcopy_(N, xvec, &inc, zvec, &inc);
+
+      tmpa = 1-(mu/munew);
+      dscal_(N, &tmpa, zvec, &inc);
+      
+      tmpa = mu/munew;
+      daxpy_(N, &tmpa, xnew, &inc, zvec, &inc);
+
+      /* another stopping rule */
+      if((iter>1) && (dasum_(N, xvec, &inc) == 0)) break;
+    }
+
+    /* stopping rule start */
+     
+    if((iter>=MINITER) && ((cost[iter-TD]-cost[iter])<EPS)) break;
+
+    /* stopping rule end */
+
+    mu = munew;
+  }
+  if(iter == MAXITER){
+    printf("%d cost = %f \n",(iter), cost[iter-1]);
+    iter = iter -1;
+  }
+  else
+    printf("%d cost = %f \n",(iter+1), cost[iter]);
+
+  /* sending summary of results */
+
+  printf("\n");
+
+  /* clear memory */
+
+  free(cost);
+  free(dfdx);
+  free(xnew);
+  free(xtmp);
+  free(ytmp);
+  free(zvec);
+  return(iter);
+}
+
+void mfista_L1_TSV_result(double *yvec, double *Amat, 
+			  int *M, int *N, int NX, int NY,
+			  double lambda_l1, double lambda_tsv, int iter,
+			  double *xvec, int nonneg_flag, int looe_flag,
+			  struct RESULT *mfista_result)
+{
+  int i, inc = 1;
+  double *yAx, tmpa;
+
+  printf("computing image with MFISTA.\n");
+
+  /* allocate memory space start */
+
+  yAx  = alloc_vector(*M);
+
+  mfista_result->residual = alloc_vector(*M);
+  
+  mfista_result->M = (*M);
+  mfista_result->N = (*N);
+  mfista_result->NX = NX;
+  mfista_result->NY = NY;
+  mfista_result->ITER = iter+1;
+  mfista_result->maxiter = MAXITER;
+	    
+  mfista_result->lambda_l1 = lambda_l1;
+  mfista_result->lambda_tsv = lambda_tsv;
+  mfista_result->lambda_tv = 0;
+
+  calc_yAz(M, N, yvec, Amat, xvec, &inc, yAx);
+
+  /* mean square error */
+  mfista_result->sq_error = 0;
+
+  for(i = 0;i< (*M);i++){
+    mfista_result->sq_error += yAx[i]*yAx[i];
+    mfista_result->residual[i] = yAx[i];
+  }
+
+  /* average of mean square error */
+
+  mfista_result->mean_sq_error = mfista_result->sq_error/((double)(*M));
+
+  mfista_result->l1cost   = 0;
+  mfista_result->N_active = 0;
+
+  for(i = 0;i < (*N);i++){
+    tmpa = fabs(xvec[i]);
+    if(tmpa > 0){
+      mfista_result->l1cost += tmpa;
+      ++ mfista_result->N_active;
+    }
+  }
+
+  mfista_result->tsvcost = TSV(NX, NY, xvec);
+  mfista_result->tvcost = 0;
+  mfista_result->finalcost = (mfista_result->sq_error)/2
+    + lambda_l1*(mfista_result->l1cost)
+    + lambda_tsv*(mfista_result->tsvcost);
+
+  /* computing LOOE */
+
+  if(looe_flag == 1){
+    mfista_result->looe = compute_LOOE_L1_TSV(M, N, NX, NY,
+					      lambda_l1, lambda_tsv,
+					      yvec, Amat, xvec, yAx);
+    if(mfista_result->looe == -1){
+      mfista_result->Hessian_positive = 0;
+      mfista_result->looe = 0;
+    }
+    else{
+      mfista_result->Hessian_positive = 1;
+    }
+  }
+  else{
+    mfista_result->looe = 0;
+    mfista_result->Hessian_positive = -1;
+  }
+    
+  /* clear memory */
+  free(yAx);
+}
