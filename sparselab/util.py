@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-A python module sparselab.util
-
 This is a submodule of sparselab. This module saves some common functions,
 variables, and data types in the sparselab module.
 '''
