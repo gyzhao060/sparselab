@@ -9,6 +9,7 @@ CFLAGS=-fPIC -O2
 CLIBS=@LDFLAGS@ @lapacklib@ @blaslib@ -lm
 
 targets = libmfista.so
+object_mfista_imaging = mfista_imaging.o
 object_tools = mfista_tools.o
 object_l1 = mfista_lib.o
 object_tv = mfista_TV_lib.o
@@ -16,8 +17,8 @@ object_tsv = mfista_TSV_lib.o
 
 all: $(targets)
 
-libmfista.so: mfista.o $(object_l1) $(object_tv) $(object_tsv) $(object_tools)
-	$(CC) $(CFLAGS) $(object_l1) $(object_tv) $(object_tsv) $(object_tools) mfista.o $(CLIBS) -shared -o libmfista.so
+libmfista.so: $(object_l1) $(object_tv) $(object_tsv) $(object_tools) $(object_mfista_imaging)
+	$(CC) $(CFLAGS) $(object_l1) $(object_tv) $(object_tsv) $(object_tools) $(object_mfista_imaging) $(CLIBS) -shared -o libmfista.so
 
 .c.o:
 	$(CC) -c $(CFLAGS) -o $@ $<
