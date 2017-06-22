@@ -905,7 +905,7 @@ def static_dft_pipeline(
         if "catable" in imageprm.keys():
             if imageprm["catable"] is not None:
                 iscatable = True
-                catables = imageprm["bstable"].gencvtables(nfold=nfold, seed=seed)
+                catables = imageprm["catable"].gencvtables(nfold=nfold, seed=seed)
 
     # Start Imaging
     for itsv, itv, il1 in itertools.product(np.arange(ntsv),
@@ -974,7 +974,7 @@ def static_dft_pipeline(
             tmpcvsum["vrchisqamp"] = np.zeros(nfold, dtype=np.float64)
             tmpcvsum["vrchisqcp"] = np.zeros(nfold, dtype=np.float64)
             tmpcvsum["vrchisqca"] = np.zeros(nfold, dtype=np.float64)
-            
+
             #    initialize some columns
             tmpcvsum.loc[:, "itsv"] = itsv
             tmpcvsum.loc[:, "itv"] = itv
@@ -1069,6 +1069,7 @@ def static_dft_pipeline(
             cvsumtable.to_csv(os.path.join(workdir, cvsumtablefile))
 
             # Average Varidation Errors and memorized them
+            tmpsum["tchisq"] = np.mean(tmpcvsum["tchisq"])
             tmpsum["trchisq"] = np.mean(tmpcvsum["trchisq"])
             tmpsum["tchisqfcv"] = np.mean(tmpcvsum["tchisqfcv"])
             tmpsum["tchisqamp"] = np.mean(tmpcvsum["tchisqamp"])
