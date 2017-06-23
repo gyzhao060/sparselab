@@ -5,7 +5,7 @@ This is a new version of a sparse imaging software, which has more interactive i
 
 **Please contact to [Kazu Akiyama](http://kazuakiyama.github.io/) at MIT Haystack Observatory, if you would like to try the library**.
 
-## Documatiation
+## Documentation
 We are working on [the documentation of this library](https://eht-jp.github.io/sparselab).
 
 ## Contact
