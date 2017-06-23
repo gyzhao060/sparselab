@@ -20,14 +20,11 @@ import astropy.coordinates as coord
 import astropy.io.fits as pyfits
 from astropy.convolution import convolve_fft
 
-
 # matplotlib
 import matplotlib.pyplot as plt
 
-
 # internal
 import fortlib
-
 
 #-------------------------------------------------------------------------
 # IMAGEFITS (Manupulating FITS FILES)
