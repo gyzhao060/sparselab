@@ -9,4 +9,4 @@ This is a new version of a sparse imaging software, which has more interactive i
 We are working on [the documentation of this library](https://eht-jp.github.io/sparselab).
 
 ## Contact
-Kazu Akiyama, Main Developer of Sparselab, [Website](http://kazuakiyama.github.io/)
+Kazu Akiyama, the Main Developer of Sparselab, [Website](http://kazuakiyama.github.io/)
