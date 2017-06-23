@@ -1,5 +1,5 @@
 module interp
-  use nrtype, only: dp
+  use param, only: dp
 contains
 !
 !  subroutines and functions
@@ -101,7 +101,7 @@ subroutine spline(x, y, yp1, ypn, y2, n)
   ! this routine returns an array y2 of length N that contains the second
   ! derivertives of the interpolating function at the tabulated points xi.
   ! If yp1 and/or ypn are equal to 1x10e30 or larger (default values),
-  ! the routine is signaled to set the corresponding boundary condition for 
+  ! the routine is signaled to set the corresponding boundary condition for
   ! a natural spline, with zero second derivative on that boundary.
   !
   implicit none
@@ -110,7 +110,7 @@ subroutine spline(x, y, yp1, ypn, y2, n)
   real(dp), intent(in)  :: yp1, ypn
   real(dp), intent(out) :: y2(1:n)
   real(dp) :: a(1:n), b(1:n), c(1:n), r(1:n)
-  
+
   c(1:n-1) = x(2:n) - x(1:n-1)
   r(1:n-1) = 6.0d0*((y(2:n)-y(1:n-1))/c(1:n-1))
   r(2:n-1) = r(2:n-1)-r(1:n-2)
@@ -118,7 +118,7 @@ subroutine spline(x, y, yp1, ypn, y2, n)
   b(2:n-1) = 2.0d0*(c(2:n-1)+a(2:n-1))
   b(1) = 1.0d0
   b(n) = 1.0d0
-  
+
   ! set the boundary condition
   if (yp1 > 0.99d30) then
     r(1)=0.0d0
@@ -134,7 +134,7 @@ subroutine spline(x, y, yp1, ypn, y2, n)
     r(n)=(-3.0d0/(x(n)-x(n-1)))*((y(n)-y(n-1))/(x(n)-x(n-1))-ypn)
     a(n)=0.5d0
   end if
-  
+
   ! derive the spline coefficients
   call solve_tridiag(a(2:n),b(1:n),c(1:n-1),r(1:n),y2(1:n),n)
 end subroutine
@@ -156,10 +156,10 @@ subroutine splint(xa,ya,y2a,x,y,na)
   real(dp), intent(in) :: xa(1:na),ya(1:na),y2a(1:na) ! input tablated data
   real(dp), intent(in) :: x ! at each value in x, interpolation is exermined.
   real(dp), intent(out):: y ! cubic-spline interpolated value on x
-  
+
   integer :: khi,klo
   real(dp) :: a,b,h
-  
+
   !klo and khi now bracket the input value of x.
   klo=max(min(locate(xa,x,na),na-1),1)
   khi=klo+1
@@ -181,7 +181,7 @@ subroutine splintvec(xa,ya,y2a,x,y,na,n)
   real(dp), intent(in) :: x(1:n) ! at each value in x, interpolation is exermined.
   real(dp), intent(out):: y(1:n) ! cubic-spline interpolated value on x
   integer :: i
-  
+
   do i=1, n
     if ((x(i) > maxval(xa)) .or. (x(i) < minval(xa))) then
       y(i) = 0d0
@@ -220,7 +220,7 @@ subroutine splin2(xa, ya, za, z2a, x, y, z, nxa, nya)
   real(dp), intent(in) :: x,y
   real(dp), intent(out):: z
   real(dp) :: ztmp(1:nya), zztmp(1:nya)
-  integer :: iy 
+  integer :: iy
   !
   do iy=1, nya
     call splint(xa(1:nxa),za(1:nxa,iy),z2a(1:nxa,iy),x,zztmp(iy),nxa)
@@ -244,7 +244,7 @@ subroutine splin2vec(xa, ya, za, z2a, x, y, z, nxa, nya, n)
   real(dp), intent(in) :: xa(1:nxa),ya(1:nya),za(1:nxa,1:nya),z2a(1:nxa,1:nya)
   real(dp), intent(in) :: x(1:n),y(1:n)
   real(dp), intent(out):: z(1:n)
-  integer :: i 
+  integer :: i
   !
   do i=1,n
     if ((x(i) > maxval(xa)) .or. (x(i) < minval(xa)) .or. &
@@ -260,11 +260,11 @@ end subroutine
 subroutine splin2grid(xa, ya, za, z2a, x, y, z, nxa, nya, nx, ny)
   !
   ! This subroutine is a variant of the subroutine splin2 in Numerical Recipe
-  ! F90, arranged by Kazu Akiyama. This fucntion is optimized for the 
+  ! F90, arranged by Kazu Akiyama. This fucntion is optimized for the
   ! two-dimensional bi-cubic interpolation on the grid-to-grid basis.
   !
   ! This subroutine omits reduandant calculations of spline coefficients
-  ! for sets of data with the same x-axis coordinates. 
+  ! for sets of data with the same x-axis coordinates.
   !
   implicit none
   integer,  intent(in) :: nx, ny, nxa, nya
@@ -274,13 +274,13 @@ subroutine splin2grid(xa, ya, za, z2a, x, y, z, nxa, nya, nx, ny)
   real(dp) :: ztmp(1:nya,1:nx), zztmp(1:nya,1:nx)
   integer :: ix, iy, iya
   real(dp) :: xamin, xamax, yamin, yamax
-  
+
   ! get minimum and maximam values of reference grids
   xamin = minval(xa)
   xamax = maxval(xa)
   yamin = minval(ya)
   yamax = maxval(ya)
-  
+
   ! calculate coeffcients using x-axis information
   do ix=1, nx
     if ((x(ix) < xamin) .or. (x(ix) > xamax)) then
@@ -293,7 +293,7 @@ subroutine splin2grid(xa, ya, za, z2a, x, y, z, nxa, nya, nx, ny)
       call spline(ya(1:nya),zztmp(1:nya,ix),1d30,1d30,ztmp(1:nya,ix),nya)
     end if
   end do
-  
+
   ! spline interplate along with the y-axis
   do iy=1, ny
     if ((y(iy) < yamin) .or. (y(iy) > yamax)) then

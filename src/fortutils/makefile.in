@@ -46,11 +46,11 @@ all: fortlib.so
 
 # Python Fortlib Module
 fortlib.so: \
-	nrtype.f90 interp.f90 phasecon.f90 houghlib.f90 \
+	param.f90 interp.f90 phasecon.f90 houghlib.f90 \
 	static_imaging_lib.f90 static_imaging_dft.f90
 
 	$(F2PY) $(F2PYFLAGS) -m fortlib -c \
-	nrtype.f90 interp.f90 phasecon.f90 houghlib.f90 \
+	param.f90 interp.f90 phasecon.f90 houghlib.f90 \
 	static_imaging_lib.f90 static_imaging_dft.f90
 
 install: all

@@ -1,6 +1,6 @@
 module static_imaging_dft
   !$use omp_lib
-  use nrtype, only: dp, tol, pi
+  use param, only: dp, tol, pi
   use static_imaging_lib, only: tv, tsv, gradtve, gradtsve, calc_I2d
   implicit none
   !

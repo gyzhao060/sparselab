@@ -1,6 +1,6 @@
 module static_imaging_lib
   !$use omp_lib
-  use nrtype, only : dp, tol
+  use param, only : dp, tol
   implicit none
 contains
 
@@ -163,14 +163,14 @@ real(dp) function gradtve(xidx,yidx,I2d,Nx,Ny)
   if (i0 > 0) then
     ! dIx = I(i,j) - I(i-1,j)
     dIx = I2d(i1,j1) - I2d(i0,j1)
-    
+
     ! dIy = I(i-1,j+1) - I(i,j)
     if (j2 > Ny) then
       dIy = 0d0
     else
       dIy = I2d(i0,j2) - I2d(i0,j1)
     end if
-    
+
     tve = sqrt(dIx*dIx+dIy*dIy)
     if (tve > tol) then
       gradtve = gradtve + dIx/tve
@@ -183,14 +183,14 @@ real(dp) function gradtve(xidx,yidx,I2d,Nx,Ny)
   if (j0 > 0) then
     ! dIy = I(i,j) - I(i,j-1)
     dIy = I2d(i1,j1) - I2d(i1,j0)
-    
+
     ! dIx = I(i+1,j-1) - I(i,j-1)
     if (i2 > Nx) then
       dIx = 0d0
     else
       dIx = I2d(i2,j0) - I2d(i1,j0)
     end if
-    
+
     tve = sqrt(dIx*dIx+dIy*dIy)
     if (tve > tol) then
       gradtve = gradtve + dIy/tve
@@ -244,7 +244,7 @@ end function
 
 subroutine ixy2ixiy(ixy,ix,iy,Nx)
   implicit none
-  
+
   ! arguments
   integer, intent(in):: ixy,Nx
   integer, intent(out):: ix,iy
@@ -256,7 +256,7 @@ end subroutine
 
 subroutine ixiy2ixy(ix,iy,ixy,Nx)
   implicit none
-  
+
   ! arguments
   integer, intent(in):: ix,iy,Nx
   integer, intent(out):: ixy
