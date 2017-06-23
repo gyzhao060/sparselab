@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
-AC_INIT([nrtype.f90], [1], [kakiyama@mit.edu])
-AC_CONFIG_SRCDIR([./src/fortutils])
+AC_INIT([param.f90], [1], [kakiyama@mit.edu])
+AC_CONFIG_SRCDIR([./src/fortlib])
 #
 AC_PREFIX_PROGRAM([gfortran])
 AC_LANG([C])
