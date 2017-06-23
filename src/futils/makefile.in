@@ -1,0 +1,74 @@
+.SUFFIXES: .f90 .o
+#-------------------------------------------------------------------------------
+# Fortran
+FC=@FC@
+
+# debug option
+DBG_FLAG=@dbg_flag@
+ifeq ($(DBG_FLAG),True)
+	FCFLAGS_DBG=-g -Wall -pedantic -fbounds-check -O -Wuninitialized -ffpe-trap=invalid,zero,overflow -fbacktrace
+else
+	FCFLAGS_DBG=
+endif
+
+# other options
+FCFLAGS_OMP=-fopenmp
+FCFLAGS_OPT=-O2
+FCFLAGS_BLAS=@LDFLAGS@ @blaslib@
+FCFLAGS_LBFGSB=-L../lbfgsb -llbgsb
+
+# collect above options
+FCFLAGS=$(FCFLAGS_OPT) -fPIC $(FCFLAGS_DBG) $(FCFLAGS_BLAS) $(FCFLAGS_OMP)
+
+#-------------------------------------------------------------------------------
+# F2PY
+F2PY=@F2PY@
+
+F2PYFLAGS_FC=gfortran
+F2PYFLAGS_OPT=$(FCFLAGS_OPT)
+F2PYFLAGS_F90=-fPIC $(FCFLAGS_DBG) $(FCFLAGS_LBFGSB) $(FCFLAGS_BLAS) $(FCFLAGS_OMP)
+F2PYFLAGS_F77=-fPIC $(FCFLAGS_DBG) $(FCFLAGS_LBFGSB) $(FCFLAGS_BLAS) $(FCFLAGS_OMP)
+F2PYFLAGS_OMP=-lgomp
+
+# collect above options
+F2PYFLAGS=--fcompiler=$(F2PYFLAGS_FC)\
+		  --opt="$(F2PYFLAGS_OPT)"\
+		  --f90flags="$(F2PYFLAGS_F90)"\
+		  --f77flags="$(F2PYFLAGS_F77)"\
+		  $(FCFLAGS_BLAS) $(F2PYFLAGS_OMP)
+
+#-------------------------------------------------------------------------------
+all: libfutils.a futils.so
+
+libfutils.a: stdftim.o dftlib.o hough.o phasecon.o interp.o blas.o params.o
+	ar rcs libfutils.a stdftim.o dftlib.o hough.o phasecon.o interp.o blas.o params.o
+
+.f90.o:
+	$(FC) -c $< $(FCFLAGS)
+
+interp.o: params.o
+hough.o: interp.o params.o
+phasecon.o: params.o
+dftlib.o: blas.o params.o
+stdftim.o: dftlib.o blas.o params.o
+	$(FC) -c stdftim.f90 $(FCFLAGS_OPT) -fPIC $(FCFLAGS_DBG) $(FCFLAGS_LBFGSB) $(FCFLAGS_BLAS) $(FCFLAGS_OMP)
+
+# Python futils Module
+futils.so: hough.f90 phasecon.f90 interp.f90 blas.f90 params.f90\
+	         dftlib.f90 stdftim.f90
+	$(F2PY) $(F2PYFLAGS)\
+	  -m futils\
+	  -c params.f90 blas.f90 interp.f90 phasecon.f90 hough.f90\
+	     dftlib.f90 stdftim.f90
+
+install: all
+	cp -rp futils.*so* ../../sparselab/
+
+clean:
+	rm -rf *.*so*
+	rm -f *.mod *.o *.a
+	rm -f *__genmod.f90 *.pyf
+
+uninstall: clean
+	rm -f makefile
+	rm -rf ../../sparselab/futils.*so*

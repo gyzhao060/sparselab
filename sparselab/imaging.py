@@ -25,9 +25,7 @@ from matplotlib.ticker import NullFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # internal modules
-import util
-import fortlib
-import imdata
+from sparselab import util, futils, imdata
 
 #-------------------------------------------------------------------------
 # Default Parameters
@@ -213,7 +211,7 @@ def static_dft_imaging(
     )
 
     # run imaging
-    Iout = fortlib.static_imaging_dft(
+    Iout = futils.stdftim.imaging(
         # Images
         iin=Iin, x=x, y=y, xidx=xidx, yidx=yidx, nx=Nx, ny=Ny,
         # UV coordinates,
@@ -398,7 +396,7 @@ def static_dft_stats(
     )
 
     # calculate all
-    out = fortlib.static_imaging_dft.statistics(
+    out = futils.stdftim.statistics(
         # Images
         iin=Iin, x=x, y=y, xidx=xidx, yidx=yidx, nx=Nx, ny=Ny,
         # UV coordinates,

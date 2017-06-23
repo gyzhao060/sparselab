@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 
 
 # internal
-import fortlib
+from sparselab import futils
 
 
 #-------------------------------------------------------------------------
@@ -1424,7 +1424,7 @@ class IMFITS(object):
             sgny = 1
 
         # calculate circle hough transform
-        H = fortlib.hough_lib.circle_hough(self.data[istokes, ifreq],
+        H = futils.hough.circle_hough(self.data[istokes, ifreq],
                                            sgnx * xgrid, sgny * ygrid,
                                            radius, np.int32(ntheta))
         isfort = np.isfortran(H)
