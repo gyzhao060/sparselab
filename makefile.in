@@ -18,6 +18,7 @@ clean:
 	cd src/fortutils; make clean
 	cd src/mfista; make clean
 	rm -f $(PYTHONLIBDIR)/*.pyf
+	rm -f $(PYTHONLIBDIR)/*.pyc
 
 uninstall: clean
 	cd src/lbfgsb; make uninstall
