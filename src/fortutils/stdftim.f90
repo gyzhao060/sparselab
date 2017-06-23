@@ -1,10 +1,13 @@
-module static_imaging_dft
+module stdftim
   !$use omp_lib
-  use param, only: dp, tol, pi
-  use static_imaging_lib, only: tv, tsv, gradtve, gradtsve, calc_I2d
+  use param, only: dp, tol
+  use dftlib, only: calc_F, grad_amppha, DFT,&
+                    chisq_fcv, chisq_amp, chisq_camp, chisq_cphase,&
+                    model_fcv, model_amp, model_camp, model_cphase,&
+                    tv, tsv, gradtve, gradtsve, calc_I2d
   implicit none
-  !
-  ! External Functions (BLAS Functions)
+
+  ! BLAS function (external)
   interface
     real(kind(1d0)) function dasum(n, x, incx)
       integer,         intent(in) :: n, incx
@@ -131,7 +134,7 @@ subroutine imaging( &
   ! Preperation
   !-------------------------------------
   ! allocate vectors and arrays
-  !write(*,*) 'static_imaging_dft.imaging: Allocate Freal, Fimag'
+  !write(*,*) 'stdftim.imaging: Allocate Freal, Fimag'
   allocate(Freal(Npix, Nuv), Fimag(Npix, Nuv))
   !$OMP PARALLEL DO DEFAULT(SHARED) &
   !$OMP   FIRSTPRIVATE(Nuv) &
@@ -143,16 +146,16 @@ subroutine imaging( &
   !$OMP END PARALLEL DO
 
   ! calculate Fourier Matrix
-  !write(*,*) 'static_imaging_dft.imaging: Calc the Fourier Matrix'
+  !write(*,*) 'stdftim.imaging: Calc the Fourier Matrix'
   call calc_F(x,y,u,v,Freal,Fimag,Npix,Nuv)
 
   ! copy images
-  !write(*,*) 'static_imaging_dft.imaging: Initialize the image'
+  !write(*,*) 'stdftim.imaging: Initialize the image'
   Iout(1:Npix) = Iin(1:Npix)
   !-------------------------------------
   ! L-BFGS-B
   !-------------------------------------
-  !write(*,*) 'static_imaging_dft.imaging: Initialize the L-BFGS-B'
+  !write(*,*) 'stdftim.imaging: Initialize the L-BFGS-B'
   ! initialise L-BFGS-B
   !   Allocate some arrays
   allocate(iwa(3*Npix))
@@ -168,7 +171,7 @@ subroutine imaging( &
   end if
 
   ! start L-BFGS-B
-  !write(*,*) 'static_imaging_dft.imaging: start L-BFGS-B calculations'
+  !write(*,*) 'stdftim.imaging: start L-BFGS-B calculations'
   task = 'START'
   do while(task(1:2) == 'FG' &
           .or. task == 'NEW_X' &
@@ -299,7 +302,7 @@ subroutine calc_cost(&
   end if
 
   ! Initialize the chisquare and its gradient
-  !write(*,*) 'static_imaging_dft.calc_cost: initialize cost and gradcost'
+  !write(*,*) 'stdftim.calc_cost: initialize cost and gradcost'
   cost = 0d0
   gradcost(1:Npix) = 0d0
 
@@ -331,51 +334,51 @@ subroutine calc_cost(&
   ! Calculate Chi Square and its gradient
   !-------------------------------------
   ! Do Fourier Transfromation
-  !write(*,*) 'static_imaging_dft.calc_cost: run DFT'
+  !write(*,*) 'stdftim.calc_cost: run DFT'
   call DFT(Iin,Freal,Fimag,Vreal,Vimag,Npix,Nuv)
 
   !   Full Complex Vibisility
   if (isfcv .eqv. .True.) then
-    !write(*,*) 'static_imaging_dft.calc_cost: calculate chisq and gradchisq on Full Complex Visibility'
+    !write(*,*) 'stdftim.calc_cost: calculate chisq and gradchisq on Full Complex Visibility'
     call chisq_fcv(Freal,Fimag,Vreal,Vimag,&
                    uvidxfcv,Vfcvr,Vfcvi,Varfcv,&
                    chisq,gradchisq,Npix,Nuv,Nfcv)
-    !write(*,*) 'static_imaging_dft.calc_cost: chisq fcv',chisq
+    !write(*,*) 'stdftim.calc_cost: chisq fcv',chisq
     cost = cost + chisq / Ndata
     call daxpy(Npix,1d0/Ndata,gradchisq(1:Npix),1,gradcost(1:Npix),1)
   end if
 
   !   Other quantities
   if (needgradV .eqv. .True.) then
-    !write(*,*) 'static_imaging_dft.calc_cost: calculate gradients of visibility amplitudes and phases'
+    !write(*,*) 'stdftim.calc_cost: calculate gradients of visibility amplitudes and phases'
     call grad_amppha(Freal,Fimag,Vreal,Vimag,gradVamp,gradVpha,Npix,Nuv)
 
     if (isamp .eqv. .True.) then
-      !write(*,*) 'static_imaging_dft.calc_cost: calculate chisq and gradchisq on Visibility Amplitudes'
+      !write(*,*) 'stdftim.calc_cost: calculate chisq and gradchisq on Visibility Amplitudes'
       call chisq_amp(gradVamp,Vreal,Vimag,&
                      uvidxamp,Vamp,Varamp,&
                      chisq,gradchisq,Npix,Nuv,Namp)
-      !write(*,*) 'static_imaging_dft.calc_cost: chisq amp',chisq
+      !write(*,*) 'stdftim.calc_cost: chisq amp',chisq
       cost = cost + chisq / Ndata
       call daxpy(Npix,1d0/Ndata,gradchisq(1:Npix),1,gradcost(1:Npix),1)
     end if
 
     if (isca .eqv. .True.) then
-      !write(*,*) 'static_imaging_dft.calc_cost: calculate chisq and gradchisq on Closure Amplitudes'
+      !write(*,*) 'stdftim.calc_cost: calculate chisq and gradchisq on Closure Amplitudes'
       call chisq_camp(gradVamp,Vreal,Vimag,&
                       uvidxca,CA,Varca,&
                       chisq,gradchisq,Npix,Nuv,Nca)
-      !write(*,*) 'static_imaging_dft.calc_cost: chisq camp',chisq
+      !write(*,*) 'stdftim.calc_cost: chisq camp',chisq
       cost = cost + chisq / Ndata
       call daxpy(Npix,1d0/Ndata,gradchisq(1:Npix),1,gradcost(1:Npix),1)
     end if
 
     if (iscp .eqv. .True.) then
-      !write(*,*) 'static_imaging_dft.calc_cost: calculate chisq and gradchisq on Closure Phases'
+      !write(*,*) 'stdftim.calc_cost: calculate chisq and gradchisq on Closure Phases'
       call chisq_cphase(gradVpha,Vreal,Vimag,&
                         uvidxcp,CP,Varcp,&
                         chisq,gradchisq,Npix,Nuv,Ncp)
-      !write(*,*) 'static_imaging_dft.calc_cost: chisq cphase',chisq
+      !write(*,*) 'stdftim.calc_cost: chisq cphase',chisq
       cost = cost + chisq / Ndata
       call daxpy(Npix,1d0/Ndata,gradchisq(1:Npix),1,gradcost(1:Npix),1)
     end if
@@ -440,305 +443,6 @@ subroutine calc_cost(&
     deallocate(I2d)
   end if
 end subroutine
-!
-!-------------------------------------------------------------------------------
-! calc the Fourier Matrix
-!-------------------------------------------------------------------------------
-!
-subroutine calc_F(x,y,u,v,Freal,Fimag,Npix,Nuv)
-  !
-  ! This subroutine calculates the DFT matrix from the input data
-  !
-  implicit none
-
-  integer,  intent(in)  :: Npix,Nuv
-  real(dp), intent(in)  :: x(Npix),y(Npix)
-  real(dp), intent(in)  :: u(Nuv),v(Nuv)
-  real(dp), intent(out) :: Freal(Npix,Nuv), Fimag(Npix,Nuv)
-
-  integer :: iuv
-  real(dp):: phase(1:Npix)
-
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Nuv,Npix,x,y,u,v) &
-  !$OMP   PRIVATE(iuv, phase)
-  do iuv = 1, Nuv
-    ! Calculate phases first
-    phase(1:Npix) = 0d0
-    call daxpy(Npix,2*pi*u(iuv),x(1:Npix),1,phase(1:Npix),1)
-    call daxpy(Npix,2*pi*v(iuv),y(1:Npix),1,phase(1:Npix),1)
-    !write(*,*) maxval(v(iuv)*y), minval(v(iuv)*y)
-
-    ! Calculate the matrix
-    Freal(1:Npix, iuv) = cos(phase(1:Npix))
-    Fimag(1:Npix, iuv) = sin(phase(1:Npix))
-  end do
-  !$OMP END PARALLEL DO
-end subroutine
-!
-!
-subroutine grad_amppha(Freal,Fimag,Vreal,Vimag,gradVamp,gradVpha,Npix,Nuv)
-  implicit none
-
-  integer,  intent(in)  :: Npix,Nuv
-  real(dp), intent(in)  :: Freal(Npix,Nuv), Fimag(Npix,Nuv)
-  real(dp), intent(in)  :: Vreal(Nuv),Vimag(Nuv)
-  real(dp), intent(out) :: gradVamp(Npix,Nuv),gradVpha(Npix,Nuv)
-
-  real(dp) :: Vamp, Vampsq
-  integer  :: iuv
-
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Nuv,Npix,Vreal,Vimag) &
-  !$OMP   PRIVATE(iuv, Vamp, Vampsq)
-  do iuv=1, Nuv
-    Vamp = sqrt(Vreal(iuv)*Vreal(iuv)+Vimag(iuv)*Vimag(iuv))
-    Vampsq = Vamp*Vamp
-
-    ! using BLAS functions
-    gradVamp(1:Npix,iuv) = 0d0
-    call daxpy(Npix,Vreal(iuv)/Vamp,Freal(1:Npix,iuv),1,gradVamp(1:Npix,iuv),1)
-    call daxpy(Npix,Vimag(iuv)/Vamp,Fimag(1:Npix,iuv),1,gradVamp(1:Npix,iuv),1)
-    gradVpha(1:Npix,iuv) = 0d0
-    call daxpy(Npix, Vreal(iuv)/Vampsq,Fimag(1:Npix,iuv),1,gradVpha(1:Npix,iuv),1)
-    call daxpy(Npix,-Vimag(iuv)/Vampsq,Freal(1:Npix,iuv),1,gradVpha(1:Npix,iuv),1)
-
-    ! using Fortran functions
-    !gradVamp(1:Npix,iuv)=Vreal(iuv)/Vamp*Freal(1:Npix, iuv)&
-    !                    +Vimag(iuv)/Vamp*Fimag(1:Npix, iuv)
-    !gradVpha(1:Npix,iuv)=Vreal(iuv)/Vampsq*Fimag(1:Npix, iuv)&
-    !                    -Vimag(iuv)/Vampsq*Freal(1:Npix, iuv)
-  end do
-  !$OMP END PARALLEL DO
-end subroutine
-!
-!
-!-------------------------------------------------------------------------------
-! DFT
-!-------------------------------------------------------------------------------
-!
-subroutine DFT(I,Freal,Fimag,Vreal,Vimag,Npix,Nuv)
-  ! This subroutine do DFT
-  implicit none
-  integer,  intent(in)  :: Npix,Nuv
-  real(dp), intent(in)  :: Freal(Npix,Nuv), Fimag(Npix,Nuv)
-  real(dp), intent(in)  :: I(Npix)
-  real(dp), intent(out) :: Vreal(Nuv),Vimag(Nuv)
-
-  integer  :: iuv
-
-  !call dgemv('T',Nuv,Npix,1d0,Freal(1:Npix,1:Nuv),&
-  !           Npix,I(1:Npix),1,0d0,Vreal(1:Nuv),1)
-  !call dgemv('T',Nuv,Npix,1d0,Fimag(1:Npix,1:Nuv),&
-  !           Npix,I(1:Npix),1,0d0,Vimag(1:Nuv),1)
-
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Nuv,Npix,I) &
-  !$OMP   PRIVATE(iuv)
-  do iuv=1, Nuv
-    Vreal(iuv) = ddot(Npix, I(1:Npix), 1, Freal(1:Npix,iuv), 1)
-    Vimag(iuv) = ddot(Npix, I(1:Npix), 1, Fimag(1:Npix,iuv), 1)
-  end do
-  !$OMP END PARALLEL DO
-  !write(*,*) maxval(I),maxval(Freal),maxval(Fimag),minval(Freal),minval(Fimag)
-end subroutine
-!
-!
-!-------------------------------------------------------------------------------
-! calc chisquares
-!-------------------------------------------------------------------------------
-!
-!
-subroutine chisq_fcv(Freal,Fimag,Vreal,Vimag,&
-                     uvidxfcv,Vfcvr,Vfcvi,Varfcv,&
-                     chisq,gradchisq,Npix,Nuv,Nfcv)
-  integer,  intent(in)  :: Npix,Nuv,Nfcv
-  integer,  intent(in)  :: uvidxfcv(Nfcv)
-  real(dp), intent(in)  :: Freal(Npix,Nuv), Fimag(Npix,Nuv)
-  real(dp), intent(in)  :: Vreal(Nuv), Vimag(Nuv)
-  real(dp), intent(in)  :: Vfcvr(Nfcv),Vfcvi(Nfcv)
-  real(dp), intent(in)  :: Varfcv(Nfcv)
-  real(dp), intent(out) :: chisq
-  real(dp), intent(out) :: gradchisq(Npix)
-
-  real(dp)  :: resid1,resid2,factor1,factor2
-  integer   :: uvidx,ifcv
-
-  chisq = 0d0
-  gradchisq(1:Npix) = 0d0
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nuv,Nfcv,Vreal,Vimag,uvidxfcv,Vfcvr,Vfcvi,Varfcv) &
-  !$OMP   PRIVATE(ifcv,uvidx,resid1,resid2,factor1,factor2) &
-  !$OMP   REDUCTION(+:chisq,gradchisq)
-  do ifcv=1, Nfcv
-    ! calc model fcvlitude
-    uvidx = abs(uvidxfcv(ifcv))
-    resid1 = Vreal(uvidx)-Vfcvr(ifcv)
-    resid2 = sign(1,uvidxfcv(ifcv))*Vimag(uvidx)-Vfcvi(ifcv)
-
-    ! calc chi-square
-    chisq = chisq + (resid1*resid1+resid2*resid2)/Varfcv(ifcv)
-
-    ! calc gradient of chi-square
-    factor1 = 2/Varfcv(ifcv)*resid1
-    factor2 = 2/Varfcv(ifcv)*resid2*sign(1,uvidxfcv(ifcv))
-    call daxpy(Npix,factor1,Freal(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-    call daxpy(Npix,factor2,Fimag(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-  end do
-  !$OMP END PARALLEL DO
-end subroutine
-
-
-subroutine chisq_amp(gradVamp,Vreal,Vimag,&
-                     uvidxamp,Vamp,Varamp,&
-                     chisq,gradchisq,Npix,Nuv,Namp)
-  integer,  intent(in)  :: Npix, Nuv, Namp
-  integer,  intent(in)  :: uvidxamp(Namp)
-  real(dp), intent(in)  :: gradVamp(Npix,Nuv)
-  real(dp), intent(in)  :: Vreal(Nuv), Vimag(Nuv)
-  real(dp), intent(in)  :: Vamp(Namp),Varamp(Namp)
-  real(dp), intent(out) :: chisq
-  real(dp), intent(out) :: gradchisq(Npix)
-
-  real(dp)  :: resid
-  integer   :: uvidx,iamp
-
-  chisq = 0d0
-  gradchisq(1:Npix) = 0d0
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nuv,Namp,Vreal,Vimag,uvidxamp,Vamp,Varamp) &
-  !$OMP   PRIVATE(iamp,uvidx,resid)  &
-  !$OMP   REDUCTION(+:chisq,gradchisq)
-  do iamp=1, Namp
-    ! calc model amplitude
-    uvidx = abs(uvidxamp(iamp))
-    resid = sqrt(Vreal(uvidx)*Vreal(uvidx)+Vimag(uvidx)*Vimag(uvidx))-Vamp(iamp)
-
-    ! calc chi-square
-    chisq = chisq + resid*resid/Varamp(iamp)
-
-    ! calc gradient of chisquare
-    !  using BLAS
-    call daxpy(Npix,2/Varamp(iamp)*resid,&
-               gradVamp(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-    !  not using BLAS
-    !gradchisq(1:Npix) = gradchisq(1:Npix) &
-    !                  + 2/Varamp(iamp)*resid*gradVamp(1:Npix,uvidx)
-  end do
-  !$OMP END PARALLEL DO
-end subroutine
-
-
-subroutine chisq_cphase(gradVpha,Vreal,Vimag,&
-                        uvidxcp,CP,Varcp,&
-                        chisq,gradchisq,Npix,Nuv,Ncp)
-  integer,  intent(in)  :: Npix, Nuv, Ncp
-  integer,  intent(in)  :: uvidxcp(3,Ncp)
-  real(dp), intent(in)  :: gradVpha(Npix,Nuv)
-  real(dp), intent(in)  :: Vreal(Nuv), Vimag(Nuv)
-  real(dp), intent(in)  :: CP(Ncp),Varcp(Ncp)
-  real(dp), intent(out) :: chisq
-  real(dp), intent(out) :: gradchisq(Npix)
-
-  real(dp)  :: resid,factor
-  integer   :: uvidx,icp,ibl
-
-  chisq = 0d0
-  gradchisq(1:Npix) = 0d0
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nuv,Ncp,Vreal,Vimag,uvidxcp,CP,Varcp) &
-  !$OMP   PRIVATE(icp,ibl,resid,uvidx,factor) &
-  !$OMP   REDUCTION(+:chisq,gradchisq)
-  do icp=1, Ncp
-    ! calc model closure phase
-    resid = 0d0
-    do ibl=1,3
-      uvidx = abs(uvidxcp(ibl,icp))
-      resid = resid + atan2(sign(1,uvidxcp(ibl,icp))*Vimag(uvidx),Vreal(uvidx))
-    end do
-
-    ! take a residual betweem model and data
-    resid = resid - CP(icp)
-
-    ! adjust a residual phase
-    !do while (resid > pi)
-    !  resid = resid - 2*pi
-    !end do
-    !do while (resid < -pi)
-    !  resid = resid + 2*pi
-    !end do
-    resid = atan2(sin(resid),cos(resid))
-
-    ! calc chi-square
-    chisq = chisq + resid*resid/Varcp(icp)
-
-    ! calc gradient of chi-square
-    factor=2/Varcp(icp)*resid
-    do ibl=1,3
-      uvidx = abs(uvidxcp(ibl,icp))
-      call daxpy(Npix,sign(1,uvidxcp(ibl,icp))*factor,&
-                 gradVpha(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-      !gradchisq(1:Npix) = gradchisq(1:Npix)&
-      !                  + sign(1,uvidxcp(ibl,icp))*factor*gradVpha(1:Npix,uvidx)
-    end do
-  end do
-  !$OMP END PARALLEL DO
-end subroutine
-!
-!
-subroutine chisq_camp(gradVamp,Vreal,Vimag,&
-                      uvidxca,CA,Varca,&
-                      chisq,gradchisq,Npix,Nuv,Nca)
-  integer,  intent(in)  :: Npix, Nuv, Nca
-  integer,  intent(in)  :: uvidxca(4,Nca)
-  real(dp), intent(in)  :: gradVamp(Npix,Nuv)
-  real(dp), intent(in)  :: Vreal(Nuv), Vimag(Nuv)
-  real(dp), intent(in)  :: CA(Nca),Varca(Nca)
-  real(dp), intent(out) :: chisq
-  real(dp), intent(out) :: gradchisq(Npix)
-
-  real(dp)  :: resid,amp,factor1,factor2(4)
-  integer   :: uvidx,ica,ibl
-
-  chisq = 0d0
-  gradchisq(1:Npix) = 0d0
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nuv,Nca,Vreal,Vimag,uvidxca,CA,Varca) &
-  !$OMP   PRIVATE(ica,ibl,resid,uvidx,amp,factor1,factor2) &
-  !$OMP   REDUCTION(+:chisq,gradchisq)
-  do ica=1, Nca
-    ! calc model closure phase
-    resid = 0d0
-    do ibl=1,4
-      uvidx = abs(uvidxca(ibl,ica))
-      amp = sqrt(Vreal(uvidx)*Vreal(uvidx)+Vimag(uvidx)*Vimag(uvidx))
-      if (ibl < 3) then
-        factor2(ibl) = 1/amp
-        resid = resid + log(amp)
-      else
-        factor2(ibl) = -1/amp
-        resid = resid - log(amp)
-      end if
-    end do
-
-    ! take a residual betweem model and data
-    resid = resid - CA(ica)
-
-    ! calc chi-square
-    chisq = chisq + resid*resid/Varca(ica)
-
-    ! calc gradient of chisquare
-    factor1=2/Varca(ica)*resid
-    do ibl=1,4
-      uvidx = abs(uvidxca(ibl,ica))
-      call daxpy(Npix,factor1*factor2(ibl),&
-                 gradVamp(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-    end do
-  end do
-  !$OMP END PARALLEL DO
-end subroutine
-!
-!
 !
 !-------------------------------------------------------------------------------
 ! calc model and statisitcs
@@ -851,7 +555,7 @@ subroutine statistics( &
   end if
 
   ! allocate vectors and arrays
-  !write(*,*) 'static_imaging_dft.imaging: Allocate Freal, Fimag'
+  !write(*,*) 'stdftim.imaging: Allocate Freal, Fimag'
   allocate(Freal(Npix, Nuv), Fimag(Npix, Nuv))
   allocate(Vreal(Nuv), Vimag(Nuv))
 
@@ -1007,215 +711,6 @@ subroutine statistics( &
   if (needgradV .eqv. .True.) then
     deallocate(gradVamp,gradVpha)
   end if
-end subroutine
-!
-!
-subroutine model_fcv(Freal,Fimag,Vreal,Vimag,&
-                     uvidxfcv,Vfcvr,Vfcvi,Varfcv,&
-                     Vfcvrmod,Vfcvimod,Vfcvres,&
-                     chisq,gradchisq,Npix,Nuv,Nfcv)
-  integer,  intent(in)  :: Npix,Nuv,Nfcv
-  integer,  intent(in)  :: uvidxfcv(Nfcv)
-  real(dp), intent(in)  :: Freal(Npix,Nuv), Fimag(Npix,Nuv)
-  real(dp), intent(in)  :: Vreal(Nuv), Vimag(Nuv)
-  real(dp), intent(in)  :: Vfcvr(Nfcv),Vfcvi(Nfcv)
-  real(dp), intent(in)  :: Varfcv(Nfcv)
-  real(dp), intent(out) :: Vfcvrmod(Nfcv),Vfcvimod(Nfcv),Vfcvres(Nfcv)
-  real(dp), intent(out) :: chisq
-  real(dp), intent(out) :: gradchisq(Npix)
-
-  real(dp)  :: resid1,resid2,factor1,factor2
-  integer   :: uvidx,ifcv
-
-  chisq = 0d0
-  gradchisq(1:Npix) = 0d0
-  Vfcvrmod(1:Nfcv) = 0d0
-  Vfcvimod(1:Nfcv) = 0d0
-  Vfcvres(1:Nfcv) = 0d0
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nuv,Nfcv,Vreal,Vimag,uvidxfcv,Vfcvr,Vfcvi,Varfcv) &
-  !$OMP   PRIVATE(ifcv,uvidx,resid1,resid2,factor1,factor2) &
-  !$OMP   REDUCTION(+:chisq,gradchisq)
-  do ifcv=1, Nfcv
-    ! calc model fcvlitude
-    uvidx = abs(uvidxfcv(ifcv))
-    Vfcvrmod(ifcv) = Vreal(uvidx)
-    Vfcvimod(ifcv) = sign(1,uvidxfcv(ifcv))*Vimag(uvidx)
-    resid1 = Vfcvrmod(ifcv)-Vfcvr(ifcv)
-    resid2 = Vfcvimod(ifcv)-Vfcvi(ifcv)
-
-    ! calc chi-square
-    Vfcvres(ifcv)=sqrt(resid1*resid1+resid2*resid2)
-    chisq = chisq + (resid1*resid1+resid2*resid2)/Varfcv(ifcv)
-
-    ! calc gradient of chi-square
-    factor1 = 2/Varfcv(ifcv)*resid1
-    factor2 = 2/Varfcv(ifcv)*resid2*sign(1,uvidxfcv(ifcv))
-    call daxpy(Npix,factor1,Freal(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-    call daxpy(Npix,factor2,Fimag(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-  end do
-  !$OMP END PARALLEL DO
-end subroutine
-!
-!
-subroutine model_amp(gradVamp,Vreal,Vimag,&
-                     uvidxamp,Vamp,Varamp,&
-                     Vampmod,Vampres,&
-                     chisq,gradchisq,Npix,Nuv,Namp)
-  integer,  intent(in)  :: Npix, Nuv, Namp
-  integer,  intent(in)  :: uvidxamp(Namp)
-  real(dp), intent(in)  :: gradVamp(Npix,Nuv)
-  real(dp), intent(in)  :: Vreal(Nuv), Vimag(Nuv)
-  real(dp), intent(in)  :: Vamp(Namp), Varamp(Namp)
-  real(dp), intent(out) :: Vampmod(Namp),Vampres(Namp)
-  real(dp), intent(out) :: chisq
-  real(dp), intent(out) :: gradchisq(Npix)
-
-  !real(dp)  :: resid
-  integer   :: uvidx,iamp
-
-  chisq = 0d0
-  gradchisq(1:Npix) = 0d0
-  Vampmod(1:Namp) = 0d0
-  Vampres(1:Namp) = 0d0
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nuv,Namp,Vreal,Vimag,uvidxamp,Vamp,Varamp) &
-  !$OMP   PRIVATE(iamp,uvidx)  &
-  !$OMP   REDUCTION(+:chisq,gradchisq)
-  do iamp=1, Namp
-    ! calc model amplitude
-    uvidx = abs(uvidxamp(iamp))
-    Vampmod(iamp) = sqrt(Vreal(uvidx)*Vreal(uvidx)+Vimag(uvidx)*Vimag(uvidx))
-    Vampres(iamp) = Vampmod(iamp)-Vamp(iamp)
-
-    ! calc chi-square
-    chisq = chisq + Vampres(iamp)*Vampres(iamp)/Varamp(iamp)
-
-    ! calc gradient of chisquare
-    !  using BLAS
-    call daxpy(Npix,2/Varamp(iamp)*Vampres(iamp),&
-               gradVamp(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-    !  not using BLAS
-    !gradchisq(1:Npix) = gradchisq(1:Npix) &
-    !                  + 2/Varamp(iamp)*resid*gradVamp(1:Npix,uvidx)
-  end do
-  !$OMP END PARALLEL DO
-end subroutine
-!
-!
-subroutine model_cphase(gradVpha,Vreal,Vimag,&
-                        uvidxcp,CP,Varcp,&
-                        CPmod,CPres,&
-                        chisq,gradchisq,Npix,Nuv,Ncp)
-  integer,  intent(in)  :: Npix, Nuv, Ncp
-  integer,  intent(in)  :: uvidxcp(3,Ncp)
-  real(dp), intent(in)  :: gradVpha(Npix,Nuv)
-  real(dp), intent(in)  :: Vreal(Nuv), Vimag(Nuv)
-  real(dp), intent(in)  :: CP(Ncp),Varcp(Ncp)
-  real(dp), intent(out) :: CPmod(Ncp),CPres(Ncp)
-  real(dp), intent(out) :: chisq
-  real(dp), intent(out) :: gradchisq(Npix)
-
-  real(dp)  :: resid,factor
-  integer   :: uvidx,icp,ibl
-
-  chisq = 0d0
-  gradchisq(1:Npix) = 0d0
-  CPmod(1:Ncp) = 0d0
-  CPres(1:Ncp) = 0d0
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nuv,Ncp,Vreal,Vimag,uvidxcp,CP,Varcp) &
-  !$OMP   PRIVATE(icp,ibl,resid,uvidx,factor) &
-  !$OMP   REDUCTION(+:chisq,gradchisq)
-  do icp=1, Ncp
-    ! calc model closure phase
-    resid = 0d0
-    do ibl=1,3
-      uvidx = abs(uvidxcp(ibl,icp))
-      resid = resid + atan2(sign(1,uvidxcp(ibl,icp))*Vimag(uvidx),Vreal(uvidx))
-    end do
-    CPmod(icp)=atan2(sin(resid),cos(resid))
-
-    ! take a residual betweem model and data
-    resid = resid - CP(icp)
-
-    ! adjust a residual phase
-    resid = atan2(sin(resid),cos(resid))
-    CPres(icp) = resid
-
-    ! calc chi-square
-    chisq = chisq + resid*resid/Varcp(icp)
-
-    ! calc gradient of chi-square
-    factor=2/Varcp(icp)*resid
-    do ibl=1,3
-      uvidx = abs(uvidxcp(ibl,icp))
-      call daxpy(Npix,sign(1,uvidxcp(ibl,icp))*factor,&
-                 gradVpha(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-      !gradchisq(1:Npix) = gradchisq(1:Npix)&
-      !                  + sign(1,uvidxcp(ibl,icp))*factor*gradVpha(1:Npix,uvidx)
-    end do
-  end do
-  !$OMP END PARALLEL DO
-end subroutine
-!
-!
-subroutine model_camp(gradVamp,Vreal,Vimag,&
-                      uvidxca,CA,Varca,&
-                      CAmod,CAres,&
-                      chisq,gradchisq,Npix,Nuv,Nca)
-  integer,  intent(in)  :: Npix, Nuv, Nca
-  integer,  intent(in)  :: uvidxca(4,Nca)
-  real(dp), intent(in)  :: gradVamp(Npix,Nuv)
-  real(dp), intent(in)  :: Vreal(Nuv), Vimag(Nuv)
-  real(dp), intent(in)  :: CA(Nca),Varca(Nca)
-  real(dp), intent(out) :: CAmod(Nca),CAres(Nca)
-  real(dp), intent(out) :: chisq
-  real(dp), intent(out) :: gradchisq(Npix)
-
-  real(dp)  :: resid,amp,factor1,factor2(4)
-  integer   :: uvidx,ica,ibl
-
-  chisq = 0d0
-  gradchisq(1:Npix) = 0d0
-  CAmod(1:Nca) = 0d0
-  CAres(1:Nca) = 0d0
-  !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nuv,Nca,Vreal,Vimag,uvidxca,CA,Varca) &
-  !$OMP   PRIVATE(ica,ibl,resid,uvidx,amp,factor1,factor2) &
-  !$OMP   REDUCTION(+:chisq,gradchisq)
-  do ica=1, Nca
-    ! calc model closure phase
-    resid = 0d0
-    do ibl=1,4
-      uvidx = abs(uvidxca(ibl,ica))
-      amp = sqrt(Vreal(uvidx)*Vreal(uvidx)+Vimag(uvidx)*Vimag(uvidx))
-      if (ibl < 3) then
-        factor2(ibl) = 1/amp
-        resid = resid + log(amp)
-      else
-        factor2(ibl) = -1/amp
-        resid = resid - log(amp)
-      end if
-    end do
-    CAmod(ica) = resid
-
-    ! take a residual betweem model and data
-    resid = resid - CA(ica)
-    CAres(ica) = resid
-
-    ! calc chi-square
-    chisq = chisq + resid*resid/Varca(ica)
-
-    ! calc gradient of chisquare
-    factor1=2/Varca(ica)*resid
-    do ibl=1,4
-      uvidx = abs(uvidxca(ibl,ica))
-      call daxpy(Npix,factor1*factor2(ibl),&
-                 gradVamp(1:Npix,uvidx),1,gradchisq(1:Npix),1)
-    end do
-  end do
-  !$OMP END PARALLEL DO
 end subroutine
 !
 !

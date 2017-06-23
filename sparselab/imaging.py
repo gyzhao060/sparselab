@@ -213,7 +213,7 @@ def static_dft_imaging(
     )
 
     # run imaging
-    Iout = fortlib.static_imaging_dft(
+    Iout = fortlib.stdftim.imaging(
         # Images
         iin=Iin, x=x, y=y, xidx=xidx, yidx=yidx, nx=Nx, ny=Ny,
         # UV coordinates,
@@ -398,7 +398,7 @@ def static_dft_stats(
     )
 
     # calculate all
-    out = fortlib.static_imaging_dft.statistics(
+    out = fortlib.stdftim.statistics(
         # Images
         iin=Iin, x=x, y=y, xidx=xidx, yidx=yidx, nx=Nx, ny=Ny,
         # UV coordinates,
