@@ -1,9 +1,35 @@
-.SUFFIXES: .f90 .o
-#-------------------------------------------------------------------------------
-# Fortran
+#-------------------------------------------
+# INSTALLDIR
+LIBDIR=../../lib
+INCLUDEDIR=../../include
+BINDIR=../../bin
+SPARSELABDIR=../../sparselab
+
+# Fortran Compiler
 FC=@FC@
 
-# debug option
+
+# command options for Open MP
+ifeq ($(FC),gfortran)
+	FCFLAGS_OMP=-fopenmp
+else
+	ifeq ($(FC),ifort)
+		FCFLAGS_OMP=-openmp -openmp-lib=compat
+	else
+		ifeq ($(FC),pgf95)
+			FCFLAGS_OMP=-mp=align,allcores -fastsse
+		else
+			FCFLAGS_OMP=-fopenmp
+		endif
+	endif
+endif
+
+
+# command options for optimization
+FCFLAGS_OPT=-O2
+
+
+# command options for Debugging
 DBG_FLAG=@dbg_flag@
 ifeq ($(DBG_FLAG),True)
 	FCFLAGS_DBG=-g -Wall -pedantic -fbounds-check -O -Wuninitialized -ffpe-trap=invalid,zero,overflow -fbacktrace
@@ -11,31 +37,45 @@ else
 	FCFLAGS_DBG=
 endif
 
-# other options
-FCFLAGS_OMP=-fopenmp
-FCFLAGS_OPT=-O2
+
+# BLAS
 FCFLAGS_BLAS=@LDFLAGS@ @blaslib@
 
-# collect above options
-FCFLAGS=-fPIC $(FCFLAGS_DBG)
+
+# set command options
+FCFLAGS=-fPIC -std=f2008 $(FCFLAGS_DBG) $(FCFLAGS_OPT)
+
 
 #-------------------------------------------------------------------------------
-all: libslsqp.a
+# Main description
+#-------------------------------------------------------------------------------
+all: libslsqp.a 
+
+slsqp_module.o: slsqp_module.f90 slsqp_core.o slsqp_support.o slsqp_kinds.o
+	$(FC) $(FCFLAGS) -c slsqp_module.f90
+
+slsqp_core.o: slsqp_core.f90 slsqp_support.o slsqp_kinds.o
+	$(FC) $(FCFLAGS) -c slsqp_core.f90
+
+slsqp_support.o: slsqp_support.f90 slsqp_kinds.o
+	$(FC) $(FCFLAGS) -c slsqp_support.f90
+
+slsqp_kinds.o: slsqp_kinds.f90
+	$(FC) $(FCFLAGS) -c slsqp_kinds.f90
 
 libslsqp.a: slsqp_module.o slsqp_core.o slsqp_support.o slsqp_kinds.o
-	ar rcs libslsqp.a slsqp_module.o slsqp_core.o slsqp_support.o slsqp_kinds.o
-
-.f90.o:
-	$(FC) -c $< $(FCFLAGS)
-
-slsqp_support.o: slsqp_kinds.o
-slsqp_core.o: slsqp_support.o slsqp_kinds.o
-slsqp_module.o: slsqp_core.o slsqp_support.o slsqp_kinds.o
+	ar -r libslsqp.a slsqp_module.o slsqp_core.o slsqp_support.o slsqp_kinds.o
 
 install: all
+	mkdir -p $(LIBDIR)
+	mkdir -p $(INCLUDEDIR)
+	cp -p *.mod $(INCLUDEDIR)
+	cp -p libslsqp.a $(LIBDIR)
 
 clean:
 	rm -f *.o *.a *.mod
 
 uninstall: clean
 	rm -f makefile
+	rm -f $(LIBDIR)/libslsqp.a
+	rm -f $(INCLUDEDIR)/slsqp*.mod

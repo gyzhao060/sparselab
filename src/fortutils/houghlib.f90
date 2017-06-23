@@ -1,6 +1,6 @@
-module hough
+module hough_lib
   !$use omp_lib
-  use params, only: dp, pi
+  use nrtype, only: dp, pi
   use interp, only: splie2, splin2grid
   implicit none
 contains
@@ -10,14 +10,14 @@ contains
 subroutine circle_hough(Iin,x,y,R,Nth,H,Nx,Ny,Nr)
   !
   ! This is a subroutine to calculate the circle Hough transform H(Nx, Ny, Nr)
-  ! of the input two dimentional function Iin(Nx, Ny).
+  ! of the input two dimentional function Iin(Nx, Ny). 
   !
   ! R(Nr) is the radius used in the circle Hough transformation, x(Nx) and y(Ny)
   ! are tablulated coordinates of Iin along x and y axises, respectively.
   !
   ! Nth is the number of circular shifts used in the circle Hough transform.
   implicit none
-
+  
   integer,  intent(in) :: Nx,Ny,Nr,Nth
   real(dp), intent(in) :: Iin(1:Nx,1:Ny), x(1:Nx), y(1:Ny)
   real(dp), intent(in) :: R(1:Nr)
@@ -26,18 +26,18 @@ subroutine circle_hough(Iin,x,y,R,Nth,H,Nx,Ny,Nr)
   real(dp) :: x1(1:Nx), y1(1:Ny), z1(1:Nx,1:Ny)
   real(dp) :: Iin2(1:Nx,1:Ny)
   real(dp) :: theta
-
+  
   ! Derive Spline Co-efficient
   call splie2(x, y, Iin, Iin2, Nx, Ny)
-
+  
   ! Initialize H
   !$OMP PARALLEL DO DEFAULT(SHARED) &
   !$OMP PRIVATE(ir)
   do ir=1,Nr
     H(1:Nx,1:Ny,ir)=0d0
   end do
-  !$OMP END PARALLEL DO
-
+  !$OMP END PARALLEL DO 
+  
   ! Calculate Classic Hough Transform
   !$OMP PARALLEL DO DEFAULT(SHARED)&
   !$OMP   FIRSTPRIVATE(Nx,Ny,Nr,Nth,Iin,Iin2,x,y,R) &

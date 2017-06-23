@@ -12,6 +12,7 @@ import copy
 import itertools
 import collections
 
+
 # numerical packages
 import numpy as np
 import scipy.special as ss
@@ -23,11 +24,13 @@ import astropy.constants as ac
 import astropy.time as at
 import astropy.io.fits as pyfits
 
+
 # matplotlib
 import matplotlib.pyplot as plt
 
+
 # internal
-from sparselab import imdata
+import imdata
 
 
 # ------------------------------------------------------------------------------

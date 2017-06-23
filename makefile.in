@@ -1,24 +1,29 @@
+# INSTALLDIR
+PYTHONLIBDIR=./pythonlib
+LIBDIR=./lib
+INCLUDEDIR=./include
+BINDIR=./bin
+
 all:	install
 
 install:
 	cd src/lbfgsb; make install
 	cd src/slsqp; make install
+	cd src/fortutils; make install
 	cd src/mfista; make install
-	cd src/futils; make install
 
 clean:
 	cd src/lbfgsb; make clean
 	cd src/slsqp; make clean
+	cd src/fortutils; make clean
 	cd src/mfista; make clean
-	cd src/futils; make clean
-	rm -f sparselab/*.pyc
-	rm -f sparselab/*.pyc
+	rm -f $(PYTHONLIBDIR)/*.pyf
 
 uninstall: clean
 	cd src/lbfgsb; make uninstall
 	cd src/slsqp; make uninstall
+	cd src/fortutils; make uninstall
 	cd src/mfista; make uninstall
-	cd src/futils; make uninstall
 	rm -rf autom4te.cache
 	rm -f config.log
 	rm -f config.status

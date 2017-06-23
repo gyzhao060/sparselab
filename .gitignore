@@ -15,5 +15,3 @@ include
 *.mod
 *.o
 ./makefile
-src/futils/futils.so.dSYM
-sparselab/futils.so.dSYM
