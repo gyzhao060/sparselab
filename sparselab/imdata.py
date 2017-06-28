@@ -635,15 +635,24 @@ class IMFITS(object):
     #-------------------------------------------------------------------------
     # Plotting
     #-------------------------------------------------------------------------
-    def imshow(self, istokes=0, ifreq=0, logscale=False, angunit=None,
-               vmin=None, **imshow_args):
+    def imshow(self, logscale=False, angunit=None,
+               vmin=None, istokes=0, ifreq=0, **imshow_args):
         '''
         plot contours of the image
 
         Args:
-          istokes (integer): index for Stokes Parameter at which the image will be plotted
-          ifreq (integer): index for Frequency at which the image will be plotted
-          angunit (string): Angular Unit for the axis labels (pixel, uas, mas, asec or arcsec, amin or arcmin, degree)
+          logscale (boolean):
+            If True, the color contour will be on log scales. Otherise,
+            the color contour will be on linear scales.
+          angunit (string):
+            Angular Unit for the axis labels (pixel, uas, mas, asec or arcsec,
+            amin or arcmin, degree)
+          vmin (string):
+            minimum value of the color contour in Jy/pixel
+          istokes (integer):
+            index for Stokes Parameter at which the image will be plotted
+          ifreq (integer):
+            index for Frequency at which the image will be plotted
           **imshow_args: Arguments will be input in matplotlib.pyplot.imshow
         '''
         if angunit is None:
@@ -686,8 +695,9 @@ class IMFITS(object):
         plt.xlabel("Relative RA (%s)" % (unit))
         plt.ylabel("Relative Dec (%s)" % (unit))
 
-    def contour(self, istokes=0, ifreq=0, angunit=None,
-                colors="white", cmul=None, levels=None, relative=True,
+    def contour(self, cmul=None, levels=None, angunit=None,
+                colors="white", relative=True,
+                istokes=0, ifreq=0,
                 **contour_args):
         '''
         plot contours of the image
@@ -718,6 +728,8 @@ class IMFITS(object):
         else:
             if relative:
                 vmin = cmul * np.abs(image).max()
+            else:
+                vmin = cmul
 
         if levels is None:
             clevels = np.power(2, np.arange(10))
