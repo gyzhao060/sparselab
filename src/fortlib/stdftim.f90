@@ -29,7 +29,7 @@ contains
 !
 subroutine imaging( &
   Iin, x, y, xidx, yidx, Nx, Ny, u, v, &
-  lambl1, lambtv, lambtsv, nonneg, Niter, &
+  lambl1, lambtv, lambtsv, nonneg, logreg, Niter, &
   isfcv, uvidxfcv, Vfcvr, Vfcvi, Varfcv, &
   isamp, uvidxamp, Vamp, Varamp, &
   iscp, uvidxcp, CP, Varcp, &
@@ -56,6 +56,7 @@ subroutine imaging( &
   real(dp), intent(in) :: lambtsv ! imaging parameter for TSV
   logical,  intent(in) :: nonneg  ! if nonneg > 0, the image will be solved
                                   ! with a non-negative condition
+  logical,  intent(in) :: logreg  ! regularize image in log domain
   integer,  intent(in) :: Niter   ! the number of iterations
 
   ! Parameters related to full complex visibilities
@@ -185,8 +186,8 @@ subroutine imaging( &
       ! Calculate cost function and gradcostent of cost function
       call calc_cost(&
           Iout, xidx, yidx, Npix, Nx, Ny, Nuv, Ndata, &
-          lambl1, lambtv, lambtsv,&
-          Freal,Fimag,&
+          lambl1, lambtv, lambtsv, logreg, &
+          Freal, Fimag,&
           isfcv, Nfcv, uvidxfcv, Vfcvr, Vfcvi, Varfcv,&
           isamp, Namp, uvidxamp, Vamp, Varamp,&
           iscp,  Ncp, uvidxcp, CP, Varcp,&
@@ -219,8 +220,8 @@ end subroutine
 !
 subroutine calc_cost(&
     Iin, xidx, yidx, Npix, Nx, Ny, Nuv, Ndata, &
-    lambl1, lambtv, lambtsv,&
-    Freal,Fimag,&
+    lambl1, lambtv, lambtsv, logreg,&
+    Freal, Fimag,&
     isfcv, Nfcv, uvidxfcv, Vfcvr, Vfcvi, Varfcv,&
     isamp, Namp, uvidxamp, Vamp, Varamp,&
     iscp,  Ncp, uvidxcp, CP, Varcp,&
@@ -243,6 +244,7 @@ subroutine calc_cost(&
 
   ! Imaging parameters
   real(dp), intent(in) :: lambl1,lambtv,lambtsv
+  logical,  intent(in) :: logreg  ! regularize image in log domain
 
   ! Allocatable arrays and vectors common in the module
   real(dp), intent(in) :: Freal(Npix,Nuv), Fimag(Npix,Nuv)
@@ -288,7 +290,7 @@ subroutine calc_cost(&
   ! allocatable arrays
   real(dp), allocatable :: Vreal(:), Vimag(:)
   real(dp), allocatable :: gradVamp(:,:), gradVpha(:,:)
-  real(dp), allocatable :: I2d(:,:)
+  real(dp), allocatable :: I2d(:,:), logIin(:), gradlogIin(:)
 
   ! logicals
   logical :: needgradV
@@ -324,11 +326,6 @@ subroutine calc_cost(&
   end do
   !$OMP END PARALLEL DO
 
-  if ((lambtv > 0) .or. (lambtsv > 0)) then
-    allocate(I2d(Nx, Ny))
-    I2d(1:Nx,1:Ny) = 0d0
-    call calc_I2d(Iin,xidx,yidx,I2d,Npix,Nx,Ny)
-  end if
 
   !-------------------------------------
   ! Calculate Chi Square and its gradient
@@ -387,9 +384,29 @@ subroutine calc_cost(&
   !-------------------------------------
   ! Calculate regularization functions
   !-------------------------------------
+  if (logreg .eqv. .True. ) then
+    allocate(logIin(Npix), gradlogIin(Npix))
+    logIin(:) = sign(1d0,Iin(1:Npix)) * log(1+abs(Iin(1:Npix)))
+    gradlogIin(:) = sign(1d0,Iin(1:Npix)) / (1+abs(Iin(1:Npix)))
+  end if
+
+  if ((lambtv > 0) .or. (lambtsv > 0)) then
+    allocate(I2d(Nx, Ny))
+    I2d(1:Nx,1:Ny) = 0d0
+    if (logreg .eqv. .False. ) then
+      call calc_I2d(Iin,xidx,yidx,I2d,Npix,Nx,Ny)
+    else
+      call calc_I2d(logIin,xidx,yidx,I2d,Npix,Nx,Ny)
+    end if
+  end if
+
   ! calc l1norm
   if (lambl1 > 0) then
-    cost = cost + lambl1 * dasum(Npix, Iin, 1) !* sum(abs(Iin))
+    if (logreg .eqv. .False. ) then
+      cost = cost + lambl1 * dasum(Npix, Iin, 1)
+    else
+      cost = cost + lambl1 * dasum(Npix, logIin, 1)
+    end if
   end if
   !
   ! calc tv and tsv
@@ -404,29 +421,49 @@ subroutine calc_cost(&
   end if
 
   !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nx,Ny,Iin,I2d, &
+  !$OMP   FIRSTPRIVATE(Npix,Nx,Ny,Iin,I2d,logIin,gradlogIin,&
   !$OMP                lambl1,lambtv,lambtsv) &
   !$OMP   PRIVATE(ipix)
   do ipix = 1, Npix
     ! calc l1norm
     if (lambl1 > 0) then
-      if (Iin(ipix) > tol) then
-        gradcost(ipix) = gradcost(ipix) + lambl1
-      elseif (Iin(ipix) < -tol) then
-        gradcost(ipix) = gradcost(ipix) - lambl1
+      if (logreg .eqv. .False. ) then
+        if (Iin(ipix) > tol) then
+          gradcost(ipix) = gradcost(ipix) + lambl1
+        elseif (Iin(ipix) < -tol) then
+          gradcost(ipix) = gradcost(ipix) - lambl1
+        end if
+      else
+        if (logIin(ipix) > tol) then
+          gradcost(ipix) = gradcost(ipix) + lambl1 * gradlogIin(ipix)
+        elseif (logIin(ipix) < -tol) then
+          gradcost(ipix) = gradcost(ipix) - lambl1 * gradlogIin(ipix)
+        end if
       end if
     end if
     !
     ! gradient for tsv term
     if (lambtv > 0) then
-      gradcost(ipix) = gradcost(ipix) + &
-                       lambtv * gradtve(xidx(ipix),yidx(ipix),I2d,Nx,Ny)
+      if (logreg .eqv. .False. ) then
+        gradcost(ipix) = gradcost(ipix) + &
+                         lambtv * gradtve(xidx(ipix),yidx(ipix),I2d,Nx,Ny)
+      else
+        gradcost(ipix) = gradcost(ipix) + &
+                         lambtv * gradtve(xidx(ipix),yidx(ipix),I2d,Nx,Ny) * &
+                         gradlogIin(ipix)
+      end if
     end if
 
     ! gradient for tsv term
     if (lambtsv > 0) then
-      gradcost(ipix) = gradcost(ipix) + &
-                       lambtsv * gradtsve(xidx(ipix),yidx(ipix),I2d,Nx,Ny)
+      if (logreg .eqv. .False. ) then
+        gradcost(ipix) = gradcost(ipix) + &
+                         lambtsv * gradtsve(xidx(ipix),yidx(ipix),I2d,Nx,Ny)
+      else
+        gradcost(ipix) = gradcost(ipix) + &
+                         lambtsv * gradtsve(xidx(ipix),yidx(ipix),I2d,Nx,Ny) * &
+                         gradlogIin(ipix)
+      end if
     end if
   end do
   !$OMP END PARALLEL DO
@@ -437,6 +474,10 @@ subroutine calc_cost(&
 
   if (needgradV .eqv. .True.) then
     deallocate(gradVamp,gradVpha)
+  end if
+
+  if (logreg .eqv. .True. ) then
+    deallocate(logIin, gradlogIin)
   end if
 
   if ((lambtv > 0) .or. (lambtsv > 0)) then
@@ -450,7 +491,7 @@ end subroutine
 !
 subroutine statistics( &
   Iin, x, y, xidx, yidx, Nx, Ny, u, v, &
-  lambl1, lambtv, lambtsv, &
+  lambl1, lambtv, lambtsv, logreg, &
   isfcv, uvidxfcv, Vfcvr, Vfcvi, Varfcv, &
   isamp, uvidxamp, Vamp,  Varamp, &
   iscp,  uvidxcp,  CP,    Varcp, &
@@ -477,6 +518,7 @@ subroutine statistics( &
   real(dp), intent(in) :: lambl1  ! imaging parameter for L1-norm
   real(dp), intent(in) :: lambtv  ! imaging parameter for iso-TV
   real(dp), intent(in) :: lambtsv ! imaging parameter for TSV
+  logical,  intent(in) :: logreg  ! regularize image in log domain
 
   ! Parameters related to full complex visibilities
   logical,  intent(in) :: isfcv
@@ -520,7 +562,7 @@ subroutine statistics( &
   real(dp), allocatable :: Freal(:,:), Fimag(:,:)
   real(dp), allocatable :: Vreal(:), Vimag(:)
   real(dp), allocatable :: gradVamp(:,:), gradVpha(:,:)
-  real(dp), allocatable :: I2d(:,:)
+  real(dp), allocatable :: I2d(:,:), logIin(:), gradlogIin(:)
 
   ! integer
   integer :: ipix, iuv, Ndata
@@ -562,10 +604,6 @@ subroutine statistics( &
   if (needgradV .eqv. .True.) then
     allocate(gradVamp(Npix, Nuv),gradVpha(Npix, Nuv))
   end if
-
-  allocate(I2d(Nx, Ny))
-  I2d(1:Nx,1:Ny) = 0d0
-  call calc_I2d(Iin,xidx,yidx,I2d,Npix,Nx,Ny)
 
   ! First touch
   !$OMP PARALLEL DO DEFAULT(SHARED) &
@@ -658,7 +696,25 @@ subroutine statistics( &
   !-------------------------------------
   ! Calculate regularization functions
   !-------------------------------------
-  l1val = dasum(Npix, Iin, 1)
+  if (logreg .eqv. .True. ) then
+    allocate(logIin(Npix), gradlogIin(Npix))
+    logIin(:) = sign(1d0,Iin(1:Npix)) * log(1+abs(Iin(1:Npix)))
+    gradlogIin(:) = sign(1d0,Iin(1:Npix)) / (1+abs(Iin(1:Npix)))
+  end if
+
+  allocate(I2d(Nx, Ny))
+  I2d(1:Nx,1:Ny) = 0d0
+  if (logreg .eqv. .False. ) then
+    call calc_I2d(Iin,xidx,yidx,I2d,Npix,Nx,Ny)
+  else
+    call calc_I2d(logIin,xidx,yidx,I2d,Npix,Nx,Ny)
+  end if
+
+  if (logreg .eqv. .False. ) then
+    l1val = dasum(Npix, Iin, 1)
+  else
+    l1val = dasum(Npix, logIin, 1)
+  end if
   tvval = tv(I2d,Nx,Ny)
   tsvval = tsv(I2d,Nx,Ny)
   ! calc l1norm
@@ -676,29 +732,49 @@ subroutine statistics( &
   end if
 
   !$OMP PARALLEL DO DEFAULT(SHARED) &
-  !$OMP   FIRSTPRIVATE(Npix,Nx,Ny,Iin,I2d, &
+  !$OMP   FIRSTPRIVATE(Npix,Nx,Ny,Iin,I2d,logIin,gradlogIin,&
   !$OMP                lambl1,lambtv,lambtsv) &
   !$OMP   PRIVATE(ipix)
   do ipix = 1, Npix
     ! calc l1norm
     if (lambl1 > 0) then
-      if (Iin(ipix) > tol) then
-        gradcost(ipix) = gradcost(ipix) + lambl1
-      elseif (Iin(ipix) < -tol) then
-        gradcost(ipix) = gradcost(ipix) - lambl1
+      if (logreg .eqv. .False. ) then
+        if (Iin(ipix) > tol) then
+          gradcost(ipix) = gradcost(ipix) + lambl1
+        elseif (Iin(ipix) < -tol) then
+          gradcost(ipix) = gradcost(ipix) - lambl1
+        end if
+      else
+        if (logIin(ipix) > tol) then
+          gradcost(ipix) = gradcost(ipix) + lambl1 * gradlogIin(ipix)
+        elseif (logIin(ipix) < -tol) then
+          gradcost(ipix) = gradcost(ipix) - lambl1 * gradlogIin(ipix)
+        end if
       end if
     end if
     !
     ! gradient for tsv term
     if (lambtv > 0) then
-      gradcost(ipix) = gradcost(ipix) + &
-                       lambtv * gradtve(xidx(ipix),yidx(ipix),I2d,Nx,Ny)
+      if (logreg .eqv. .False. ) then
+        gradcost(ipix) = gradcost(ipix) + &
+                         lambtv * gradtve(xidx(ipix),yidx(ipix),I2d,Nx,Ny)
+      else
+        gradcost(ipix) = gradcost(ipix) + &
+                         lambtv * gradtve(xidx(ipix),yidx(ipix),I2d,Nx,Ny) * &
+                         gradlogIin(ipix)
+      end if
     end if
 
     ! gradient for tsv term
     if (lambtsv > 0) then
-      gradcost(ipix) = gradcost(ipix) + &
-                       lambtsv * gradtsve(xidx(ipix),yidx(ipix),I2d,Nx,Ny)
+      if (logreg .eqv. .False. ) then
+        gradcost(ipix) = gradcost(ipix) + &
+                         lambtsv * gradtsve(xidx(ipix),yidx(ipix),I2d,Nx,Ny)
+      else
+        gradcost(ipix) = gradcost(ipix) + &
+                         lambtsv * gradtsve(xidx(ipix),yidx(ipix),I2d,Nx,Ny) * &
+                         gradlogIin(ipix)
+      end if
     end if
   end do
   !$OMP END PARALLEL DO
@@ -710,6 +786,10 @@ subroutine statistics( &
 
   if (needgradV .eqv. .True.) then
     deallocate(gradVamp,gradVpha)
+  end if
+
+  if (logreg .eqv. .True. ) then
+    deallocate(logIin, gradlogIin)
   end if
 end subroutine
 !

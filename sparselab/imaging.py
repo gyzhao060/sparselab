@@ -45,7 +45,8 @@ lbfgsbprms = {
 def static_dft_imaging(
         initimage, imagewin=None,
         vistable=None, amptable=None, bstable=None, catable=None,
-        lambl1=-1., lambtv=-1, lambtsv=-1, normlambda=True, nonneg=True, niter=1000,
+        lambl1=-1., lambtv=-1, lambtsv=-1, normlambda=True, nonneg=True,
+        logreg=False, niter=1000,
         totalflux=None, fluxconst=False,
         istokes=0, ifreq=0):
     '''
@@ -199,9 +200,14 @@ def static_dft_imaging(
         else:
             fluxscale = np.float64(totalflux)
             print("Flux Scaling Factor for lambda: The scaling factor will be %g" % (fluxscale))
-        lambl1_sim = lambl1 / fluxscale
-        lambtv_sim = lambtv / fluxscale / 4.
-        lambtsv_sim = lambtsv / fluxscale**2 / 4.
+        if logreg:
+            lambl1_sim = lambl1 / Npix*log(fluxscale/Npix)
+            lambtv_sim = lambtv / Npix*log(fluxscale/Npix)
+            lambtsv_sim = lambtsv / (Npix*log(fluxscale/Npix))**2
+        else:
+            lambl1_sim = lambl1 / fluxscale
+            lambtv_sim = lambtv / fluxscale
+            lambtsv_sim = lambtsv / fluxscale**2
     else:
         lambl1_sim = lambl1
         lambtv_sim = lambtv
@@ -220,7 +226,7 @@ def static_dft_imaging(
         u=u, v=v,
         # Imaging Parameters
         lambl1=lambl1_sim, lambtv=lambtv_sim, lambtsv=lambtsv_sim,
-        nonneg=nonneg, niter=niter,
+        nonneg=nonneg, logreg=logreg, niter=niter,
         # Full Complex Visibilities
         isfcv=isfcv, uvidxfcv=uvidxfcv, vfcvr=vfcvr, vfcvi=vfcvi, varfcv=varfcv,
         # Visibility Ampltiudes
@@ -245,7 +251,7 @@ def static_dft_imaging(
 def static_dft_stats(
         initimage, imagewin=None,
         vistable=None, amptable=None, bstable=None, catable=None,
-        lambl1=1., lambtv=-1, lambtsv=1, normlambda=True,
+        lambl1=1., lambtv=-1, lambtsv=1, logreg=False, normlambda=True,
         totalflux=None, fluxconst=False,
         istokes=0, ifreq=0, fulloutput=True, **args):
     '''
@@ -378,15 +384,18 @@ def static_dft_stats(
                 fluxscale.append(amptable["amp"].max())
             fluxscale = np.max(fluxscale)
             print("Flux Scaling Factor for lambda: The expected total flux is not given.")
-            print(
-                "                                The scaling factor will be %g" % (fluxscale))
+            print("The scaling factor will be %g" % (fluxscale))
         else:
             fluxscale = np.float64(totalflux)
-            print(
-                "Flux Scaling Factor for lambda: The scaling factor will be %g" % (fluxscale))
-        lambl1_sim = lambl1 / fluxscale
-        lambtv_sim = lambtv / fluxscale / 4.
-        lambtsv_sim = lambtsv / fluxscale**2 / 4.
+            print("Flux Scaling Factor for lambda: The scaling factor will be %g" % (fluxscale))
+        if logreg:
+            lambl1_sim = lambl1 / Npix*log(fluxscale/Npix)
+            lambtv_sim = lambtv / Npix*log(fluxscale/Npix)
+            lambtsv_sim = lambtsv / (Npix*log(fluxscale/Npix))**2
+        else:
+            lambl1_sim = lambl1 / fluxscale
+            lambtv_sim = lambtv / fluxscale
+            lambtsv_sim = lambtsv / fluxscale**2
     else:
         lambl1_sim = lambl1
         lambtv_sim = lambtv
@@ -405,6 +414,7 @@ def static_dft_stats(
         u=u, v=v,
         # Imaging Parameters
         lambl1=lambl1_sim, lambtv=lambtv_sim, lambtsv=lambtsv_sim,
+        logreg=logreg,
         # Full Complex Visibilities
         isfcv=isfcv, uvidxfcv=uvidxfcv, vfcvr=vfcvr, vfcvi=vfcvi, varfcv=varfcv,
         # Visibility Ampltiudes
