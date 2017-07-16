@@ -424,7 +424,6 @@ class UVFITS():
                 print("Stokes I data will be calculated from input XX and YY data")
                 outfits.data = _bindstokes(
                     self.data, stokes=1, stokes1=-5, stokes2=-6, factr1=0.5, factr2=0.5)
-                outfits.data["stokes"] = 1
                 outfits.header["CRPIX3"] = 1
                 outfits.header["CRVAL3"] = 1
                 outfits.header["CDELT3"] = 1
@@ -458,7 +457,6 @@ class UVFITS():
                 print("Stokes Q data will be calculated from input RL and LR data")
                 outfits.data = _bindstokes(
                     self.data, stokes=2, stokes1=-3, stokes2=-4, factr1=0.5, factr2=0.5)
-                outfits.data["stokes"] = 2
                 outfits.header["CRPIX3"] = 1
                 outfits.header["CRVAL3"] = 2
                 outfits.header["CDELT3"] = 1
@@ -467,7 +465,6 @@ class UVFITS():
                 print("Stokes Q data will be calculated from input XX and YY data")
                 outfits.data = _bindstokes(
                     self.data, stokes=2, stokes1=-5, stokes2=-6, factr1=0.5, factr2=-0.5)
-                outfits.data["stokes"] = 2
                 outfits.header["CRPIX3"] = 1
                 outfits.header["CRVAL3"] = 2
                 outfits.header["CDELT3"] = 1
@@ -487,7 +484,6 @@ class UVFITS():
                 print("Stokes U data will be calculated from input RL and LR data")
                 outfits.data = _bindstokes(
                     self.data, stokes=3, stokes1=-3, stokes2=-4, factr1=-0.5j, factr2=0.5j)
-                outfits.data["stokes"] = 3
                 outfits.header["CRPIX3"] = 1
                 outfits.header["CRVAL3"] = 3
                 outfits.header["CDELT3"] = 1
@@ -496,7 +492,6 @@ class UVFITS():
                 print("Stokes U data will be calculated from input XX and YY data")
                 outfits.data = _bindstokes(
                     self.data, stokes=3, stokes1=-7, stokes2=-8, factr1=0.5, factr2=0.5)
-                outfits.data["stokes"] = 3
                 outfits.header["CRPIX3"] = 1
                 outfits.header["CRVAL3"] = 3
                 outfits.header["CDELT3"] = 1
@@ -516,7 +511,6 @@ class UVFITS():
                 print("Stokes V data will be calculated from input RR and LL data")
                 outfits.data = _bindstokes(
                     self.data, stokes=4, stokes1=-1, stokes2=-2, factr1=0.5, factr2=-0.5)
-                outfits.data["stokes"] = 4
                 outfits.header["CRPIX3"] = 1
                 outfits.header["CRVAL3"] = 4
                 outfits.header["CDELT3"] = 1
@@ -525,7 +519,6 @@ class UVFITS():
                 print("Stokes V data will be calculated from input XX and YY data")
                 outfits.data = _bindstokes(
                     self.data, stokes=4, stokes1=-7, stokes2=-8, factr1=-0.5j, factr2=0.5j)
-                outfits.data["stokes"] = 4
                 outfits.header["CRPIX3"] = 1
                 outfits.header["CRVAL3"] = 4
                 outfits.header["CDELT3"] = 1
