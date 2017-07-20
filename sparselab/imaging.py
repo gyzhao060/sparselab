@@ -201,9 +201,9 @@ def static_dft_imaging(
             fluxscale = np.float64(totalflux)
             print("Flux Scaling Factor for lambda: The scaling factor will be %g" % (fluxscale))
         if logreg:
-            lambl1_sim = lambl1 / Npix*log(fluxscale/Npix)
-            lambtv_sim = lambtv / Npix*log(fluxscale/Npix)
-            lambtsv_sim = lambtsv / (Npix*log(fluxscale/Npix))**2
+            lambl1_sim = lambl1 / (len(xidx)*np.log(1+fluxscale/len(xidx)))
+            lambtv_sim = lambtv / (len(xidx)*np.log(1+fluxscale/len(xidx)))
+            lambtsv_sim = lambtsv / (len(xidx)*np.log(1+fluxscale/len(xidx)))**2
         else:
             lambl1_sim = lambl1 / fluxscale
             lambtv_sim = lambtv / fluxscale
@@ -389,9 +389,9 @@ def static_dft_stats(
             fluxscale = np.float64(totalflux)
             print("Flux Scaling Factor for lambda: The scaling factor will be %g" % (fluxscale))
         if logreg:
-            lambl1_sim = lambl1 / Npix*log(fluxscale/Npix)
-            lambtv_sim = lambtv / Npix*log(fluxscale/Npix)
-            lambtsv_sim = lambtsv / (Npix*log(fluxscale/Npix))**2
+            lambl1_sim = lambl1 / (len(xidx)*np.log(1+fluxscale/len(xidx)))
+            lambtv_sim = lambtv / (len(xidx)*np.log(1+fluxscale/len(xidx)))
+            lambtsv_sim = lambtsv / (len(xidx)*np.log(1+fluxscale/len(xidx)))**2
         else:
             lambl1_sim = lambl1 / fluxscale
             lambtv_sim = lambtv / fluxscale

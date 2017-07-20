@@ -386,8 +386,8 @@ subroutine calc_cost(&
   !-------------------------------------
   if (logreg .eqv. .True. ) then
     allocate(logIin(Npix), gradlogIin(Npix))
-    logIin(:) = sign(1d0,Iin(1:Npix)) * log(1+abs(Iin(1:Npix)))
-    gradlogIin(:) = sign(1d0,Iin(1:Npix)) / (1+abs(Iin(1:Npix)))
+    logIin(1:Npix) = sign(1d0,Iin(1:Npix)) * log(1+abs(Iin(1:Npix)))
+    gradlogIin(1:Npix) = sign(1d0,Iin(1:Npix)) / (1+abs(Iin(1:Npix)))
   end if
 
   if ((lambtv > 0) .or. (lambtsv > 0)) then
