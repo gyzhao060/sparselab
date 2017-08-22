@@ -816,7 +816,7 @@ class IMFITS(object):
     #-------------------------------------------------------------------------
     # Editing images
     #-------------------------------------------------------------------------
-    def cpimage(self, fitsdata, save_totalflux=False):
+    def cpimage(self, fitsdata, save_totalflux=False, order=3):
         '''
         Copy the first image into the image grid specified in the secondaly input image.
 
@@ -852,7 +852,7 @@ class IMFITS(object):
         for idxs in np.arange(outfits.header["ns"]):
             for idxf in np.arange(outfits.header["nf"]):
                 outfits.data[idxs, idxf] = sn.map_coordinates(
-                    fitsdata.data[idxs, idxf], coord, order=3,
+                    fitsdata.data[idxs, idxf], coord, order=order,
                     mode='constant', cval=0.0, prefilter=True).reshape([Ny1, Nx1]
                                                                        ) * dx1 * dy1 / dx0 / dy0
                 # Flux Scaling
@@ -1263,18 +1263,19 @@ class IMFITS(object):
         outfits = copy.deepcopy(self)
 
         # get size
-        thmaj = majsize * self.angconv(angunit, "mas")
+        thmaj = majsize
         if minsize is None:
             thmin = thmaj
         else:
-            thmin = minsize * self.angconv(angunit, "mas")
+            thmin = minsize
 
         # Calc X,Y grid
-        yg = (np.arange(self.header["ny"]) - self.header["nyref"] +
-              1) * self.header["dy"] * 3600e3  # (mas)
-        xg = (np.arange(self.header["nx"]) - self.header["nxref"] +
-              1) * self.header["dx"] * 3600e3  # (mas)
-        X, Y = np.meshgrid(xg, yg)
+        #yg = (np.arange(self.header["ny"]) - self.header["nyref"] +
+        #      1) * self.header["dy"] * 3600e3  # (mas)
+        #xg = (np.arange(self.header["nx"]) - self.header["nxref"] +
+        #      1) * self.header["dx"] * 3600e3  # (mas)
+        #X, Y = np.meshgrid(xg, yg)
+        X, Y = self.get_xygrid(twodim=True, angunit=angunit)
 
         # Calc Gaussian Distribution
         X1 = X - x0
