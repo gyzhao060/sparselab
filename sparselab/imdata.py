@@ -865,7 +865,7 @@ class IMFITS(object):
         return outfits
 
     def gauss_convolve(self, majsize, minsize=None, x0=None, y0=None,
-                       pa=0., scale=1., angunit=None, save_totalflux=False):
+                       pa=0., scale=1., angunit=None, pos="rel", save_totalflux=False):
         '''
         Gaussian Convolution
 
@@ -889,10 +889,16 @@ class IMFITS(object):
 
         # Create Gaussian
         imextent = outfits.get_imextent(angunit)
+        Imxref = (imextent[0] + imextent[1]) / 2.
+        Imyref = (imextent[2] + imextent[3]) / 2.
         if x0 is None:
-            x0 = (imextent[0] + imextent[1]) / 2.
+            x0 = 0.
         if y0 is None:
-            y0 = (imextent[2] + imextent[3]) / 2.
+            y0 = 0.
+        if pos=="rel":
+            x0 += Imxref
+            y0 += Imyref
+		
         X, Y = outfits.get_xygrid(angunit=angunit, twodim=True)
         cospa = np.cos(np.deg2rad(pa))
         sinpa = np.sin(np.deg2rad(pa))
