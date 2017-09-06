@@ -865,7 +865,7 @@ class IMFITS(object):
         return outfits
 
     def gauss_convolve(self, majsize, minsize=None, x0=None, y0=None,
-                       pa=0., scale=1., angunit=None, rel_pos=True, save_totalflux=False):
+                       pa=0., scale=1., angunit=None, pos="rel", save_totalflux=False):
         '''
         Gaussian Convolution
 
@@ -895,7 +895,7 @@ class IMFITS(object):
             x0 = 0.
         if y0 is None:
             y0 = 0.
-        if rel_pos:
+        if pos=="rel":
             x0 += Imxref
             y0 += Imyref
 		
