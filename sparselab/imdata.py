@@ -54,7 +54,7 @@ class IMFITS(object):
             uvfitsfile (string):
                 input uv-fits file
             source (string):
-                The source of the image RA and Dec will be obtained from CDS
+               The source of the image RA and Dec will be obtained from CDS
             fov(array-like):
                 Field of View of the image [xmin, xmax, ymin, ymax]
             nx (integer):
@@ -436,7 +436,7 @@ class IMFITS(object):
 
         self.update_fits()
 
-    def update_fits(self,cctab=False,threshold=None, relative=True,
+    def update_fits(self,cctab=True,threshold=None, relative=True,
                     istokes=0, ifreq=0):
         '''
         Reflect current self.data / self.header info to the image FITS data.
@@ -499,7 +499,6 @@ class IMFITS(object):
             aipscctab = self._aipscc(threshold=threshold, relative=relative,
                     istokes=istokes, ifreq=ifreq)
 
-#            hdulist.append(hdu=aipscctab.tab)
             hdulist.append(hdu=aipscctab)
 
             next = len(hdulist)
@@ -552,7 +551,6 @@ class IMFITS(object):
         c7 = pyfits.Column(name='TYPE OBJ', array=np.zeros(len(flux)), format='1E',unit='CODE')
 
         # make CC table
-#        self.tab = pyfits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7])
         tab = pyfits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7])
         return tab
 
