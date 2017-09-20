@@ -119,6 +119,61 @@ subroutine DFT(I,Freal,Fimag,Vreal,Vimag,Npix,Nuv)
   !write(*,*) maxval(I),maxval(Freal),maxval(Fimag),minval(Freal),minval(Fimag)
 end subroutine
 !
+!-------------------------------------------------------------------------------
+! Bessel Fourier Transformation
+!-------------------------------------------------------------------------------
+!
+subroutine iBFT(beta,B,I,Nbeta,Npix)
+  ! This subroutine do inverse Bessel Fourier Transformation
+  implicit none
+  integer,  intent(in)  :: Nbeta, Npix
+  real(dp), intent(in)  :: B(Nbeta,Npix)
+  real(dp), intent(in)  :: beta(Nbeta)
+  real(dp), intent(out) :: I(Npix)
+
+  integer  :: ipix
+
+  !call dgemv('T',Nuv,Npix,1d0,Freal(1:Npix,1:Nuv),&
+  !           Npix,I(1:Npix),1,0d0,Vreal(1:Nuv),1)
+  !call dgemv('T',Nuv,Npix,1d0,Fimag(1:Npix,1:Nuv),&
+  !           Npix,I(1:Npix),1,0d0,Vimag(1:Nuv),1)
+
+  !$OMP PARALLEL DO DEFAULT(SHARED) &
+  !$OMP   FIRSTPRIVATE(Npix,Nbeta,beta) &
+  !$OMP   PRIVATE(ipix)
+  do ipix=1, Npix
+    I(ipix) = ddot(Nbeta, beta(1:Nbeta), 1, B(1:Nbeta,ipix), 1)
+  end do
+  !$OMP END PARALLEL DO
+  !write(*,*) maxval(I),maxval(Freal),maxval(Fimag),minval(Freal),minval(Fimag)
+end subroutine
+!
+!
+subroutine BFT(I,C,beta,Npix,Nbeta)
+  ! This subroutine do Bessel Fourier Transformation
+  implicit none
+  integer,  intent(in)  :: Nbeta, Npix
+  real(dp), intent(in)  :: C(Npix,Nbeta)
+  real(dp), intent(in)  :: I(Npix)
+  real(dp), intent(out) :: beta(Nbeta)
+
+  integer  :: ibeta
+
+  !call dgemv('T',Nuv,Npix,1d0,Freal(1:Npix,1:Nuv),&
+  !           Npix,I(1:Npix),1,0d0,Vreal(1:Nuv),1)
+  !call dgemv('T',Nuv,Npix,1d0,Fimag(1:Npix,1:Nuv),&
+  !           Npix,I(1:Npix),1,0d0,Vimag(1:Nuv),1)
+
+  !$OMP PARALLEL DO DEFAULT(SHARED) &
+  !$OMP   FIRSTPRIVATE(Npix,Nbeta,I) &
+  !$OMP   PRIVATE(ibeta)
+  do ibeta=1, Nbeta
+    beta(ibeta) = ddot(Npix, I(1:Npix), 1, C(1:Npix,ibeta), 1)
+  end do
+  !$OMP END PARALLEL DO
+  !write(*,*) maxval(I),maxval(Freal),maxval(Fimag),minval(Freal),minval(Fimag)
+end subroutine
+!
 !
 !-------------------------------------------------------------------------------
 ! calc chisquares
@@ -758,6 +813,46 @@ real(dp) function gradtsve(xidx,yidx,I2d,Nx,Ny)
     gradtsve = gradtsve + 2*(I2d(i1,j1) - I2d(i1,j0))
   end if
   !
+end function
+
+
+real(dp) function pwall(Iin, scale, Npix)
+  implicit none
+
+  ! arguments
+  integer, intent(in) :: Npix
+  real(dp), intent(in) :: Iin(Npix)
+  real(dp), intent(in) :: scale
+
+  integer :: ipix
+
+  pwall=0
+  !$OMP PARALLEL DO DEFAULT(SHARED) &
+  !$OMP   FIRSTPRIVATE(Iin,Npix) &
+  !$OMP   PRIVATE(ipix) &
+  !$OMP   REDUCTION(+:pwall)
+  do ipix=1,Npix
+    if (Iin(ipix) < 0) then
+      pwall = pwall + scale * Iin(ipix) ** 2
+    end if
+  end do
+  !$OMP END PARALLEL DO
+end function
+
+
+real(dp) function gradpwalle(ipix, Iin, scale, Npix)
+  implicit none
+
+  ! arguments
+  integer, intent(in) :: Npix, ipix
+  real(dp), intent(in) :: Iin(Npix)
+  real(dp), intent(in) :: scale
+
+  if (Iin(ipix) < 0) then
+    gradpwalle = 2 * scale * Iin(ipix)
+  else
+    gradpwalle = 0d0
+  end if
 end function
 
 
