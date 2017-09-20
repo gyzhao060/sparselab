@@ -54,7 +54,7 @@ class IMFITS(object):
             uvfitsfile (string):
                 input uv-fits file
             source (string):
-                The source of the image RA and Dec will be obtained from CDS
+               The source of the image RA and Dec will be obtained from CDS
             fov(array-like):
                 Field of View of the image [xmin, xmax, ymin, ymax]
             nx (integer):
@@ -436,10 +436,18 @@ class IMFITS(object):
 
         self.update_fits()
 
-    def update_fits(self):
+    def update_fits(self,cctab=True,threshold=None, relative=True,
+                    istokes=0, ifreq=0):
         '''
         Reflect current self.data / self.header info to the image FITS data.
+        Args:
+            cctab (boolean): If True, AIPS CC table is attached to fits file.
+            istokes (integer): index for Stokes Parameter at which the image will be used for CC table.
+            ifreq (integer): index for Frequency at which the image will be used for CC table.
+            threshold (float): pixels with the absolute intensity smaller than this value will be ignored in CC table.
+            relative (boolean): If true, theshold value will be normalized with the peak intensity of the image.
         '''
+
         # CREATE HDULIST
         hdu = pyfits.PrimaryHDU(self.data)
         hdulist = pyfits.HDUList([hdu])
@@ -486,7 +494,65 @@ class IMFITS(object):
         hdulist[0].header.set("CRPIX4",   np.int64(self.header["nsref"]))
         hdulist[0].header.set("CROTA4",   np.int64(0))
 
+        # Add AIPS CC Table
+        if cctab:
+            aipscctab = self._aipscc(threshold=threshold, relative=relative,
+                    istokes=istokes, ifreq=ifreq)
+
+            hdulist.append(hdu=aipscctab)
+
+            next = len(hdulist)
+            hdulist[next-1].name = 'AIPS CC'
+
         self.hdulist = hdulist
+
+    def _aipscc(self, threshold=None, relative=True,
+                    istokes=0, ifreq=0):
+        '''
+        Make AIPS CC table
+
+        Arguments:
+            istokes (integer): index for Stokes Parameter at which the image will be saved
+            ifreq (integer): index for Frequency at which the image will be saved
+            threshold (float): pixels with the absolute intensity smaller than this value will be ignored.
+            relative (boolean): If true, theshold value will be normalized with the peak intensity of the image.
+        '''
+        Nx = self.header["nx"]
+        Ny = self.header["ny"]
+        xg, yg = self.get_xygrid(angunit="deg")
+        X, Y = np.meshgrid(xg, yg)    
+        X = X.reshape(Nx * Ny)
+        Y = Y.reshape(Nx * Ny)
+        flux = self.data[istokes, ifreq]
+        flux = flux.reshape(Nx * Ny)
+
+        # threshold
+        if threshold is None:
+            thres = np.finfo(np.float32).eps
+        else:
+            if relative:
+                thres = self.peak(istokes=istokes, ifreq=ifreq) * threshold
+            else:
+                thres = threshold
+        thres = np.abs(thres)
+
+        # adopt threshold
+        X = X[flux >= thres]
+        Y = Y[flux >= thres]
+        flux = flux[flux >= thres]
+
+        # make table columns
+        c1 = pyfits.Column(name='FLUX', array=flux, format='1E',unit='JY')
+        c2 = pyfits.Column(name='DELTAX', array=X, format='1E',unit='DEGREES')
+        c3 = pyfits.Column(name='DELTAY', array=Y, format='1E',unit='DEGREES')
+        c4 = pyfits.Column(name='MAJOR AX', array=np.zeros(len(flux)), format='1E',unit='DEGREES')
+        c5 = pyfits.Column(name='MINOR AX', array=np.zeros(len(flux)), format='1E',unit='DEGREES')
+        c6 = pyfits.Column(name='POSANGLE', array=np.zeros(len(flux)), format='1E',unit='DEGREES')
+        c7 = pyfits.Column(name='TYPE OBJ', array=np.zeros(len(flux)), format='1E',unit='CODE')
+
+        # make CC table
+        tab = pyfits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7])
+        return tab
 
     def save_fits(self, outfitsfile, overwrite=True):
         '''
@@ -865,7 +931,7 @@ class IMFITS(object):
         return outfits
 
     def gauss_convolve(self, majsize, minsize=None, x0=None, y0=None,
-                       pa=0., scale=1., angunit=None, save_totalflux=False):
+                       pa=0., scale=1., angunit=None, pos="rel", save_totalflux=False):
         '''
         Gaussian Convolution
 
@@ -889,10 +955,16 @@ class IMFITS(object):
 
         # Create Gaussian
         imextent = outfits.get_imextent(angunit)
+        Imxref = (imextent[0] + imextent[1]) / 2.
+        Imyref = (imextent[2] + imextent[3]) / 2.
         if x0 is None:
-            x0 = (imextent[0] + imextent[1]) / 2.
+            x0 = 0.
         if y0 is None:
-            y0 = (imextent[2] + imextent[3]) / 2.
+            y0 = 0.
+        if pos=="rel":
+            x0 += Imxref
+            y0 += Imyref
+		
         X, Y = outfits.get_xygrid(angunit=angunit, twodim=True)
         cospa = np.cos(np.deg2rad(pa))
         sinpa = np.sin(np.deg2rad(pa))
