@@ -1485,10 +1485,10 @@ class VisTable(_UVTable):
             "ugidx", "vgidx", "u", "v", "uvdist", "amp", "phase", "weight", "sigma"])
         return outtable
 
-    def ave_vistable(self, coherent=False, Integ=300.,dofreq=2, flagweight=True, minpoint=2,uvwsep=1, k=2):
+    def ave_vistable(self, coherent=False, Integ=300.,dofreq=2, flagweight=True, minpoint=2,uvwsep=1, k=1):
         '''
         Args:
-          vistable (pandas.Dataframe object):
+          vistable (VisTable object):
             input visibility table
           
           coherent (boolean):
@@ -1513,7 +1513,7 @@ class VisTable(_UVTable):
             a number of separations to entire time period to calculate u, v, w
             using a spline interpolation
 
-          k (int; default = 2):
+          k (int; default = 1):
             The degree of the spline fit
 
         Returns:
@@ -1977,17 +1977,14 @@ class BSTable(_UVTable):
     def _constructor_sliced(self):
         return _BSSeries
 
-    def ave_bstable(self, Integ=300., dofreq=2, minpoint=4, uvwsep=1, k=1, flagweight=True):
+    def ave_bstable(self, Integ=300., dofreq=2, minpoint=2, uvwsep=1, k=1, flagweight=True):
         '''
         Args:
-          vistable (pandas.Dataframe object):
-            input visibility table
+          bstable (BSTable object):
+            input bstable
           
-          coherent (boolean):
-            Select coherent or incoherent averaging
-
           Integ (float):
-            Integration time
+            Integration time (sec)
 
           dofreq (int; default = 2):
             Parameter for multi-frequency data.
@@ -2005,11 +2002,11 @@ class BSTable(_UVTable):
             a number of separations to entire time period to calculate u, v, w
             using a spline interpolation
 
-          k (int; default = 2):
+          k (int; default = 1):
             The degree of the spline fit
 
         Returns:
-          uvdata.VisTable object
+          uvdata.BSTable object
         '''
 
         integ = Integ / 24. / 3600.
@@ -2491,17 +2488,14 @@ class CATable(_UVTable):
     def _constructor_sliced(self):
         return _CASeries
 
-    def ave_catable(self, Integ=300., dofreq=2, minpoint=4, uvwsep=1, k=1, flagweight=True):
+    def ave_catable(self, Integ=300., dofreq=2, minpoint=2, uvwsep=1, k=1, flagweight=True):
         '''
         Args:
-          vistable (pandas.Dataframe object):
-            input visibility table
+          catable (CATable object):
+            input catable
           
-          coherent (boolean):
-            Select coherent or incoherent averaging
-
           Integ (float):
-            Integration time
+            Integration time (sec)
 
           dofreq (int; default = 2):
             Parameter for multi-frequency data.
@@ -2519,7 +2513,7 @@ class CATable(_UVTable):
             a number of separations to entire time period to calculate u, v, w
             using a spline interpolation
 
-          k (int; default = 2):
+          k (int; default = 1):
             The degree of the spline fit
 
         Returns:
