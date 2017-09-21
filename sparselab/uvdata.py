@@ -3524,7 +3524,7 @@ def _calc_coherent(Tim, amp, phase, weight, fact, tbin, flagweight):
             Input['jd'], Input['amp'], Input['phase'], Input['weight'] = Tim,amp,phase,1
 
         grouped = Input.groupby(fact)
-	      N = np.array(grouped.jd.count())
+	N = np.array(grouped.jd.count())
         if (flagweight == True):
             weight = grouped.weight.sum()
             Input['fcvdf'] = Input.weight * Input.amp * np.exp(1j*Input.phase*np.pi/180.)
