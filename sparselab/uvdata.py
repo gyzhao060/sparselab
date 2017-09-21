@@ -3468,7 +3468,7 @@ def _fit_chisq(parms, X, Y, dbeam):
         return (dbeam - cbeam).reshape(dbeam.size)
     else:
         print("not equal the size of two beam array")
-
+        
 def _calc_uvw(Tim, u, v, w, freq, fact, tbin, k ):
     '''
       This function is to calculate U, V, and W in ave_vistable function.
@@ -3493,7 +3493,6 @@ def _calc_uvw(Tim, u, v, w, freq, fact, tbin, k ):
         
         # Calculate du, dv, dw by a spline interpolation
         INput = Input.groupby(fact)[['jd','du','dv','dw']].mean().reset_index(drop=True).dropna()
-        #Tbins = tbin[tbin_idx]
         du = np.array([]); dv = np.array([]); dw = np.array([]); tuvw = np.array([]); Tbins_flag = np.array([])
         ufitspl = splrep(INput.jd, INput.du, k=k) ; du = np.append(du, splev(tbin, ufitspl))
         vfitspl = splrep(INput.jd, INput.dv, k=k) ; dv = np.append(dv, splev(tbin, vfitspl))
@@ -3525,21 +3524,17 @@ def _calc_coherent(Tim, amp, phase, weight, fact, tbin, flagweight):
             Input['jd'], Input['amp'], Input['phase'], Input['weight'] = Tim,amp,phase,1
 
         grouped = Input.groupby(fact)
-        N = np.array(grouped.jd.count())
-        #Tbins = tbin[tbin_idx]
+	      N = np.array(grouped.jd.count())
         if (flagweight == True):
             weight = grouped.weight.sum()
             Input['fcvdf'] = Input.weight * Input.amp * np.exp(1j*Input.phase*np.pi/180.)
             fcv = grouped.fcvdf.sum() / weight
-            #weight = grouped.weight.sum().dropna().reset_index(drop=True)
         else:
             Input['fcvdf'] = Input.amp * np.exp(1j*Input.phase*np.pi/180.)
             fcv = grouped.fcvdf.mean()
             Input['subfcvdf'] = grouped.fcvdf.apply(Diff).abs()
             Sig = grouped.subfcvdf.mean() / np.sqrt(N)
-            #Sig = grouped.subfcvdf.mean().dropna().reset_index(drop=True)
             weight = np.power((1./Sig),2)
-        #fcv = fcv.dropna().reset_index(drop=True)
         sigma = np.sqrt(1./weight)
         amp = np.abs(fcv)
         phase = pd.Series(np.angle(fcv,deg=True))
