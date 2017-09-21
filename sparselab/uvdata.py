@@ -1580,11 +1580,11 @@ class VisTable(_UVTable):
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 t1flag = np.array(table1.groupby(t1sep).jd.count() > 0) ### tbin row
-                tuvw = _calc_uvw(table1.jd, table1.u, table1.v, table1.w, table1.freq, t1sep, tbins, t1flag, integ, minpoint, k )
+                tuvw = _calc_uvw(table1.jd, table1.u, table1.v, table1.w, table1.freq, t1sep, tbins, k )
                 if (coherent == True):
-                    tamp = _calc_coherent(table1.jd, table1.amp, table1.phase, table1.weight, t1sep, tbins, t1flag, integ, minpoint, flagweight)
+                    tamp = _calc_coherent(table1.jd, table1.amp, table1.phase, table1.weight, t1sep, tbins, flagweight)
                 else:
-                    tamp = _calc_incoherent(table1.jd, table1.amp, table1.weight, t1sep, tbins, t1flag, integ, minpoint, flagweight)
+                    tamp = _calc_incoherent(table1.jd, table1.amp, table1.weight, t1sep, tbins, flagweight)
                 
                 # Set parameters
                 U = tuvw.du * tuvw.freq
@@ -1603,6 +1603,7 @@ class VisTable(_UVTable):
                 Phase = tamp['phase']
                 Weight = tamp['weight']
                 Sigma = tamp['sigma']
+                N = tamp['N']
                 Year = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,0]
                 Doy = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,1]
                 Hour = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,2]
@@ -1615,6 +1616,7 @@ class VisTable(_UVTable):
                            'u', 'v', 'w', 'uvdist', 'st1', 'st2', 'amp', 'phase', 'weight', 'sigma']
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,U,V,W,UVDIST,St1,St2,
                                                 Amp, Phase, Weight,Sigma]).T,columns=collist)
+                table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['bandid'] = outtable.bandid.astype(np.int32)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
@@ -1642,11 +1644,11 @@ class VisTable(_UVTable):
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 t1flag = np.array(table1.groupby(t1sep).jd.count() > 0) ### tbin row
-                tuvw = _calc_uvw(table1.jd, table1.u, table1.v, table1.w, table1.freq, t1sep, tbins, t1flag, integ, minpoint, k )
+                tuvw = _calc_uvw(table1.jd, table1.u, table1.v, table1.w, table1.freq, t1sep, tbins, k )
                 if (coherent == True):
-                    tamp = _calc_coherent(table1.jd, table1.amp, table1.phase, table1.weight, t1sep, tbins, t1flag, integ, minpoint, flagweight)
+                    tamp = _calc_coherent(table1.jd, table1.amp, table1.phase, table1.weight, t1sep, tbins, flagweight)
                 else:
-                    tamp = _calc_incoherent(table1.jd, table1.amp, table1.weight, t1sep, tbins, t1flag, integ, minpoint, flagweight)
+                    tamp = _calc_incoherent(table1.jd, table1.amp, table1.weight, t1sep, tbins, flagweight)
                     
                 # Set parameters
                 U = tuvw.du * tuvw.freq
@@ -1665,6 +1667,7 @@ class VisTable(_UVTable):
                 Phase = tamp['phase']
                 Weight = tamp['weight']
                 Sigma = tamp['sigma']
+                N = tamp['N']
                 Year = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,0]
                 Doy = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,1]
                 Hour = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,2]
@@ -1677,6 +1680,7 @@ class VisTable(_UVTable):
                            'u', 'v', 'w', 'uvdist', 'st1', 'st2', 'amp', 'phase', 'weight', 'sigma']
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,U,V,W,UVDIST,St1,St2,
                                                 Amp, Phase, Weight,Sigma]).T,columns=collist)
+                table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['bandid'] = outtable.bandid.astype(np.str)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
@@ -1709,11 +1713,11 @@ class VisTable(_UVTable):
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 t1flag = np.array(table1.groupby(t1sep).jd.count() > 0) ### tbin row
-                tuvw = _calc_uvw(table1.jd, table1.u, table1.v, table1.w, table1.freq, t1sep, tbins, t1flag, integ, minpoint, k )
+                tuvw = _calc_uvw(table1.jd, table1.u, table1.v, table1.w, table1.freq, t1sep, tbins, k )
                 if (coherent == True):
-                    tamp = _calc_coherent(table1.jd, table1.amp, table1.phase, table1.weight, t1sep, tbins, t1flag, integ, minpoint, flagweight)
+                    tamp = _calc_coherent(table1.jd, table1.amp, table1.phase, table1.weight, t1sep, tbins, flagweight)
                 else:
-                    tamp = _calc_incoherent(table1.jd, table1.amp, table1.weight, t1sep, tbins, t1flag, integ, minpoint, flagweight)
+                    tamp = _calc_incoherent(table1.jd, table1.amp, table1.weight, t1sep, tbins, flagweight)
 
                 # Set parameters
                 U = tuvw.du * tuvw.freq
@@ -1732,6 +1736,7 @@ class VisTable(_UVTable):
                 Phase = tamp['phase']
                 Weight = tamp['weight']
                 Sigma = tamp['sigma']
+                N = tamp['N']
                 Year = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,0]
                 Doy = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,1]
                 Hour = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,2]
@@ -1744,6 +1749,7 @@ class VisTable(_UVTable):
                            'u', 'v', 'w', 'uvdist', 'st1', 'st2', 'amp', 'phase', 'weight', 'sigma']
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,U,V,W,UVDIST,St1,St2,
                                                 Amp, Phase, Weight,Sigma]).T,columns=collist)
+                table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['bandid'] = outtable['bandid'].astype(np.str)
             outtable['ifid'] = outtable['ifid'].astype(np.str)
@@ -3463,7 +3469,7 @@ def _fit_chisq(parms, X, Y, dbeam):
     else:
         print("not equal the size of two beam array")
 
-def _calc_uvw(Tim, u, v, w, freq, fact, tbin, tbin_idx, integ, minpoint, k ):
+def _calc_uvw(Tim, u, v, w, freq, fact, tbin, k ):
     '''
       This function is to calculate U, V, and W in ave_vistable function.
       In this function, the U, V, and W are interpolated by spline interpolation.
@@ -3478,7 +3484,7 @@ def _calc_uvw(Tim, u, v, w, freq, fact, tbin, tbin_idx, integ, minpoint, k ):
       k: degree for spline interpolation
     '''
     sTim = len(Tim); su = len(u); sv = len(v); sw = len(w); sf = len(freq)
-    if (sTim > minpoint and sTim == su and sTim == sv and sTim == sw and sTim == sf):
+    if (sTim == su and sTim == sv and sTim == sw and sTim == sf):
         import fortlib
         from scipy.interpolate import splrep,splev
         Input = pd.DataFrame()
@@ -3487,28 +3493,28 @@ def _calc_uvw(Tim, u, v, w, freq, fact, tbin, tbin_idx, integ, minpoint, k ):
         
         # Calculate du, dv, dw by a spline interpolation
         INput = Input.groupby(fact)[['jd','du','dv','dw']].mean().reset_index(drop=True).dropna()
-        Tbins = tbin[tbin_idx]
+        #Tbins = tbin[tbin_idx]
         du = np.array([]); dv = np.array([]); dw = np.array([]); tuvw = np.array([]); Tbins_flag = np.array([])
-        ufitspl = splrep(INput.jd, INput.du, k=k) ; du = np.append(du, splev(Tbins, ufitspl))
-        vfitspl = splrep(INput.jd, INput.dv, k=k) ; dv = np.append(dv, splev(Tbins, vfitspl))
-        wfitspl = splrep(INput.jd, INput.dw, k=k) ; dw = np.append(dw, splev(Tbins, wfitspl))
+        ufitspl = splrep(INput.jd, INput.du, k=k) ; du = np.append(du, splev(tbin, ufitspl))
+        vfitspl = splrep(INput.jd, INput.dv, k=k) ; dv = np.append(dv, splev(tbin, vfitspl))
+        wfitspl = splrep(INput.jd, INput.dw, k=k) ; dw = np.append(dw, splev(tbin, wfitspl))
         duvdist = np.sqrt(du**2 + dv**2)
         if len(set(freq)) == 1:
             Freq = np.repeat(freq[0],len(duvdist))
         else:
             Freq = np.repeat(mean(unique(freq)),len(duvdist))
-        out['jd'], out['du'], out['dv'], out['dw'], out['duvdist'], out['freq'] = Tbins, du, dv, dw, duvdist, Freq
+        out['jd'], out['du'], out['dv'], out['dw'], out['duvdist'], out['freq'] = tbin, du, dv, dw, duvdist, Freq
         return out
     else:
         print("not equal the size of time, u, v, w arrays")
 
 
-def _calc_coherent(Tim, amp, phase, weight, fact, tbin, tbin_idx, integ, minpoint, flagweight):
+def _calc_coherent(Tim, amp, phase, weight, fact, tbin, flagweight):
     '''
       This function calculates averages of full complex visibility coherently
     '''
     sTim = len(Tim); samp = len(amp); sphase = len(phase)
-    if (sTim > minpoint and sTim == samp and sTim == sphase):
+    if (sTim == samp and sTim == sphase):
         # calculate visibility
         out = pd.DataFrame()
         Input = pd.DataFrame()
@@ -3519,34 +3525,36 @@ def _calc_coherent(Tim, amp, phase, weight, fact, tbin, tbin_idx, integ, minpoin
             Input['jd'], Input['amp'], Input['phase'], Input['weight'] = Tim,amp,phase,1
 
         grouped = Input.groupby(fact)
-        Tbins = tbin[tbin_idx]
-        weight = grouped.weight.sum().dropna()
+        N = np.array(grouped.jd.count())
+        #Tbins = tbin[tbin_idx]
         if (flagweight == True):
+            weight = grouped.weight.sum()
             Input['fcvdf'] = Input.weight * Input.amp * np.exp(1j*Input.phase*np.pi/180.)
             fcv = grouped.fcvdf.sum() / weight
-            weight = grouped.weight.sum().dropna().reset_index(drop=True)
+            #weight = grouped.weight.sum().dropna().reset_index(drop=True)
         else:
             Input['fcvdf'] = Input.amp * np.exp(1j*Input.phase*np.pi/180.)
             fcv = grouped.fcvdf.mean()
             Input['subfcvdf'] = grouped.fcvdf.apply(Diff).abs()
-            Sig = grouped.subfcvdf.mean().dropna().reset_index(drop=True)
+            Sig = grouped.subfcvdf.mean() / np.sqrt(N)
+            #Sig = grouped.subfcvdf.mean().dropna().reset_index(drop=True)
             weight = np.power((1./Sig),2)
-        fcv = fcv.dropna().reset_index(drop=True)
+        #fcv = fcv.dropna().reset_index(drop=True)
         sigma = np.sqrt(1./weight)
         amp = np.abs(fcv)
         phase = pd.Series(np.angle(fcv,deg=True))
-        out['jd'], out['amp'], out['phase'], out['weight'], out['sigma'] = Tbins, amp, phase, weight, sigma
+        out['jd'], out['amp'], out['phase'], out['weight'], out['sigma'], out['N'] = tbin, amp, phase, weight, sigma, N
         return out
     else:
         print("not equal the size of time, amp, phase, weight arrays")
 
 
-def _calc_incoherent(Tim, Amp, Weight, fact, tbin, tbin_idx, integ, minpoint, flagweight):
+def _calc_incoherent(Tim, Amp, Weight, fact, tbin, flagweight):
     '''
       This function calculates averages of full complex visibility incoherently
     '''
     sTim = len(Tim); samp = len(Amp)
-    if (sTim > minpoint and sTim == samp):
+    if (sTim == samp):
         out = pd.DataFrame()
         Input = pd.DataFrame()
         if (flagweight == True):
@@ -3554,23 +3562,23 @@ def _calc_incoherent(Tim, Amp, Weight, fact, tbin, tbin_idx, integ, minpoint, fl
             Input['sigma'] = 1/np.sqrt(Input.weight)
         else:
             Input['jd'], Input['amp'], Input['weight'] = Tim,Amp,1
-        Input['amp2'] = Input.amp**2
+        Input['amp2'] = np.power(Input.amp,2.)
         grouped = Input.groupby(fact)
-        Tbins = tbin[tbin_idx]
+        N = np.array(grouped.jd.count())
         if (flagweight == True):
-            sigma = grouped.sigma.mean().dropna()
+            Sigma = 1./np.sqrt(grouped.weight.sum())
         else:
-            sigma = grouped.amp.std().dropna()
-        amp2 = grouped.amp2.mean().dropna()
-        amp = np.sqrt(amp2 - 2*(sigma**2))
-        SNR1 = 2/np.sqrt(grouped.jd.count()[grouped.jd.count() > 0])
-        SNR2 = sigma/amp
+            Sigma = grouped.amp.std()
+        Amp2 = grouped.amp2.mean()
+        amp = np.sqrt(Amp2 - 2*(Sigma**2))
+        SNR1 = 2/np.sqrt(grouped.jd.count())
+        SNR2 = Sigma/amp
         SNR3 = np.sqrt(1+SNR2**2)
         SNR = np.sqrt(1 + SNR1*SNR2*SNR3)
-        snr = 1/(SNR-1)
-        sigma = amp / snr
+        Snr = 1/(SNR-1)
+        sigma = amp / Snr
         weight = (1/sigma)**2
-        out['jd'], out['amp'], out['phase'], out['weight'], out['sigma'] = Tbins, np.array(amp), 0.0, np.array(weight), np.array(sigma)
+        out['jd'], out['amp'], out['phase'], out['weight'], out['sigma'], out['N'] = tbin, np.array(amp), 0.0, np.array(weight), np.array(sigma), N
         return out
     else:
         print("not equal the size of time, amp, phase, weight arrays")
