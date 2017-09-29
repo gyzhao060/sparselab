@@ -378,7 +378,8 @@ class IMFITS(object):
 
         if 'TELESCOP' in grouphdu.header:
             self.header["telescope"] = self.header_dtype["telescope"](
-                telescope=grouphdu.header.get('TELESCOP'))
+#                telescope=grouphdu.header.get('TELESCOP'))
+                grouphdu.header.get('TELESCOP'))
         else:
             self.header["telescope"] = self.header_dtype["telescope"]('None')
 
@@ -428,7 +429,7 @@ class IMFITS(object):
             self.header["f"] = self.header_dtype["f"](
                 hdulist[0].header.get("CRVAL%d" % (isf)))
             self.header["df"] = self.header_dtype["df"](hdulist[0].header.get(
-                "CDELT%d" % (isfreq)) * hdulist[0].header.get("NAXIS%d" % (isf)))
+                "CDELT%d" % (isf)) * hdulist[0].header.get("NAXIS%d" % (isf)))
             self.header["nf"] = self.header_dtype["nf"](1)
             self.header["nfref"] = self.header_dtype["nfref"](1)
         else:
