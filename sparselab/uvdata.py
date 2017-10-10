@@ -1490,7 +1490,7 @@ class VisTable(_UVTable):
         Args:
           vistable (VisTable object):
             input visibility table
-          
+
           coherent (boolean):
             Select coherent or incoherent averaging
 
@@ -1524,7 +1524,7 @@ class VisTable(_UVTable):
         tmpvis = copy.deepcopy(self)
         N = np.shape(tmpvis)[0]
         blids = tmpvis.st1 + tmpvis.st2*1000 # baseline id
-        
+
         # Default Averaging alldata
         doif = True
         doband = True
@@ -1534,11 +1534,11 @@ class VisTable(_UVTable):
         if np.int64(dofreq) > 1:
             doband = False
             bandset = set(tmpvis.bandid)
-        
+
         # make non redundant sets of each parameter
         stokesset = set(tmpvis.stokesid)
         blidset = set(blids)
-        
+
         # getting time tag
         YEAR = tmpvis['year'].apply(lambda x: str(int(x)).zfill(4))
         DOY = tmpvis['doy'].apply(lambda x: str(int(x)).zfill(3))
@@ -1549,7 +1549,7 @@ class VisTable(_UVTable):
         TimeTag = at.Time(np.array(Timetag,dtype=str))
         timetag = TimeTag.jd
         tmpvis['timetag'] = timetag
-        
+
         # make time bins
         tset = set(timetag)
         tmin = min(tset)
@@ -1557,16 +1557,16 @@ class VisTable(_UVTable):
         tregs = np.arange(tmin,tmax+integ,integ)
         tbinfac = pd.cut(timetag,tregs,include_lowest=True)
         tbins = np.arange(tmin+integ/2.,tmax+integ/2.,integ)
-        
+
         outtable = VisTable()
-        
+
         # Case dofreq = 2
         if doband == False and doif == False:
             table = pd.DataFrame()
             for stokesid, bandid, ifid, blid in itertools.product(stokesset, bandset, ifset, blidset):
                 st1 = blid % 1000
                 st2 = blid //1000
-                
+
                 # selecting data
                 idx = (tmpvis.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpvis.loc[:,"bandid"]==bandid)
@@ -1576,7 +1576,7 @@ class VisTable(_UVTable):
                 table1 = tmpvis.loc[idx, :].reset_index(drop=True)
                 if table1.shape[0] < minpoint:
                     continue
-                
+
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 t1flag = np.array(table1.groupby(t1sep).jd.count() > 0) ### tbin row
@@ -1585,7 +1585,7 @@ class VisTable(_UVTable):
                     tamp = _calc_coherent(table1.jd, table1.amp, table1.phase, table1.weight, t1sep, tbins, flagweight)
                 else:
                     tamp = _calc_incoherent(table1.jd, table1.amp, table1.weight, t1sep, tbins, flagweight)
-                
+
                 # Set parameters
                 U = tuvw.du * tuvw.freq
                 V = tuvw.dv * tuvw.freq
@@ -1610,7 +1610,7 @@ class VisTable(_UVTable):
                 Minute = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,3]
                 Sec = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,4]
                 Jd = tbin_at.jd
-                
+
                 # Make output table
                 collist = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                            'u', 'v', 'w', 'uvdist', 'st1', 'st2', 'amp', 'phase', 'weight', 'sigma']
@@ -1621,7 +1621,7 @@ class VisTable(_UVTable):
             outtable['bandid'] = outtable.bandid.astype(np.int32)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
-            
+
             # Case dofreq = 1
         if doband == True and doif == False:
             # Make strings
@@ -1631,7 +1631,7 @@ class VisTable(_UVTable):
             for stokesid, ifid, blid in itertools.product(stokesset, ifset, blidset):
                 st1 = blid % 1000
                 st2 = blid //1000
-                
+
                 # selecting data
                 idx = (tmpvis.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpvis.loc[:,"ifid"]==ifid)
@@ -1640,7 +1640,7 @@ class VisTable(_UVTable):
                 table1 = tmpvis.loc[idx, :].reset_index(drop=True)
                 if table1.shape[0] < minpoint:
                     continue
-                
+
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 t1flag = np.array(table1.groupby(t1sep).jd.count() > 0) ### tbin row
@@ -1649,7 +1649,7 @@ class VisTable(_UVTable):
                     tamp = _calc_coherent(table1.jd, table1.amp, table1.phase, table1.weight, t1sep, tbins, flagweight)
                 else:
                     tamp = _calc_incoherent(table1.jd, table1.amp, table1.weight, t1sep, tbins, flagweight)
-                    
+
                 # Set parameters
                 U = tuvw.du * tuvw.freq
                 V = tuvw.dv * tuvw.freq
@@ -1674,7 +1674,7 @@ class VisTable(_UVTable):
                 Minute = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,3]
                 Sec = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,4]
                 Jd = tbin_at.jd
-                
+
                 # Make output table
                 collist = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                            'u', 'v', 'w', 'uvdist', 'st1', 'st2', 'amp', 'phase', 'weight', 'sigma']
@@ -1685,7 +1685,7 @@ class VisTable(_UVTable):
             outtable['bandid'] = outtable.bandid.astype(np.str)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
-            
+
             # Case dofreq = 0
         if doband == True and doif == True:
             # Make strings
@@ -1701,7 +1701,7 @@ class VisTable(_UVTable):
             for stokesid, blid in itertools.product(stokesset, blidset):
                 st1 = blid % 1000
                 st2 = blid //1000
-                
+
                 # selecting data
                 idx = (tmpvis.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpvis.loc[:,"st1"]==st1)
@@ -1709,7 +1709,7 @@ class VisTable(_UVTable):
                 table1 = tmpvis.loc[idx, :].reset_index(drop=True)
                 if table1.shape[0] < minpoint:
                     continue
-                
+
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 t1flag = np.array(table1.groupby(t1sep).jd.count() > 0) ### tbin row
@@ -1743,7 +1743,7 @@ class VisTable(_UVTable):
                 Minute = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,3]
                 Sec = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,4]
                 Jd = tbin_at.jd
-                
+
                 # Make output table
                 collist = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                            'u', 'v', 'w', 'uvdist', 'st1', 'st2', 'amp', 'phase', 'weight', 'sigma']
@@ -1754,7 +1754,7 @@ class VisTable(_UVTable):
             outtable['bandid'] = outtable['bandid'].astype(np.str)
             outtable['ifid'] = outtable['ifid'].astype(np.str)
             outtable['ch'] = outtable['ch'].astype(np.str)
-            
+
         # reset types
         outtable['jd'] = outtable['jd'].astype(np.float64)
         outtable['year'] = outtable['year'].astype(np.int32)
@@ -1774,12 +1774,12 @@ class VisTable(_UVTable):
         outtable['phase'] = outtable['phase'].astype(np.float64)
         outtable['weight'] = outtable['weight'].astype(np.float64)
         outtable['sigma'] = outtable['sigma'].astype(np.float64)
-        
-        # sort table 
+
+        # sort table
         outtable = outtable.loc[outtable.sigma > 0]
         outtable = outtable.sort_values(by=["jd", "st1", "st2"], ascending=True).reset_index(drop=True)
-        return outtable
-    
+        return VisTable(outtable)
+
 
     #-------------------------------------------------------------------------
     # Plot Functions
@@ -1988,7 +1988,7 @@ class BSTable(_UVTable):
         Args:
           bstable (BSTable object):
             input bstable
-          
+
           Integ (float):
             Integration time (sec)
 
@@ -2019,7 +2019,7 @@ class BSTable(_UVTable):
         tmpbs = copy.deepcopy(self)
         N = np.shape(tmpbs)[0]
         blids = tmpbs.st1 + tmpbs.st2*1000 + tmpbs.st3*1000000 # baseline id
-        
+
         # Default Averaging alldata
         doif = True
         doband = True
@@ -2029,11 +2029,11 @@ class BSTable(_UVTable):
         if np.int64(dofreq) > 1:
             doband = False
             bandset = set(tmpbs.bandid)
-            
+
         # make non redundant sets of each parameter
         stokesset = set(tmpbs.stokesid)
         blidset = set(blids)
-        
+
         # getting time tag
         YEAR = tmpbs['year'].apply(lambda x: str(int(x)).zfill(4))
         DOY = tmpbs['doy'].apply(lambda x: str(int(x)).zfill(3))
@@ -2052,16 +2052,16 @@ class BSTable(_UVTable):
         tregs = np.arange(tmin,tmax+integ,integ)
         tbinfac = pd.cut(timetag,tregs,include_lowest=True)
         tbins = np.arange(tmin+integ/2.,tmax+integ/2.,integ)
-        
+
         outtable = BSTable()
-        
+
         # Case dofreq = 2
         if doband == False and doif == False:
             for stokesid, bandid, ifid, blid in itertools.product(stokesset, bandset, ifset, blidset):
                 st1 = blid % 1000 % 1000
                 st2 = blid // 1000 % 1000
                 st3 = blid // 1000 // 1000
-                
+
                 # selecting data
                 idx = (tmpbs.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpbs.loc[:,"bandid"]==bandid)
@@ -2072,21 +2072,21 @@ class BSTable(_UVTable):
                 table1 = tmpbs.loc[idx, :].reset_index(drop=True)
                 if table1.shape[0] < k+2:
                     continue
-                
+
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 if table1.groupby(t1sep).jd.count().max() < minpoint:
                     continue
                 t1flag = np.array(table1.groupby(t1sep).jd.count() >= 1) ### tbin row
-                tuvw = _calc_bs_uvw(table1.jd, 
-                                    table1.u12, table1.v12, table1.w12, 
-                                    table1.u23, table1.v23, table1.w23, 
-                                    table1.u31, table1.v31, table1.w31, 
+                tuvw = _calc_bs_uvw(table1.jd,
+                                    table1.u12, table1.v12, table1.w12,
+                                    table1.u23, table1.v23, table1.w23,
+                                    table1.u31, table1.v31, table1.w31,
                                     table1.freq, t1sep, tbins, k)
                 tphase = _calc_bsave(table1.jd, table1.amp, table1.phase, table1.sigma, t1sep, tbins, flagweight)
                 if (tuvw.size == 1 or tphase.size == 1):
                     continue
-                
+
                 # Set parameters
                 U12 = tuvw.du12 * tuvw.freq; U23 = tuvw.du23 * tuvw.freq; U31 = tuvw.du31 * tuvw.freq
                 V12 = tuvw.dv12 * tuvw.freq; V23 = tuvw.dv23 * tuvw.freq; V31 = tuvw.dv31 * tuvw.freq
@@ -2113,9 +2113,9 @@ class BSTable(_UVTable):
                 Minute = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,3]
                 Sec = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,4]
                 Jd = tbin_at.jd
-                
+
                 collist = [
-                    'jd', 'year', 'doy', 'hour', 'min', 'sec', 
+                    'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u12', 'v12', 'w12', 'uvdist12',
                     'u23', 'v23', 'w23', 'uvdist23',
@@ -2124,7 +2124,7 @@ class BSTable(_UVTable):
                     'st1', 'st2', 'st3',
                     'amp', 'phase', 'weight', 'sigma'
                     ]
-                
+
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U12,V12,W12,UVDIST12,U23,V23,W23,UVDIST23,U31,V31,W31,UVDIST31,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
@@ -2134,7 +2134,7 @@ class BSTable(_UVTable):
             outtable['bandid'] = outtable.bandid.astype(np.int32)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
-            
+
             # Case dofreq = 1
         if doband == True and doif == False:
             # Make strings
@@ -2145,7 +2145,7 @@ class BSTable(_UVTable):
                 st1 = blid % 1000 % 1000
                 st2 = blid // 1000 % 1000
                 st3 = blid // 1000 // 1000
-                
+
                 # selecting data
                 idx = (tmpbs.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpbs.loc[:,"ifid"]==ifid)
@@ -2155,21 +2155,21 @@ class BSTable(_UVTable):
                 table1 = tmpbs.loc[idx, :].reset_index(drop=True)
                 if table1.shape[0] < k+2:
                     continue
-                
+
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 if table1.groupby(t1sep).jd.count().max() < minpoint:
                     continue
                 t1flag = np.array(table1.groupby(t1sep).jd.count() >= 1) ### tbin row
-                tuvw = _calc_bs_uvw(table1.jd, 
-                                    table1.u12, table1.v12, table1.w12, 
-                                    table1.u23, table1.v23, table1.w23, 
-                                    table1.u31, table1.v31, table1.w31, 
+                tuvw = _calc_bs_uvw(table1.jd,
+                                    table1.u12, table1.v12, table1.w12,
+                                    table1.u23, table1.v23, table1.w23,
+                                    table1.u31, table1.v31, table1.w31,
                                     table1.freq, t1sep, tbins, k)
                 tphase = _calc_bsave(table1.jd, table1.amp, table1.phase, table1.sigma, t1sep, tbins, flagweight)
                 if (tuvw.size == 1 or tphase.size == 1):
                     continue
-                
+
                 # Set parameters
                 U12 = tuvw.du12 * tuvw.freq; U23 = tuvw.du23 * tuvw.freq; U31 = tuvw.du31 * tuvw.freq
                 V12 = tuvw.dv12 * tuvw.freq; V23 = tuvw.dv23 * tuvw.freq; V31 = tuvw.dv31 * tuvw.freq
@@ -2196,9 +2196,9 @@ class BSTable(_UVTable):
                 Minute = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,3]
                 Sec = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,4]
                 Jd = tbin_at.jd
-                
+
                 collist = [
-                    'jd', 'year', 'doy', 'hour', 'min', 'sec', 
+                    'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u12', 'v12', 'w12', 'uvdist12',
                     'u23', 'v23', 'w23', 'uvdist23',
@@ -2207,7 +2207,7 @@ class BSTable(_UVTable):
                     'st1', 'st2', 'st3',
                     'amp', 'phase', 'weight', 'sigma'
                     ]
-                
+
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U12,V12,W12,UVDIST12,U23,V23,W23,UVDIST23,U31,V31,W31,UVDIST31,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
@@ -2217,7 +2217,7 @@ class BSTable(_UVTable):
             outtable['bandid'] = outtable.bandid.astype(np.str)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
-            
+
         # Case dofreq = 0
         if doband == True and doif == True:
             # Make strings
@@ -2234,7 +2234,7 @@ class BSTable(_UVTable):
                 st1 = blid % 1000 % 1000
                 st2 = blid // 1000 % 1000
                 st3 = blid // 1000 // 1000
-                
+
                 # selecting data
                 idx = (tmpbs.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpbs.loc[:,"st1"]==st1)
@@ -2243,21 +2243,21 @@ class BSTable(_UVTable):
                 table1 = tmpbs.loc[idx, :].reset_index(drop=True)
                 if table1.shape[0] < k+2:
                     continue
-                
+
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 if table1.groupby(t1sep).jd.count().max() < minpoint:
                     continue
                 t1flag = np.array(table1.groupby(t1sep).jd.count() >= 1) ### tbin row
-                tuvw = _calc_bs_uvw(table1.jd, 
-                                    table1.u12, table1.v12, table1.w12, 
-                                    table1.u23, table1.v23, table1.w23, 
-                                    table1.u31, table1.v31, table1.w31, 
+                tuvw = _calc_bs_uvw(table1.jd,
+                                    table1.u12, table1.v12, table1.w12,
+                                    table1.u23, table1.v23, table1.w23,
+                                    table1.u31, table1.v31, table1.w31,
                                     table1.freq, t1sep, tbins, k)
                 tphase = _calc_bsave(table1.jd, table1.amp, table1.phase, table1.sigma, t1sep, tbins, flagweight)
                 if (tuvw.size == 1 or tphase.size == 1):
                     continue
-                
+
                 # Set parameters
                 U12 = tuvw.du12 * tuvw.freq; U23 = tuvw.du23 * tuvw.freq; U31 = tuvw.du31 * tuvw.freq
                 V12 = tuvw.dv12 * tuvw.freq; V23 = tuvw.dv23 * tuvw.freq; V31 = tuvw.dv31 * tuvw.freq
@@ -2284,9 +2284,9 @@ class BSTable(_UVTable):
                 Minute = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,3]
                 Sec = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,4]
                 Jd = tbin_at.jd
-                
+
                 collist = [
-                    'jd', 'year', 'doy', 'hour', 'min', 'sec', 
+                    'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u12', 'v12', 'w12', 'uvdist12',
                     'u23', 'v23', 'w23', 'uvdist23',
@@ -2295,7 +2295,7 @@ class BSTable(_UVTable):
                     'st1', 'st2', 'st3',
                     'amp', 'phase', 'weight', 'sigma'
                     ]
-                
+
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U12,V12,W12,UVDIST12,U23,V23,W23,UVDIST23,U31,V31,W31,UVDIST31,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
@@ -2336,11 +2336,11 @@ class BSTable(_UVTable):
         outtable['weight'] = outtable['weight'].astype(np.float64)
         outtable['sigma'] = outtable['sigma'].astype(np.float64)
 
-        # sort table 
+        # sort table
         outtable = outtable.sort_values(by=["jd", "st1", "st2", "st3"], ascending=True).reset_index(drop=True)
-        return outtable
+        return BSTable(outtable)
 
-    
+
     #-------------------------------------------------------------------------
     # Plot Functions
     #-------------------------------------------------------------------------
@@ -2499,7 +2499,7 @@ class CATable(_UVTable):
         Args:
           catable (CATable object):
             input catable
-          
+
           Integ (float):
             Integration time (sec)
 
@@ -2530,7 +2530,7 @@ class CATable(_UVTable):
         tmpca = copy.deepcopy(self)
         N = np.shape(tmpca)[0]
         blids = tmpca.st1 + tmpca.st2*1000 + tmpca.st3*1000000 + tmpca.st4*1000000000 # baseline id
-        
+
         # Default Averaging alldata
         doif = True
         doband = True
@@ -2540,11 +2540,11 @@ class CATable(_UVTable):
         if np.int64(dofreq) > 1:
             doband = False
             bandset = set(tmpca.bandid)
-            
+
         # make non redundant sets of each parameter
         stokesset = set(tmpca.stokesid)
         blidset = set(blids)
-        
+
         # getting time tag
         YEAR = tmpca['year'].apply(lambda x: str(int(x)).zfill(4))
         DOY = tmpca['doy'].apply(lambda x: str(int(x)).zfill(3))
@@ -2563,9 +2563,9 @@ class CATable(_UVTable):
         tregs = np.arange(tmin,tmax+integ,integ)
         tbinfac = pd.cut(timetag,tregs,include_lowest=True)
         tbins = np.arange(tmin+integ/2.,tmax+integ/2.,integ)
-        
+
         outtable = CATable()
-        
+
         # Case dofreq = 2
         if doband == False and doif == False:
             for stokesid, bandid, ifid, blid in itertools.product(stokesset, bandset, ifset, blidset):
@@ -2573,7 +2573,7 @@ class CATable(_UVTable):
                 st2 = blid // 1000 % 1000 % 1000
                 st3 = blid // 1000 // 1000 % 1000
                 st4 = blid // 1000 // 1000 // 1000
-                
+
                 # selecting data
                 idx = (tmpca.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpca.loc[:,"bandid"]==bandid)
@@ -2585,22 +2585,22 @@ class CATable(_UVTable):
                 table1 = tmpca.loc[idx, :].reset_index(drop=True)
                 if table1.shape[0] < k+2:
                     continue
-                
+
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 if table1.groupby(t1sep).jd.count().max() < minpoint:
                     continue
                 t1flag = np.array(table1.groupby(t1sep).jd.count() >= 1) ### tbin row
-                tuvw = _calc_ca_uvw(table1.jd, 
-                                    table1.u1, table1.v1, table1.w1, 
-                                    table1.u2, table1.v2, table1.w2, 
-                                    table1.u3, table1.v3, table1.w3, 
-                                    table1.u4, table1.v4, table1.w4, 
+                tuvw = _calc_ca_uvw(table1.jd,
+                                    table1.u1, table1.v1, table1.w1,
+                                    table1.u2, table1.v2, table1.w2,
+                                    table1.u3, table1.v3, table1.w3,
+                                    table1.u4, table1.v4, table1.w4,
                                     table1.freq, t1sep, tbins, k)
                 tamp = _calc_caave(table1.jd, table1.logamp, table1.logsigma, t1sep, tbins, flagweight)
                 if (tuvw.size == 1 or tamp.size == 1):
                     continue
-                
+
                 # Set parameters
                 U1 = tuvw.du1 * tuvw.freq; U2 = tuvw.du2 * tuvw.freq; U3 = tuvw.du3 * tuvw.freq; U4 = tuvw.du4 * tuvw.freq
                 V1 = tuvw.dv1 * tuvw.freq; V2 = tuvw.dv2 * tuvw.freq; V3 = tuvw.dv3 * tuvw.freq; V4 = tuvw.dv4 * tuvw.freq
@@ -2627,9 +2627,9 @@ class CATable(_UVTable):
                 Minute = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,3]
                 Sec = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,4]
                 Jd = tbin_at.jd
-                
+
                 collist = [
-                    'jd', 'year', 'doy', 'hour', 'min', 'sec', 
+                    'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u1', 'v1', 'w1', 'uvdist1', 'u2', 'v2', 'w2', 'uvdist2',
                     'u3', 'v3', 'w3', 'uvdist3', 'u4', 'v4', 'w4', 'uvdist4',
@@ -2637,7 +2637,7 @@ class CATable(_UVTable):
                     'st1', 'st2', 'st3', 'st4',
                     'logamp', 'weight', 'logsigma'
                     ]
-                
+
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U1,V1,W1,UVDIST1,U2,V2,W2,UVDIST2,U3,V3,W3,UVDIST3,U4,V4,W4,UVDIST4,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
@@ -2647,7 +2647,7 @@ class CATable(_UVTable):
             outtable['bandid'] = outtable.bandid.astype(np.int32)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
-            
+
             # Case dofreq = 1
         if doband == True and doif == False:
             # Make strings
@@ -2659,7 +2659,7 @@ class CATable(_UVTable):
                 st2 = blid // 1000 % 1000 % 1000
                 st3 = blid // 1000 // 1000 % 1000
                 st4 = blid // 1000 // 1000 // 1000
-                
+
                 # selecting data
                 idx = (tmpca.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpca.loc[:,"ifid"]==ifid)
@@ -2670,22 +2670,22 @@ class CATable(_UVTable):
                 table1 = tmpca.loc[idx, :].reset_index(drop=True)
                 if table1.shape[0] < k+2:
                     continue
-                
+
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 if table1.groupby(t1sep).jd.count().max() < minpoint:
                     continue
                 t1flag = np.array(table1.groupby(t1sep).jd.count() >= 1) ### tbin row
-                tuvw = _calc_ca_uvw(table1.jd, 
-                                    table1.u1, table1.v1, table1.w1, 
-                                    table1.u2, table1.v2, table1.w2, 
-                                    table1.u3, table1.v3, table1.w3, 
-                                    table1.u4, table1.v4, table1.w4, 
+                tuvw = _calc_ca_uvw(table1.jd,
+                                    table1.u1, table1.v1, table1.w1,
+                                    table1.u2, table1.v2, table1.w2,
+                                    table1.u3, table1.v3, table1.w3,
+                                    table1.u4, table1.v4, table1.w4,
                                     table1.freq, t1sep, tbins, k)
                 tamp = _calc_caave(table1.jd, table1.logamp, table1.logsigma, t1sep, tbins, flagweight)
                 if (tuvw.size == 1 or tamp.size == 1):
                     continue
-                
+
                 # Set parameters
                 U1 = tuvw.du1 * tuvw.freq; U2 = tuvw.du2 * tuvw.freq; U3 = tuvw.du3 * tuvw.freq; U4 = tuvw.du4 * tuvw.freq
                 V1 = tuvw.dv1 * tuvw.freq; V2 = tuvw.dv2 * tuvw.freq; V3 = tuvw.dv3 * tuvw.freq; V4 = tuvw.dv4 * tuvw.freq
@@ -2712,9 +2712,9 @@ class CATable(_UVTable):
                 Minute = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,3]
                 Sec = np.vstack(np.core.defchararray.split(tbin_at.yday,sep=":"))[:,4]
                 Jd = tbin_at.jd
-                
+
                 collist = [
-                    'jd', 'year', 'doy', 'hour', 'min', 'sec', 
+                    'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u1', 'v1', 'w1', 'uvdist1', 'u2', 'v2', 'w2', 'uvdist2',
                     'u3', 'v3', 'w3', 'uvdist3', 'u4', 'v4', 'w4', 'uvdist4',
@@ -2722,7 +2722,7 @@ class CATable(_UVTable):
                     'st1', 'st2', 'st3', 'st4',
                     'logamp', 'weight', 'logsigma'
                     ]
-                
+
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U1,V1,W1,UVDIST1,U2,V2,W2,UVDIST2,U3,V3,W3,UVDIST3,U4,V4,W4,UVDIST4,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
@@ -2732,7 +2732,7 @@ class CATable(_UVTable):
             outtable['bandid'] = outtable.bandid.astype(np.str)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
-            
+
         # Case dofreq = 0
         if doband == True and doif == True:
             # Make strings
@@ -2750,7 +2750,7 @@ class CATable(_UVTable):
                 st2 = blid // 1000 % 1000 % 1000
                 st3 = blid // 1000 // 1000 % 1000
                 st4 = blid // 1000 // 1000 // 1000
-                
+
                 # selecting data
                 idx = (tmpca.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpca.loc[:,"st1"]==st1)
@@ -2760,22 +2760,22 @@ class CATable(_UVTable):
                 table1 = tmpca.loc[idx, :].reset_index(drop=True)
                 if table1.shape[0] < k+2:
                     continue
-                
+
                 # Averaging parameters
                 t1sep = pd.cut(table1.jd,tregs,include_lowest=True) ### table1 row
                 if table1.groupby(t1sep).jd.count().max() < minpoint:
                     continue
                 t1flag = np.array(table1.groupby(t1sep).jd.count() >= 1) ### tbin row
-                tuvw = _calc_ca_uvw(table1.jd, 
-                                    table1.u1, table1.v1, table1.w1, 
-                                    table1.u2, table1.v2, table1.w2, 
-                                    table1.u3, table1.v3, table1.w3, 
-                                    table1.u4, table1.v4, table1.w4, 
+                tuvw = _calc_ca_uvw(table1.jd,
+                                    table1.u1, table1.v1, table1.w1,
+                                    table1.u2, table1.v2, table1.w2,
+                                    table1.u3, table1.v3, table1.w3,
+                                    table1.u4, table1.v4, table1.w4,
                                     table1.freq, t1sep, tbins, k)
                 tamp = _calc_caave(table1.jd, table1.logamp, table1.logsigma, t1sep, tbins, flagweight)
                 if (tuvw.size == 1 or tamp.size == 1):
                     continue
-                
+
                 # Set parameters
                 U1 = tuvw.du1 * tuvw.freq; U2 = tuvw.du2 * tuvw.freq; U3 = tuvw.du3 * tuvw.freq; U4 = tuvw.du4 * tuvw.freq
                 V1 = tuvw.dv1 * tuvw.freq; V2 = tuvw.dv2 * tuvw.freq; V3 = tuvw.dv3 * tuvw.freq; V4 = tuvw.dv4 * tuvw.freq
@@ -2804,7 +2804,7 @@ class CATable(_UVTable):
                 Jd = tbin_at.jd
 
                 collist = [
-                    'jd', 'year', 'doy', 'hour', 'min', 'sec', 
+                    'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u1', 'v1', 'w1', 'uvdist1', 'u2', 'v2', 'w2', 'uvdist2',
                     'u3', 'v3', 'w3', 'uvdist3', 'u4', 'v4', 'w4', 'uvdist4',
@@ -2812,7 +2812,7 @@ class CATable(_UVTable):
                     'st1', 'st2', 'st3', 'st4',
                     'logamp', 'weight', 'logsigma'
                     ]
-                
+
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U1,V1,W1,UVDIST1,U2,V2,W2,UVDIST2,U3,V3,W3,UVDIST3,U4,V4,W4,UVDIST4,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
@@ -2856,10 +2856,10 @@ class CATable(_UVTable):
         outtable['logamp'] = outtable['logamp'].astype(np.float64)
         outtable['weight'] = outtable['weight'].astype(np.float64)
         outtable['logsigma'] = outtable['logsigma'].astype(np.float64)
-        
-        # sort table 
+
+        # sort table
         outtable = outtable.sort_values(by=["jd", "st1", "st2", "st3", "st4"], ascending=True).reset_index(drop=True)
-        return outtable
+        return CATable(outtable)
 
     #-------------------------------------------------------------------------
     # Plot Functions
@@ -3468,7 +3468,7 @@ def _fit_chisq(parms, X, Y, dbeam):
         return (dbeam - cbeam).reshape(dbeam.size)
     else:
         print("not equal the size of two beam array")
-        
+
 def _calc_uvw(Tim, u, v, w, freq, fact, tbin, k ):
     '''
       This function is to calculate U, V, and W in ave_vistable function.
@@ -3490,7 +3490,7 @@ def _calc_uvw(Tim, u, v, w, freq, fact, tbin, k ):
         Input = pd.DataFrame()
         Input['jd'], Input['du'], Input['dv'], Input['dw'] = Tim, u/freq, v/freq, w/freq
         out = pd.DataFrame()
-        
+
         # Calculate du, dv, dw by a spline interpolation
         INput = Input.groupby(fact)[['jd','du','dv','dw']].mean().reset_index(drop=True).dropna()
         du = np.array([]); dv = np.array([]); dw = np.array([]); tuvw = np.array([]); Tbins_flag = np.array([])
@@ -3589,12 +3589,12 @@ def _calc_bs_uvw(Tim, u12, v12, w12, u23, v23, w23, u31, v31, w31, freq, fact, t
         Input['du23'], Input['dv23'], Input['dw23'] = u23/freq, v23/freq, w23/freq
         Input['du31'], Input['dv31'], Input['dw31'] = u31/freq, v31/freq, w31/freq
         out = pd.DataFrame()
-        
+
         # Calculate du, dv, dw by a spline interpolation
         INput = Input.groupby(fact)[['jd','du12','dv12','dw12','du23','dv23','dw23','du31','dv31','dw31']].mean().reset_index(drop=True).dropna()
-        du12 = np.array([]); dv12 = np.array([]); dw12 = np.array([]); 
-        du23 = np.array([]); dv23 = np.array([]); dw23 = np.array([]); 
-        du31 = np.array([]); dv31 = np.array([]); dw31 = np.array([]); 
+        du12 = np.array([]); dv12 = np.array([]); dw12 = np.array([]);
+        du23 = np.array([]); dv23 = np.array([]); dw23 = np.array([]);
+        du31 = np.array([]); dv31 = np.array([]); dw31 = np.array([]);
         tuvw = np.array([])
         u12fitspl = splrep(INput.jd, INput.du12, k=k) ; du12 = np.append(du12, splev(tbin, u12fitspl))
         v12fitspl = splrep(INput.jd, INput.dv12, k=k) ; dv12 = np.append(dv12, splev(tbin, v12fitspl))
@@ -3605,7 +3605,7 @@ def _calc_bs_uvw(Tim, u12, v12, w12, u23, v23, w23, u31, v31, w31, freq, fact, t
         u31fitspl = splrep(INput.jd, INput.du31, k=k) ; du31 = np.append(du31, splev(tbin, u31fitspl))
         v31fitspl = splrep(INput.jd, INput.dv31, k=k) ; dv31 = np.append(dv31, splev(tbin, v31fitspl))
         w31fitspl = splrep(INput.jd, INput.dw31, k=k) ; dw31 = np.append(dw31, splev(tbin, w31fitspl))
-        duvdist12 = np.sqrt(du12**2 + dv12**2); duvdist23 = np.sqrt(du23**2 + dv23**2); duvdist31 = np.sqrt(du31**2 + dv31**2) 
+        duvdist12 = np.sqrt(du12**2 + dv12**2); duvdist23 = np.sqrt(du23**2 + dv23**2); duvdist31 = np.sqrt(du31**2 + dv31**2)
         temp = pd.DataFrame(); temp['duvdist12']=duvdist12; temp['duvdist23']=duvdist23; temp['duvdist31']=duvdist31
         if len(set(freq)) == 1:
             Freq = np.repeat(freq[0],len(duvdist12))
@@ -3629,13 +3629,13 @@ def _calc_bsave(Tim, amp, phase, sigma, fact, tbin, flagweight):
         out = pd.DataFrame()
         Input = pd.DataFrame()
         Input['jd'], Input['amp'], Input['phase'], Input['weight'], Input['sigma'], Input['sn'] = Tim,amp,phase,np.power(1./sigma,2),sigma,amp/sigma
-        
+
         grouped = Input.groupby(fact)
         N = np.array(grouped.jd.count())
         Ave = lambda g: np.repeat( np.mean(g), g.shape[0] )
         Diff = lambda g: g - np.mean(g)
         WAve = lambda g: np.average(g['fcvdf']/sum(g['weight']))
-        if (flagweight == True): 
+        if (flagweight == True):
             Input['Weight'] = grouped.weight.transform(sum)
             Input['fcvdf'] = Input.weight * np.exp(1j*Input.phase*np.pi/180.)
             Input['fcv'] = Input.fcvdf / Input.Weight
@@ -3649,7 +3649,7 @@ def _calc_bsave(Tim, amp, phase, sigma, fact, tbin, flagweight):
         Input['Sin2'] = np.power( Input.sn * np.sin(Input.phase*np.pi/180. - pd.Series(np.angle(Input.clave))), 2.)
         snr = grouped.Cos.sum() / np.sqrt(grouped.Sin2.sum())
         #weight = snr**2
-        sigma = 1./snr 
+        sigma = 1./snr
         weight = np.power(1./sigma,2.)
         phase = pd.Series(np.angle(fcv,deg=True))
         out['jd'], out['amp'], out['phase'], out['weight'], out['sigma'], out['N'] = tbin, 1, phase, np.array(weight), np.array(sigma), N
@@ -3669,13 +3669,13 @@ def _calc_ca_uvw(Tim, u1, v1, w1, u2, v2, w2, u3, v3, w3, u4, v4, w4, freq, fact
         Input['du3'], Input['dv3'], Input['dw3'] = u3/freq, v3/freq, w3/freq
         Input['du4'], Input['dv4'], Input['dw4'] = u4/freq, v4/freq, w4/freq
         out = pd.DataFrame()
-        
+
         # Calculate du, dv, dw by a spline interpolation
         INput = Input.groupby(fact)[['jd','du1','dv1','dw1','du2','dv2','dw2','du3','dv3','dw3','du4','dv4','dw4']].mean().reset_index(drop=True).dropna()
-        du1 = np.array([]); dv1 = np.array([]); dw1 = np.array([]); 
-        du2 = np.array([]); dv2 = np.array([]); dw2 = np.array([]); 
-        du3 = np.array([]); dv3 = np.array([]); dw3 = np.array([]); 
-        du4 = np.array([]); dv4 = np.array([]); dw4 = np.array([]); 
+        du1 = np.array([]); dv1 = np.array([]); dw1 = np.array([]);
+        du2 = np.array([]); dv2 = np.array([]); dw2 = np.array([]);
+        du3 = np.array([]); dv3 = np.array([]); dw3 = np.array([]);
+        du4 = np.array([]); dv4 = np.array([]); dw4 = np.array([]);
         tuvw = np.array([]); Tbins_flag = np.array([])
         u1fitspl = splrep(INput.jd, INput.du1, k=k) ; du1 = np.append(du1, splev(tbin, u1fitspl))
         v1fitspl = splrep(INput.jd, INput.dv1, k=k) ; dv1 = np.append(dv1, splev(tbin, v1fitspl))
@@ -3689,7 +3689,7 @@ def _calc_ca_uvw(Tim, u1, v1, w1, u2, v2, w2, u3, v3, w3, u4, v4, w4, freq, fact
         u4fitspl = splrep(INput.jd, INput.du4, k=k) ; du4 = np.append(du4, splev(tbin, u4fitspl))
         v4fitspl = splrep(INput.jd, INput.dv4, k=k) ; dv4 = np.append(dv4, splev(tbin, v4fitspl))
         w4fitspl = splrep(INput.jd, INput.dw4, k=k) ; dw4 = np.append(dw4, splev(tbin, w4fitspl))
-        duvdist1 = np.sqrt(du1**2 + dv1**2); duvdist2 = np.sqrt(du2**2 + dv2**2); duvdist3 = np.sqrt(du3**2 + dv3**2) ; duvdist4 = np.sqrt(du4**2 + dv4**2) 
+        duvdist1 = np.sqrt(du1**2 + dv1**2); duvdist2 = np.sqrt(du2**2 + dv2**2); duvdist3 = np.sqrt(du3**2 + dv3**2) ; duvdist4 = np.sqrt(du4**2 + dv4**2)
         temp = pd.DataFrame(); temp['duvdist1']=duvdist1; temp['duvdist2']=duvdist2; temp['duvdist3']=duvdist3; temp['duvdist4']=duvdist4
         if len(set(freq)) == 1:
             Freq = np.repeat(freq[0],len(duvdist1))
@@ -3713,10 +3713,10 @@ def _calc_caave(Tim, amp, sigma, fact, tbin, flagweight):
         out = pd.DataFrame()
         Input = pd.DataFrame()
         Input['jd'], Input['logamp'], Input['weight'], Input['logsigma'] = Tim,amp,np.power(1./sigma,2),sigma
-        
+
         grouped = Input.groupby(fact)
         N = np.array(grouped.jd.count())
-        if (flagweight == True): 
+        if (flagweight == True):
             Input["wlogamp"] = Input['weight'] * Input['logamp']
             Amp = grouped.wlogamp.sum() / grouped.weight.sum()
             Weight = grouped.weight.sum()
@@ -3735,4 +3735,3 @@ def _calc_caave(Tim, amp, sigma, fact, tbin, flagweight):
     else:
         print("not equal the size of time, amp, phase, weight arrays")
         return np.array([-1])
-
