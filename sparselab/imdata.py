@@ -1046,6 +1046,9 @@ class IMFITS(object):
                 if save_totalflux:
                     totalflux = self.totalflux(istokes=idxs, ifreq=idxf)
                     outfits.data[idxs, idxf] *= totalflux / image.sum()
+        # Update and Return
+        outfits.update_fits()
+	return outfits
     
     def read_cleanbox(self, regfile):
         # Read DS9-region file
