@@ -1032,7 +1032,21 @@ class IMFITS(object):
         # Update and Return
         outfits.update_fits()
         return outfits
-
+    
+    def winmod(self, imagewin, save_totalflux=False):
+        # create output fits
+        outfits = copy.deepcopy(self)
+        
+        for idxs in np.arange(self.header["ns"]):
+            for idxf in np.arange(self.header["nf"]):
+                image = outfits.data[idxs, idxf]
+                masked = imagewin == False
+                image[np.where(masked)] = 0
+                outfits.data[idxs, idxf] = image                
+                if save_totalflux:
+                    totalflux = self.totalflux(istokes=idxs, ifreq=idxf)
+                    outfits.data[idxs, idxf] *= totalflux / image.sum()
+    
     def read_cleanbox(self, regfile):
         # Read DS9-region file
         f = open(regfile)
