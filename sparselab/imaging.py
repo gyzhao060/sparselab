@@ -785,7 +785,7 @@ def static_dft_plots(outimage, imageprm={}, filename=None,
 def iterative_imaging(initimage, imageprm, Niter=10,
                       dothres=True, threstype="hard", threshold=0.3,
                       doshift=True, shifttype="com",
-                      dowinmod=False,
+                      dowinmod=False, imagewin=None,
                       doconv=True, convprm={},
                       save_totalflux=False):
     oldimage = static_dft_imaging(initimage, **imageprm)
@@ -794,8 +794,8 @@ def iterative_imaging(initimage, imageprm, Niter=10,
         newimage = copy.deepcopy(oldimage)
 
         # Edit Images
-        if dowinmod:
-            newimage = newimage.winmod(imageprm["imagewin"],
+        if dowinmod and imagewin is not None:
+            newimage = newimage.winmod(imagewin,
                                        save_totalflux=save_totalflux)
         if dothres:
             if threstype == "soft":
