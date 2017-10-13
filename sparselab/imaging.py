@@ -793,10 +793,6 @@ def iterative_imaging(initimage, imageprm, Niter=10,
     for i in np.arange(Niter - 1):
         newimage = copy.deepcopy(oldimage)
 
-        # Edit Images
-        if dowinmod and imagewin is not None:
-            newimage = newimage.winmod(imagewin,
-                                       save_totalflux=save_totalflux)
         if dothres:
             if threstype == "soft":
                 newimage = newimage.soft_threshold(threshold=threshold,
@@ -809,6 +805,12 @@ def iterative_imaging(initimage, imageprm, Niter=10,
                 newimage = newimage.peakshift(save_totalflux=save_totalflux)
             else:
                 newimage = newimage.comshift(save_totalflux=save_totalflux)
+
+        # Edit Images
+        if dowinmod and imagewin is not None:
+            newimage = newimage.winmod(imagewin,
+                                       save_totalflux=save_totalflux)
+        
         if doconv:
             newimage = newimage.gauss_convolve(
                 save_totalflux=save_totalflux, **convprm)
