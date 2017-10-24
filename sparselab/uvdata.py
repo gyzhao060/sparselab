@@ -1067,7 +1067,7 @@ class VisTable(_UVTable):
 
         Returns: uvdata.BSTable object
         '''
-        import multiprocessing as mp
+        # Unused: import multiprocessing as mp
         # Get Number of Data
         Ndata = len(self["u"])
 

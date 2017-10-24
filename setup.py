@@ -20,5 +20,5 @@ setup(
     keywords = "imaging astronomy EHT",
 
     packages = find_packages(exclude=["doc*", "test*"]),
-    install_requires = ["astropy", "matplotlib", "multiprocessing", "numpy", "pandas", "scikit-image", "scipy", "xarray"]
+    install_requires = ["astropy", "matplotlib", "numpy", "pandas", "scikit-image", "scipy", "xarray"]
 )
