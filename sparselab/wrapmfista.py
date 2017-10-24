@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 # internal LoadLibrary
-from sparselab import uvdata
+from . import uvdata
 
 #-------------------------------------------------------------------------
 # Default Parameters

@@ -31,7 +31,7 @@ import matplotlib.pyplot as plt
 
 
 # internal
-import imdata
+from . import imdata
 
 
 # ------------------------------------------------------------------------------
@@ -3485,7 +3485,7 @@ def _calc_uvw(Tim, u, v, w, freq, fact, tbin, k ):
     '''
     sTim = len(Tim); su = len(u); sv = len(v); sw = len(w); sf = len(freq)
     if (sTim == su and sTim == sv and sTim == sw and sTim == sf):
-        import fortlib
+        from . import fortlib
         from scipy.interpolate import splrep,splev
         Input = pd.DataFrame()
         Input['jd'], Input['du'], Input['dv'], Input['dw'] = Tim, u/freq, v/freq, w/freq
@@ -3582,7 +3582,7 @@ def _calc_incoherent(Tim, Amp, Weight, fact, tbin, flagweight):
 def _calc_bs_uvw(Tim, u12, v12, w12, u23, v23, w23, u31, v31, w31, freq, fact, tbin, k ):
     sTim = len(Tim); su = len(u12); sv = len(v23); sw = len(w31); sf = len(freq)
     if (sTim == su and sTim == sv and sTim == sw and sTim == sf):
-        import fortlib
+        from . import fortlib
         from scipy.interpolate import splrep,splev
         Input = pd.DataFrame()
         Input['jd'], Input['du12'], Input['dv12'], Input['dw12'] = Tim, u12/freq, v12/freq, w12/freq
@@ -3661,7 +3661,7 @@ def _calc_bsave(Tim, amp, phase, sigma, fact, tbin, flagweight):
 def _calc_ca_uvw(Tim, u1, v1, w1, u2, v2, w2, u3, v3, w3, u4, v4, w4, freq, fact, tbin, k ):
     sTim = len(Tim); su = len(u1); sv = len(v2); sw = len(w3); sw4 = len(w4); sf = len(freq)
     if (sTim == su and sTim == sv and sTim == sw and sTim == sw4 and sTim == sf):
-        import fortlib
+        from . import fortlib
         from scipy.interpolate import splrep,splev
         Input = pd.DataFrame()
         Input['jd'], Input['du1'], Input['dv1'], Input['dw1'] = Tim, u1/freq, v1/freq, w1/freq
