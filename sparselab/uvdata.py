@@ -13,6 +13,7 @@ import itertools
 import collections
 import tqdm
 
+
 # numerical packages
 import numpy as np
 import pandas as pd
@@ -32,6 +33,7 @@ import matplotlib.pyplot as plt
 
 # internal
 import imdata
+from . import imdata
 
 
 # ------------------------------------------------------------------------------
@@ -109,6 +111,7 @@ class UVFITS():
         firstdate = 0
         Npars = len(pars)
         for ipar in xrange(Npars):
+        for ipar in np.arange(Npars):
             par = pars[ipar]
             if par.find('UU') == 0:
                 # FITS stores uvw coordinates in sec.
@@ -129,12 +132,15 @@ class UVFITS():
                 elif firstdate == 1:
                     jd = np.float64(grouphdu.data.par(ipar))
                     timeobj+= at.TimeDelta(np.float64(jd), format='jd')
+                    jd += np.float64(grouphdu.data.par(ipar))
                     firstdate += 1
             elif par.find('INTTIM') == 0:
                 integ = grouphdu.data.par(ipar)  # integration time
         if (not 'usec' in locals()) or (not 'vsec' in locals()) or (not 'wsec' in locals()) or \
            (not 'bl' in locals()) or (not 'jd' in locals()):
             print("[Error] %s does not contain required random parameters in the Primary HDU" % (infile))
+            print(
+                "[Error] %s does not contain required random parameters in the Primary HDU" % (infile))
 
         #----------------------------------------------------------------------
         # Make Coordinates
@@ -163,10 +169,14 @@ class UVFITS():
             coord["integ"] = ("data", np.float64(integ))  # integration time
 
         # Time Tag
+        timeobj = at.Time(np.float64(jd), format='jd', scale='utc')
+        datetime = timeobj.datetime
         gsthour = timeobj.sidereal_time(
             kind="mean", longitude="greenwich", model=None).hour
         coord["jd"] = ("data", np.asarray(timeobj.jd, dtype=np.float64))
         coord["utc"] = ("data", timeobj.datetime)
+        coord["jd"] = ("data", np.asarray(jd, dtype=np.float64))
+        coord["datetime"] = ("data", datetime)
         coord["gsthour"] = ("data", np.asarray(gsthour, dtype=np.float64))
 
         # Stokes parameter
@@ -294,6 +304,21 @@ class UVFITS():
         attime = at.Time(np.datetime_as_string(self.data["utc"]))
         utctime = attime.datetime
         gsthour = attime.sidereal_time("apparent", "greenwich").hour
+        yday = at.Time(np.float64(
+            self.data["jd"]), format='jd', scale='utc').yday
+        year = np.zeros(Ndata, dtype=np.int32)
+        doy = np.zeros(Ndata, dtype=np.int32)
+        hour = np.zeros(Ndata, dtype=np.int32)
+        minute = np.zeros(Ndata, dtype=np.int32)
+        sec = np.zeros(Ndata, dtype=np.int32)
+        for idata in np.arange(Ndata):
+            time = yday[idata].split(":")
+            year[idata] = np.int32(time[0])
+            doy[idata] = np.int32(time[1])
+            hour[idata] = np.int32(time[2])
+            minute[idata] = np.int32(time[3])
+            sec[idata] = np.int32(np.float64(time[4]))
+
         for idec, ira, iif, ich, istokes in itertools.product(np.arange(Ndec),
                                                               np.arange(Nra),
                                                               np.arange(Nif),
@@ -304,6 +329,12 @@ class UVFITS():
             # Time
             tmpdata["utc"] = utctime
             tmpdata["gsthour"] = gsthour
+            tmpdata["jd"] = np.float64(self.data["jd"])
+            tmpdata["year"] = np.int32(year)
+            tmpdata["doy"] = np.int32(doy)
+            tmpdata["hour"] = np.int32(hour)
+            tmpdata["min"] = np.int32(minute)
+            tmpdata["sec"] = np.int32(sec)
 
             # Frequecny
             tmpdata["freq"] = np.zeros(Ndata, dtype=np.float32)
@@ -318,11 +349,15 @@ class UVFITS():
                     self.data["stokes"][istokes])
 
             # ch/if id, frequency
+            # band/if id, frequency
+            tmpdata["bandid"] = np.zeros(Ndata, dtype=np.int32)
+            tmpdata.loc[:, "bandid"] = np.int32(ich)
             tmpdata["ifid"] = np.zeros(Ndata, dtype=np.int32)
             tmpdata.loc[:, "ifid"] = np.int32(iif)
             tmpdata["chid"] = np.zeros(Ndata, dtype=np.int32)
             tmpdata.loc[:, "chid"] = np.int32(ich)
             tmpdata["ch"] = tmpdata["ifid"] + tmpdata["chid"] * Nif
+            tmpdata["ch"] = tmpdata["ifid"] + tmpdata["bandid"] * Nif
 
             # uvw
             tmpdata["u"] = np.float64(self.data["u"][:, iif, ich])
@@ -604,6 +639,7 @@ class UVFITS():
 
         if doif == True and doch == True:
             for idata in xrange(Ndata):
+            for idata in np.arange(Ndata):
                 #if idata%1000 == 0: print("%d / %d"%(idata,Ndata))
                 dataidx1 = np.where(np.abs(unix - unix[idata]) < solint)
                 dataidx2 = np.where(baseline[dataidx1] == baseline[idata])
@@ -642,6 +678,7 @@ class UVFITS():
             outfits.data.data[:, :, :, :, :, :, 2][np.where(select)] = 0.0
         elif doif == True:
             for idata in xrange(Ndata):
+            for idata in np.arange(Ndata):
                 #if idata%1000 == 0: print("%d / %d"%(idata,Ndata))
                 dataidx1 = np.where(np.abs(unix - unix[idata]) < solint)
                 dataidx2 = np.where(baseline[dataidx1] == baseline[idata])
@@ -683,6 +720,7 @@ class UVFITS():
             outfits.data.data[:, :, :, :, :, :, 2][np.where(select)] = 0.0
         else:
             for idata in xrange(Ndata):
+            for idata in np.arange(Ndata):
                 #if idata%1000 == 0: print("%d / %d"%(idata,Ndata))
                 dataidx1 = np.where(np.abs(unix - unix[idata]) < solint)
                 dataidx2 = np.where(baseline[dataidx1] == baseline[idata])
@@ -771,6 +809,7 @@ class _UVTable(pd.DataFrame):
         # Name
         out = collections.OrderedDict()
         for icv in xrange(nfold):
+        for icv in np.arange(nfold):
             trainkeyname = "t%d" % (icv)
             validkeyname = "v%d" % (icv)
             if Nval * (icv + 1) == Ndata:
@@ -919,6 +958,7 @@ class VisTable(_UVTable):
         # sort with time, and stations
         outdata = outdata.sort_values(
             by=["utc", "st1", "st2", "stokesid", "ch"])
+            by=["year", "doy", "hour", "min", "sec", "st1", "st2", "ch"])
 
         return outdata
 
@@ -1047,15 +1087,25 @@ class VisTable(_UVTable):
     def make_bstable(self, redundant=None):
         # Number of Stations
         Ndata = len(self["ch"])
+    def make_bstable(self):
+        '''
+        This function calculates bi-spectra from full complex visibility data.
+        It will output uvdata.BSTable object.
 
         # Check redundant
         if redundant is not None:
             for i in xrange(len(redundant)):
                 redundant[i] = sorted(set(redundant[i]))
+        Args: N/A
 
         print("(1/5) Sort data")
         vistable = self.sort_values(by=["utc", "stokesid", "ch", "st1", "st2"]).reset_index(drop=True)
         vistable["bl"] = vistable["st1"] * 256 + vistable["st2"]
+        Returns: uvdata.BSTable object
+        '''
+        # Unused: import multiprocessing as mp
+        # Get Number of Data
+        Ndata = len(self["u"])
 
         print("(2/5) Tagging data")
         vistable["tag"] = np.zeros(Ndata, dtype=np.int64)
@@ -1069,6 +1119,22 @@ class VisTable(_UVTable):
                 vistable.loc[idata,"tag"] = vistable.loc[idata-1,"tag"]+1
         Ntag = vistable["tag"].max() + 1
         print("  Number of Tags: %d"%(Ntag))
+        # get list of timetags
+        timetag = []
+        for i in np.arange(Ndata):
+            timetag.append("%04d-%03d-%02d-%02d-%5.2f_%d" % (self.loc[i, "year"],
+                                                             self.loc[i,
+                                                                      "doy"],
+                                                             self.loc[i,
+                                                                      "hour"],
+                                                             self.loc[i,
+                                                                      "min"],
+                                                             self.loc[i,
+                                                                      "sec"],
+                                                             self.loc[i, "ch"]))
+        timetag = np.asarray(timetag)
+        timetagset = sorted(set(timetag))
+        Ntt = len(timetagset)
 
         print("(3/5) Checking Baseline Combinations")
         blsets = [] # baseline coverages
@@ -1086,7 +1152,12 @@ class VisTable(_UVTable):
             if Nbl < 3:
                 bltype[itag] = -1
                 #print("Tag %d: skip Nbl=%d<4"%(itag,Nbl))
+        bstable = {}
+        for column in BSTable.bstable_columns:
+            if column in ["uvdistave", "uvdistmax", "uvdistmin",
+                          "uvdist12", "uvdist23", "uvdist31"]:
                 continue
+            bstable[column] = []
 
             # Check number of stations
             stset = sorted(set(tmptab["st1"].tolist()+tmptab["st2"].tolist()))
@@ -1095,43 +1166,81 @@ class VisTable(_UVTable):
                 bltype[itag] = -1
                 #print("Tag %d: skip Nst=%d<4"%(itag,Nst))
                 continue
+        # calculate bi-spectrum for each timetag
+        for itt in np.arange(Ntt):
+            # get available station
+            idx = timetag == timetagset[itt]
+            sts = self.loc[idx, "st1"].tolist(
+            ) + self.loc[idx, "st2"].tolist()
+            sts = sorted(set(sts))
 
             # Check this baseline combinations are already detected
             try:
                 iblset = blsets.index(blset)
                 bltype[itag] = iblset
                 #print("Tag %d: the same combination was already detected %d"%(itag, iblset))
+            # check if the number of stations exceed three
+            Nsts = len(sts)
+            if Nsts < 3:
                 continue
             except ValueError:
                 pass
+            stsid = np.arange(Nsts)
+            # the maximum number of closure phases
+            Ntrimax = (Nsts - 1) * (Nsts - 2) / 2
+            Nbl = Nsts * (Nsts - 1) / 2           # the number of baslines
 
             # Number of baseline combinations
             Nblmax = Nst * (Nst - 1) / 2
             Nbsmax = (Nst-1) * (Nst - 2) / 2
 
             # Check combinations
+            # calc bi-spectrum and output
             rank = 0
+            Ntri = 0
             matrix = None
             rank = 0
             cblset = []
             cstset = []
             for stid1, stid2, stid3 in itertools.combinations(range(Nst), 3):
                 Ncomb=0
+            for stid1, stid2, stid3 in itertools.combinations(stsid, 3):
+                # if we already found the maximum number of triangles, skip the
+                # process
+                if Ntri >= Ntrimax:
+                    break
 
                 # Stations
                 st1 = stset[stid1]
                 st2 = stset[stid2]
                 st3 = stset[stid3]
+                # station number
+                st1 = sts[stid1]
+                st2 = sts[stid2]
+                st3 = sts[stid3]
 
                 # baselines
                 bl12 = st1*256 + st2
                 bl23 = st2*256 + st3
                 bl13 = st1*256 + st3
+                # baseline ids
+                blid1 = _getblid(stid1, stid2, Nsts)
+                blid2 = _getblid(stid2, stid3, Nsts)
+                blid3 = _getblid(stid1, stid3, Nsts)
 
                 # baseline ID
                 blid12 = _getblid(stid1, stid2, Nst)
                 blid23 = _getblid(stid2, stid3, Nst)
                 blid13 = _getblid(stid1, stid3, Nst)
+                # calculate conversion matrix
+                row = np.zeros(Nbl)
+                row[blid1] = 1
+                row[blid2] = 1
+                row[blid3] = -1
+                if matrix is None:
+                    tmpmatrix = np.asarray([row])
+                else:
+                    tmpmatrix = np.append(matrix, row).reshape(Ntri + 1, Nbl)
 
                 if rank>=Nbsmax:
                     break
@@ -1154,6 +1263,10 @@ class VisTable(_UVTable):
             cstsets.append(cstset) # combination to make closure amplitudes
             bltype[itag] = len(cblsets) - 1
         print("  Detect %d combinations for Closure Phases"%(len(cblsets)))
+                # Check if this triangle is redundant
+                tmprank = np.linalg.matrix_rank(tmpmatrix)
+                if rank == tmprank:
+                    continue
 
         print("(4/5) Forming Closure Phases")
         keys = "utc,gsthour,freq,stokesid,ifid,chid,ch,"
@@ -1216,6 +1329,21 @@ class VisTable(_UVTable):
                 outtab["amp"].append(amp)
                 outtab["phase"].append(phase)
                 outtab["sigma"].append(sigma)
+                # Check if corresponding baseline data exist
+                isbl1 = True
+                isbl2 = True
+                isbl3 = True
+                bl1idx = idx & (self["st1"] == st1) & (self["st2"] == st2)
+                bl2idx = idx & (self["st1"] == st2) & (self["st2"] == st3)
+                bl3idx = idx & (self["st1"] == st1) & (self["st2"] == st3)
+                if np.where(bl1idx)[0].shape[0] == 0:
+                    isbl1 = False
+                if np.where(bl2idx)[0].shape[0] == 0:
+                    isbl2 = False
+                if np.where(bl3idx)[0].shape[0] == 0:
+                    isbl3 = False
+                if False in [isbl1, isbl2, isbl3]:
+                    continue
 
         print("(5/5) Creating BSTable object")
         # Calculate UV Distance
@@ -1232,22 +1360,98 @@ class VisTable(_UVTable):
         # generate CATable object
         outtab = BSTable(outtab)[BSTable.bstable_columns].reset_index(drop=True)
         for i in xrange(len(BSTable.bstable_columns)):
+                # calculate bi-spectrum
+                bl1data = self.loc[bl1idx, :].reset_index(drop=True).loc[0, :]
+                bl2data = self.loc[bl2idx, :].reset_index(drop=True).loc[0, :]
+                bl3data = self.loc[bl3idx, :].reset_index(drop=True).loc[0, :]
+
+                amp = bl1data.loc["amp"] * \
+                    bl2data.loc["amp"] * bl3data.loc["amp"]
+                phase = bl1data.loc["phase"] + \
+                    bl2data.loc["phase"] - bl3data.loc["phase"]
+                ratio_12 = bl1data.loc["sigma"] / bl1data.loc["amp"]
+                ratio_23 = bl2data.loc["sigma"] / bl2data.loc["amp"]
+                ratio_13 = bl3data.loc["sigma"] / bl3data.loc["amp"]
+                sigma = amp * np.sqrt((ratio_12)**2 +
+                                      (ratio_23)**2 + (ratio_13)**2)
+
+                bstable["jd"].append(bl1data.loc["jd"])
+                bstable["year"].append(bl1data.loc["year"])
+                bstable["doy"].append(bl1data.loc["doy"])
+                bstable["hour"].append(bl1data.loc["hour"])
+                bstable["min"].append(bl1data.loc["min"])
+                bstable["sec"].append(bl1data.loc["sec"])
+                bstable["freq"].append(bl1data.loc["freq"])
+                bstable["stokesid"].append(bl1data.loc["stokesid"])
+                bstable["bandid"].append(bl1data.loc["bandid"])
+                bstable["ifid"].append(bl1data.loc["ifid"])
+                bstable["ch"].append(bl1data.loc["ch"])
+                bstable["u12"].append(bl1data.loc["u"])
+                bstable["v12"].append(bl1data.loc["v"])
+                bstable["w12"].append(bl1data.loc["w"])
+                bstable["u23"].append(bl2data.loc["u"])
+                bstable["v23"].append(bl2data.loc["v"])
+                bstable["w23"].append(bl2data.loc["w"])
+                bstable["u31"].append(-bl3data.loc["u"])
+                bstable["v31"].append(-bl3data.loc["v"])
+                bstable["w31"].append(-bl3data.loc["w"])
+                bstable["st1"].append(st1)
+                bstable["st2"].append(st2)
+                bstable["st3"].append(st3)
+                bstable["amp"].append(amp)
+                bstable["phase"].append(phase)
+                bstable["sigma"].append(sigma)
+                # update rank and matrix
+                rank += 1
+                Ntri += 1
+                matrix = tmpmatrix.copy()
+
+        # form pandas dataframe
+        bstable = BSTable(bstable)
+        bstable["uvdist12"] = np.sqrt(
+            np.square(bstable["u12"]) + np.square(bstable["v12"]))
+        bstable["uvdist23"] = np.sqrt(
+            np.square(bstable["u23"]) + np.square(bstable["v23"]))
+        bstable["uvdist31"] = np.sqrt(
+            np.square(bstable["u31"]) + np.square(bstable["v31"]))
+        bstable["uvdistave"] = bstable["uvdist12"]
+        bstable["uvdistmin"] = bstable["uvdist12"]
+        bstable["uvdistmax"] = bstable["uvdist12"]
+
+        for i in np.arange(len(bstable["uvdist12"])):
+            uvdists = bstable.loc[i, ["uvdist12", "uvdist23", "uvdist31"]]
+            bstable.loc[i, "uvdistave"] = np.mean(uvdists)
+            bstable.loc[i, "uvdistmax"] = np.max(uvdists)
+            bstable.loc[i, "uvdistmin"] = np.min(uvdists)
+        bstable = bstable[BSTable.bstable_columns]
+
+        for i in np.arange(len(BSTable.bstable_columns)):
             column = BSTable.bstable_columns[i]
             outtab[column] = BSTable.bstable_types[i](outtab[column])
         return outtab
+            bstable[column] = BSTable.bstable_types[i](bstable[column])
 
     def make_catable(self, redundant=None):
         # Number of Stations
         Ndata = len(self["ch"])
+        # Adjust Phase
+        bstable["phase"] *= np.pi / 180.
+        bstable["phase"] = np.arctan2(
+            np.sin(bstable["phase"]), np.cos(bstable["phase"])) * 180. / np.pi
 
         # Check redundant
         if redundant is not None:
             for i in xrange(len(redundant)):
                 redundant[i] = sorted(set(redundant[i]))
+        return bstable
 
         print("(1/5) Sort data")
         vistable = self.sort_values(by=["utc", "stokesid", "ch", "st1", "st2"]).reset_index(drop=True)
         vistable["bl"] = vistable["st1"] * 256 + vistable["st2"]
+    def make_catable(self):
+        '''
+        This function calculates closure amplitudes from full complex visibility data.
+        It will output uvdata.CATable object.
 
         print("(2/5) Tagging data")
         vistable["tag"] = np.zeros(Ndata, dtype=np.int64)
@@ -1261,6 +1465,7 @@ class VisTable(_UVTable):
                 vistable.loc[idata,"tag"] = vistable.loc[idata-1,"tag"]+1
         Ntag = vistable["tag"].max() + 1
         print("  Number of Tags: %d"%(Ntag))
+        Args: N/A
 
         print("(3/5) Checking Baseline Combinations")
         blsets = [] # baseline coverages
@@ -1271,6 +1476,8 @@ class VisTable(_UVTable):
                                                 # number of cl sets corresponding timetag.
         for itag in tqdm.tqdm(xrange(Ntag)):
             tmptab = vistable.loc[vistable["tag"]==itag, :].reset_index(drop=True)
+        Returns: uvdata.CATable object
+        '''
 
             # Check number of baselines
             blset = sorted(set(tmptab["bl"]))
@@ -1279,6 +1486,8 @@ class VisTable(_UVTable):
                 bltype[itag] = -1
                 #print("Tag %d: skip Nbl=%d<4"%(itag,Nbl))
                 continue
+        # Get Number of Data
+        Ndata = len(self["u"])
 
             # Check number of stations
             stset = sorted(set(tmptab["st1"].tolist()+tmptab["st2"].tolist()))
@@ -1287,34 +1496,108 @@ class VisTable(_UVTable):
                 bltype[itag] = -1
                 #print("Tag %d: skip Nst=%d<4"%(itag,Nst))
                 continue
+        # get list of timetags
+        timetag = []
+        for i in np.arange(Ndata):
+            timetag.append("%04d-%03d-%02d-%02d-%5.2f_%d" % (self.loc[i, "year"],
+                                                             self.loc[i,
+                                                                      "doy"],
+                                                             self.loc[i,
+                                                                      "hour"],
+                                                             self.loc[i,
+                                                                      "min"],
+                                                             self.loc[i,
+                                                                      "sec"],
+                                                             self.loc[i, "ch"]))
+        timetag = np.asarray(timetag)
+        timetagset = sorted(set(timetag))
+        Ntt = len(timetagset)
 
             # Check this baseline combinations are already detected
             try:
                 iblset = blsets.index(blset)
                 bltype[itag] = iblset
                 #print("Tag %d: the same combination was already detected %d"%(itag, iblset))
+        catable = {}
+        for column in CATable.catable_columns:
+            if column in ["uvdistave", "uvdistmax", "uvdistmin",
+                          "uvdist1", "uvdist2", "uvdist3", "uvdist4"]:
                 continue
             except ValueError:
                 pass
+            catable[column] = []
 
             # Number of baseline combinations
             Nblmax = Nst * (Nst - 1) / 2
             Ncamax = Nst * (Nst - 3) / 2
+        # calculate bi-spectrum for each timetag
+        for itt in np.arange(Ntt):
+            # get available station
+            idx = timetag == timetagset[itt]
+            sts = self.loc[idx, "st1"].tolist(
+            ) + self.loc[idx, "st2"].tolist()
+            sts = sorted(set(sts))
 
             # Check combinations
+            # check if the number of stations exceed three
+            Nsts = len(sts)
+            if Nsts < 4:
+                continue
+            stsid = np.arange(Nsts)
+            # the maximum number of closure phases
+            Ncamax = Nsts * (Nsts - 3) / 2
+            Nbl = Nsts * (Nsts - 1) / 2           # the number of baslines
+
+            # calc bi-spectrum and output
             rank = 0
+            Nca = 0
             matrix = None
             rank = 0
             cblset = []
             cstset = []
             for stid1, stid2, stid3, stid4 in itertools.combinations(range(Nst), 4):
                 Ncomb=0
+            for stid1, stid2, stid3, stid4 in itertools.combinations(stsid, 4):
+                output = _calc_caamp(self, catable, idx,
+                                     stid1, stid2, stid3, stid4, sts, Nsts, Nbl,
+                                     matrix, rank, Nca, Ncamax)
+                if output is not None:
+                    catable, rank, Nca, matrix = output
+                output = _calc_caamp(self, catable, idx,
+                                     stid1, stid3, stid4, stid2, sts, Nsts, Nbl,
+                                     matrix, rank, Nca, Ncamax)
+                if output is not None:
+                    catable, rank, Nca, matrix = output
+                output = _calc_caamp(self, catable, idx,
+                                     stid1, stid2, stid4, stid3, sts, Nsts, Nbl,
+                                     matrix, rank, Nca, Ncamax)
+                if output is not None:
+                    catable, rank, Nca, matrix = output
 
                 # Stations
                 st1 = stset[stid1]
                 st2 = stset[stid2]
                 st3 = stset[stid3]
                 st4 = stset[stid4]
+        # form pandas dataframe
+        catable = CATable(catable)
+        catable["uvdist1"] = np.sqrt(
+            np.square(catable["u1"]) + np.square(catable["v1"]))
+        catable["uvdist2"] = np.sqrt(
+            np.square(catable["u2"]) + np.square(catable["v2"]))
+        catable["uvdist3"] = np.sqrt(
+            np.square(catable["u3"]) + np.square(catable["v3"]))
+        catable["uvdist4"] = np.sqrt(
+            np.square(catable["u4"]) + np.square(catable["v4"]))
+        catable["uvdistave"] = catable["uvdist1"]
+        catable["uvdistmin"] = catable["uvdist1"]
+        catable["uvdistmax"] = catable["uvdist1"]
+        for i in np.arange(len(catable["uvdist1"])):
+            uvdists = catable.loc[i, ["uvdist1",
+                                      "uvdist2", "uvdist3", "uvdist4"]]
+            catable.loc[i, "uvdistave"] = np.mean(uvdists)
+            catable.loc[i, "uvdistmax"] = np.max(uvdists)
+            catable.loc[i, "uvdistmin"] = np.min(uvdists)
 
                 # baselines
                 bl12 = st1*256 + st2
@@ -1323,6 +1606,10 @@ class VisTable(_UVTable):
                 bl23 = st2*256 + st3
                 bl24 = st2*256 + st4
                 bl34 = st3*256 + st4
+        catable = catable[CATable.catable_columns]
+        for i in np.arange(len(CATable.catable_columns)):
+            column = CATable.catable_columns[i]
+            catable[column] = CATable.catable_types[i](catable[column])
 
                 # baseline ID
                 blid12 = _getblid(stid1, stid2, Nst)
@@ -1331,9 +1618,13 @@ class VisTable(_UVTable):
                 blid23 = _getblid(stid2, stid3, Nst)
                 blid24 = _getblid(stid2, stid4, Nst)
                 blid34 = _getblid(stid3, stid4, Nst)
+        return catable
 
                 # Number of combinations
                 Ncomb = 0
+    def _make_gradvistable(self, normalize=True):
+        gradself1 = self.copy()
+        gradself2 = self.copy()
 
                 # Get number
                 # Combination 1: (V12 V34) / (V13 V24)
@@ -1351,6 +1642,13 @@ class VisTable(_UVTable):
                         rank = newrank
                         matrix = newmatrix
                         Ncomb +=1
+        # scale visibility
+        gradself1.loc[:, "amp"] *= np.abs(gradself1["u"])
+        gradself1.loc[:, "sigma"] *= np.abs(gradself1["u"])
+        gradself1.loc[:, "phase"] -= 90
+        gradself2.loc[:, "amp"] *= np.abs(gradself2["v"])
+        gradself2.loc[:, "sigma"] *= np.abs(gradself2["v"])
+        gradself2.loc[:, "phase"] -= 90
 
                 # Combination 2: (V13 V24) / (V14 V23)
                 #   This conmbination becomes trivial if
@@ -1367,6 +1665,9 @@ class VisTable(_UVTable):
                         rank = newrank
                         matrix = newmatrix
                         Ncomb +=1
+        # frip phase
+        idx1 = gradself1["u"] < 0
+        gradself1.loc[idx1, "phase"] += 180
 
                 # Combination 3: (V12 V34) / (V14 V23)
                 #   This conmbination becomes trivial if
@@ -1393,6 +1694,8 @@ class VisTable(_UVTable):
             cstsets.append(cstset) # combination to make closure amplitudes
             bltype[itag] = len(cblsets) - 1
         print("  Detect %d combinations for Closure Amplitudes"%(len(cblsets)))
+        idx1 = gradself2["v"] < 0
+        gradself2.loc[idx1, "phase"] += 180
 
         print("(4/5) Forming Closure Amplitudes")
         keys = "utc,gsthour,freq,stokesid,ifid,chid,ch,"
@@ -1465,6 +1768,14 @@ class VisTable(_UVTable):
                 outtab["sigma"].append(sigma)
                 outtab["logamp"].append(logamp)
                 outtab["logsigma"].append(logsigma)
+        if normalize:
+            maxamp = np.max([gradself1["amp"].max(),
+                             gradself2["amp"].max()])
+            gradself1.loc[:, "amp"] /= maxamp
+            gradself1.loc[:, "sigma"] /= maxamp
+            gradself2.loc[:, "amp"] /= maxamp
+            gradself2.loc[:, "sigma"] /= maxamp
+        return gradself1, gradself2
 
         print("(5/5) Creating CATable object")
         # Calculate UV Distance
@@ -1487,6 +1798,7 @@ class VisTable(_UVTable):
 
 
     def gridding(self, fitsdata, fgfov, mu=1, mv=1, c=1):
+    def gridding(self, fitsdata, fgfov=1, mu=6, mv=6, c=10):
         '''
         Args:
           vistable (pandas.Dataframe object):
@@ -1552,6 +1864,7 @@ class VisTable(_UVTable):
 
         # Convolutional gridding
         for itable in xrange(Ntable):
+        for itable in np.arange(Ntable):
             if vistable["skip"][itable] > 0:
                 continue
 
@@ -1645,12 +1958,15 @@ class VisTable(_UVTable):
         # Default Averaging alldata
         doif = True
         doch = True
+        doband = True
         if np.int64(dofreq) > 0:
             doif = False
             ifset = set(tmpvis.ifid)
         if np.int64(dofreq) > 1:
             doch = False
             chset = set(tmpvis.chid)
+            doband = False
+            bandset = set(tmpvis.bandid)
 
         # make non redundant sets of each parameter
         stokesset = set(tmpvis.stokesid)
@@ -1679,14 +1995,17 @@ class VisTable(_UVTable):
 
         # Case dofreq = 2
         if doch == False and doif == False:
+        if doband == False and doif == False:
             table = pd.DataFrame()
             for stokesid, chid, ifid, blid in itertools.product(stokesset, chset, ifset, blidset):
+            for stokesid, bandid, ifid, blid in itertools.product(stokesset, bandset, ifset, blidset):
                 st1 = blid % 1000
                 st2 = blid //1000
 
                 # selecting data
                 idx = (tmpvis.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpvis.loc[:,"chid"]==chid)
+                idx &= (tmpvis.loc[:,"bandid"]==bandid)
                 idx &= (tmpvis.loc[:,"ifid"]==ifid)
                 idx &= (tmpvis.loc[:,"st1"]==st1)
                 idx &= (tmpvis.loc[:,"st2"]==st2)
@@ -1711,8 +2030,10 @@ class VisTable(_UVTable):
                 Freq = tuvw.freq
                 Stokesid = np.repeat(stokesid,len(Freq))
                 chid = np.repeat(chid,len(Freq))
+                Bandid = np.repeat(bandid,len(Freq))
                 Ifid = np.repeat(ifid,len(Freq))
                 Ch = Ifid + chid * len(ifset)
+                Ch = Ifid + Bandid * len(ifset)
                 St1 = np.repeat(st1,len(Freq))
                 St2 = np.repeat(st2,len(Freq))
                 tbin_at = at.Time(tuvw.jd, format="jd")
@@ -1730,21 +2051,28 @@ class VisTable(_UVTable):
 
                 # Make output table
                 collist = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'freq', 'stokesid', 'chid', 'ifid', 'ch',
+                collist = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                            'u', 'v', 'w', 'uvdist', 'st1', 'st2', 'amp', 'phase', 'weight', 'sigma']
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,chid,Ifid,Ch,U,V,W,UVDIST,St1,St2,
+                table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,U,V,W,UVDIST,St1,St2,
                                                 Amp, Phase, Weight,Sigma]).T,columns=collist)
                 table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['chid'] = outtable.chid.astype(np.int32)
+            outtable['bandid'] = outtable.bandid.astype(np.int32)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
 
             # Case dofreq = 1
         if doch == True and doif == False:
+        if doband == True and doif == False:
             # Make strings
             chid = ""
             for i in tmpvis.chid.unique():
                 chid = chid + str(tmpvis.chid.unique()[i])
+            bandid = ""
+            for i in tmpvis.bandid.unique():
+                bandid = bandid + str(tmpvis.bandid.unique()[i])
             for stokesid, ifid, blid in itertools.product(stokesset, ifset, blidset):
                 st1 = blid % 1000
                 st2 = blid //1000
@@ -1775,6 +2103,7 @@ class VisTable(_UVTable):
                 Freq = tuvw.freq
                 Stokesid = np.repeat(stokesid,len(Freq))
                 chid = np.repeat(chid,len(Freq))
+                Bandid = np.repeat(bandid,len(Freq))
                 Ifid = np.repeat(ifid,len(Freq))
                 Ch = Ifid
                 St1 = np.repeat(st1,len(Freq))
@@ -1794,21 +2123,28 @@ class VisTable(_UVTable):
 
                 # Make output table
                 collist = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'freq', 'stokesid', 'chid', 'ifid', 'ch',
+                collist = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                            'u', 'v', 'w', 'uvdist', 'st1', 'st2', 'amp', 'phase', 'weight', 'sigma']
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,chid,Ifid,Ch,U,V,W,UVDIST,St1,St2,
+                table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,U,V,W,UVDIST,St1,St2,
                                                 Amp, Phase, Weight,Sigma]).T,columns=collist)
                 table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['chid'] = outtable.chid.astype(np.str)
+            outtable['bandid'] = outtable.bandid.astype(np.str)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
 
             # Case dofreq = 0
         if doch == True and doif == True:
+        if doband == True and doif == True:
             # Make strings
             chid = ""
             for i in tmpvis.chid.unique():
                 chid = chid + str(tmpvis.chid.unique()[i])
+            bandid = ""
+            for i in tmpvis.bandid.unique():
+                bandid = bandid + str(tmpvis.bandid.unique()[i])
             ifid = ""
             for i in tmpvis.ifid.unique():
                 ifid = ifid + str(tmpvis.ifid.unique()[i])
@@ -1844,6 +2180,7 @@ class VisTable(_UVTable):
                 Freq = tuvw.freq
                 Stokesid = np.repeat(stokesid,len(Freq))
                 chid = np.repeat(chid,len(Freq))
+                Bandid = np.repeat(bandid,len(Freq))
                 Ifid = np.repeat(ifid,len(Freq))
                 Ch = np.repeat(ch,len(Freq))
                 St1 = np.repeat(st1,len(Freq))
@@ -1863,12 +2200,15 @@ class VisTable(_UVTable):
 
                 # Make output table
                 collist = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'freq', 'stokesid', 'chid', 'ifid', 'ch',
+                collist = ['jd', 'year', 'doy', 'hour', 'min', 'sec', 'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                            'u', 'v', 'w', 'uvdist', 'st1', 'st2', 'amp', 'phase', 'weight', 'sigma']
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,chid,Ifid,Ch,U,V,W,UVDIST,St1,St2,
+                table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,U,V,W,UVDIST,St1,St2,
                                                 Amp, Phase, Weight,Sigma]).T,columns=collist)
                 table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['chid'] = outtable['chid'].astype(np.str)
+            outtable['bandid'] = outtable['bandid'].astype(np.str)
             outtable['ifid'] = outtable['ifid'].astype(np.str)
             outtable['ch'] = outtable['ch'].astype(np.str)
 
@@ -2066,6 +2406,330 @@ class VisTable(_UVTable):
         plt.xlim(0,)
         plt.ylim(-180, 180)
 
+class GVisTable(_UVTable):
+    '''
+    This class is for handling two dimentional tables of full complex visibilities
+    and amplitudes. The class inherits pandas.DataFrame class, so you can use this
+    class like pandas.DataFrame. The class also has additional methods to edit,
+    visualize and convert data.
+    '''
+    @property
+    def _constructor(self):
+        return GVisTable
+
+    @property
+    def _constructor_sliced(self):
+        return _GVisSeries
+
+    def recalc_uvdist(self):
+        '''
+        Re-calculate the baseline length from self["u"] and self["v"].
+        '''
+        self["uvdist"] = np.sqrt(self["u"] * self["u"] + self["v"] * self["v"])
+
+    def fit_beam(self, angunit="mas", errweight=0., ftsign=+1):
+        '''
+        This function estimates the synthesized beam size at natural weighting.
+
+        keywords:
+          angunit (string):
+            Angular unit (uas, mas, asec or arcsec, amin or arcmin, degree)
+          errweight (float; experimental):
+            index for errer weighting
+          ftsign (integer):
+            a sign for fourier matrix
+        '''
+        # infer the parameters of clean beam
+        parm0 = _calc_bparms(self)
+
+        # generate a small image 4 times larger than the expected major axis
+        # size of the beam
+        fitsdata = imdata.IMFITS(fov=[parm0[0], -parm0[0], -parm0[0], parm0[0]],
+                                 nx=20, ny=20, angunit="deg")
+
+        # create output fits
+        dbfitsdata, dbflux = _calc_dbeam(
+            fitsdata, self, errweight=errweight, ftsign=ftsign)
+
+        X, Y = fitsdata.get_xygrid(angunit="deg", twodim=True)
+        dbeam = dbfitsdata.data[0, 0]
+        dbeam /= np.max(dbeam)
+
+        parms = optimize.leastsq(_fit_chisq, parm0, args=(X, Y, dbeam))
+
+        (maja, mina, PA) = parms[0]
+        maja = np.abs(maja)
+        mina = np.abs(mina)
+
+        # adjust these parameters
+        if maja < mina:
+            maja, mina = mina, maja
+            PA += 90
+        while np.abs(PA) > 90:
+            if PA > 90:
+                PA -= 90
+            elif PA < -90:
+                PA += 90
+
+        # return as parameters of gauss_convolve
+        factor = fitsdata.angconv("deg", angunit)
+        cb_parms = ({'majsize': maja * factor, 'minsize': mina *
+                     factor, 'angunit': angunit, 'pa': PA})
+        return cb_parms
+
+    def fftshift(self, fitsdata, fgfov=1):
+        '''
+        Arguments:
+          vistable (pandas.Dataframe object):
+            input visibility table
+
+          fitsdata (imdata.IMFITS object):
+            input imdata.IMFITS object
+
+          fgfov (int)
+            a number of gridded FOV/original FOV
+
+        Output: pandas.Dataframe object
+        '''
+        # Copy vistable for edit
+        vistable = self.copy()
+
+        # Calculate du and dv
+        Nupix = fitsdata.header["nx"] * fgfov
+        Nvpix = fitsdata.header["ny"] * fgfov
+        du = 1 / np.radians(np.abs(fitsdata.header["dx"]) * Nupix)
+        dv = 1 / np.radians(fitsdata.header["dy"] * Nvpix)
+
+        # Shift vistable
+        vistable.loc[vistable["vgidx"] < 0, "vgidx"] += Nvpix
+        
+        # Create new list for shift
+        outlist = {
+            "ugidx": [],
+            "vgidx": [],
+            "u": [],
+            "v": [],
+            "orgu": [],
+            "orgv": [],
+            "uvdist": [],
+            "amp": [],
+            "phase": [],
+            "weight": [],
+            "sigma": []
+        }
+
+        # Save shifted data
+        outlist["ugidx"] = vistable["ugidx"]
+        outlist["vgidx"] = vistable["vgidx"]
+        outlist["u"] = vistable["ugidx"] * du
+        outlist["v"] = vistable["vgidx"] * dv
+        outlist["orgu"] = self["u"]
+        outlist["orgv"] = self["v"]
+        outlist["uvdist"] = np.sqrt(self["u"]*self["u"]+self["v"]*self["v"])
+        outlist["amp"] = self["amp"]
+        outlist["phase"] = self["phase"]
+        outlist["weight"] = self["weight"]
+        outlist["sigma"] = self["sigma"]
+
+        # Output as pandas.DataFrame
+        outtable = GVisTable(outlist)
+        return outtable
+
+    def _make_gradvistable(self, normalize=True):
+        gradself1 = self.copy()
+        gradself2 = self.copy()
+
+        # scale visibility
+        gradself1.loc[:, "amp"] *= np.abs(gradself1["u"])
+        gradself1.loc[:, "sigma"] *= np.abs(gradself1["u"])
+        gradself1.loc[:, "phase"] -= 90
+        gradself2.loc[:, "amp"] *= np.abs(gradself2["v"])
+        gradself2.loc[:, "sigma"] *= np.abs(gradself2["v"])
+        gradself2.loc[:, "phase"] -= 90
+
+        # frip phase
+        idx1 = gradself1["u"] < 0
+        gradself1.loc[idx1, "phase"] += 180
+
+        idx1 = gradself2["v"] < 0
+        gradself2.loc[idx1, "phase"] += 180
+
+        if normalize:
+            maxamp = np.max([gradself1["amp"].max(),
+                             gradself2["amp"].max()])
+            gradself1.loc[:, "amp"] /= maxamp
+            gradself1.loc[:, "sigma"] /= maxamp
+            gradself2.loc[:, "amp"] /= maxamp
+            gradself2.loc[:, "sigma"] /= maxamp
+        return gradself1, gradself2
+
+    #-------------------------------------------------------------------------
+    # Plot Functions
+    #-------------------------------------------------------------------------
+    def uvplot(self, uvunit=None, conj=True,
+               ls="none", marker=".", **plotargs):
+        '''
+        Plot uv-plot on the current axes.
+        This method uses matplotlib.pyplot.plot().
+
+        Args:
+          uvunit (str, default = None):
+            The unit of the baseline length. if uvunit is None, it will use
+            self.uvunit.
+
+          conj (boolean, default = True):
+            if conj=True, it will plot complex conjugate components (i.e. (-u, -v)).
+
+          **plotargs:
+            You can set parameters of matplotlib.pyplot.plot.
+            Defaults are {'ls': "none", 'marker': "."}
+        '''
+        # Set Unit
+        if uvunit is None:
+            uvunit = self.uvunit
+
+        # Conversion Factor
+        conv = self.uvunitconv(unit1="lambda", unit2=uvunit)
+
+        # Label
+        unitlabel = self.get_unitlabel(uvunit)
+
+        # plotting
+        plt.plot(self["u"] * conv, self["v"] * conv,
+                 ls=ls, marker=marker, **plotargs)
+        if conj:
+            plotargs2 = copy.deepcopy(plotargs)
+            plotargs2["label"] = ""
+            plt.plot(-self["u"] * conv, -self["v"] * conv,
+                     ls=ls, marker=marker, **plotargs)
+        plt.xlabel(r"Baseline Length $u$ (%s)" % (unitlabel))
+        plt.ylabel(r"Baseline Length $v$ (%s)" % (unitlabel))
+
+        ax = plt.gca()
+        ax.set_aspect("equal")
+        xlim = np.asarray(ax.get_xlim())
+        ylim = np.asarray(ax.get_ylim())
+        ax.set_xlim(-np.sort(-xlim))
+        ax.set_ylim(np.sort(ylim))
+
+    def radplot_amp(self, uvunit=None, errorbar=True, model=None, modeltype="amp",
+                    ls="none", marker=".", **plotargs):
+        '''
+        Plot visibility amplitudes as a function of baseline lengths
+        on the current axes. This method uses matplotlib.pyplot.plot() or
+        matplotlib.pyplot.errorbar().
+
+        Args:
+          uvunit (str, default = None):
+            The unit of the baseline length. if uvunit is None, it will use
+            self.uvunit.
+
+          errorbar (boolean, default = True):
+            If errorbar is True, it will plot data with errorbars using
+            matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
+            errorbars using matplotlib.pyplot.plot().
+
+            If you plot model closure phases (i.e. model is not None),
+            it will plot without errobars regardless of this parameter.
+
+          model (dict-like such as pd.DataFrame, pd.Series, default is None):
+            Model data sets. Model amplitudes must be given by model["fcvampmod"]
+            for full complex visibilities (modeltype="fcv") or model["ampmod"]
+            for visibility amplitudes (modeltype="amp").
+            Otherwise, it will plot amplitudes in the table (i.e. self["amp"]).
+
+          modeltype (string, default = "amp"):
+            The type of models. If you would plot model amplitudes, set modeltype="amp".
+            Else if you would plot model full complex visibilities, set modeltype="fcv".
+
+          **plotargs:
+            You can set parameters of matplotlib.pyplot.plot() or
+            matplotlib.pyplot.errorbars().
+            Defaults are {'ls': "none", 'marker': "."}.
+        '''
+        # Set Unit
+        if uvunit is None:
+            uvunit = self.uvunit
+
+        # Conversion Factor
+        conv = self.uvunitconv(unit1="lambda", unit2=uvunit)
+
+        # Label
+        unitlabel = self.get_unitlabel(uvunit)
+
+        # plotting data
+        if model is not None:
+            if modeltype.lower().find("amp") == 0:
+                plt.plot(self["uvdist"] * conv, model["ampmod"],
+                         ls=ls, marker=marker, **plotargs)
+            elif modeltype.lower().find("fcv") == 0:
+                plt.plot(self["uvdist"] * conv, model["fcvampmod"],
+                         ls=ls, marker=marker, **plotargs)
+        elif errorbar:
+            plt.errorbar(self["uvdist"] * conv, self["amp"], self["sigma"],
+                         ls=ls, marker=marker, **plotargs)
+        else:
+            plt.plot(self["uvdist"] * conv, self["amp"],
+                     ls=ls, marker=marker, **plotargs)
+        plt.xlabel(r"Baseline Length (%s)" % (unitlabel))
+        plt.ylabel(r"Visibility Amplitude (Jy)")
+        plt.xlim(0,)
+        plt.ylim(0,)
+
+    def radplot_phase(self, uvunit=None, errorbar=True, model=None,
+                      ls="none", marker=".", **plotargs):
+        '''
+        Plot visibility phases as a function of baseline lengths
+        on the current axes. This method uses matplotlib.pyplot.plot() or
+        matplotlib.pyplot.errorbar().
+
+        Args:
+          uvunit (str, default = None):
+            The unit of the baseline length. if uvunit is None, it will use
+            self.uvunit.
+
+          errorbar (boolean, default = True):
+            If errorbar is True, it will plot data with errorbars using
+            matplotlib.pyplot.errorbar(). Otherwise, it will plot data without
+            errorbars using matplotlib.pyplot.plot().
+
+            If you plot model closure phases (i.e. model is not None),
+            it will plot without errobars regardless of this parameter.
+
+          model (dict-like such as pd.DataFrame, pd.Series, default is None):
+            Model data sets. Model phases must be given by model["fcvphamod"].
+            Otherwise, it will plot amplitudes in the table (i.e. self["phase"]).
+
+          **plotargs:
+            You can set parameters of matplotlib.pyplot.plot() or
+            matplotlib.pyplot.errorbars().
+            Defaults are {'ls': "none", 'marker': "."}.
+        '''
+        # Set Unit
+        if uvunit is None:
+            uvunit = self.uvunit
+
+        # Conversion Factor
+        conv = self.uvunitconv(unit1="lambda", unit2=uvunit)
+
+        # Label
+        unitlabel = self.get_unitlabel(uvunit)
+
+        # plotting data
+        if model is not None:
+            plt.plot(self["uvdist"] * conv, model["fcvphamod"],
+                     ls=ls, marker=marker, **plotargs)
+        elif errorbar:
+            pherr = np.rad2deg(self["sigma"] / self["amp"])
+            plt.errorbar(self["uvdist"] * conv, self["phase"], pherr,
+                         ls=ls, marker=marker, **plotargs)
+        else:
+            plt.plot(self["uvdist"] * conv, self["phase"],
+                     ls=ls, marker=marker, **plotargs)
+        plt.xlabel(r"Baseline Length (%s)" % (unitlabel))
+        plt.ylabel(r"Visibility Phase ($^\circ$)")
+        plt.xlim(0,)
+        plt.ylim(-180, 180)
 
 class BSTable(_UVTable):
     '''
@@ -2078,12 +2742,15 @@ class BSTable(_UVTable):
 
     bstable_columns = ["utc", "gsthour",
                        "freq", "stokesid", "chid", "ifid", "ch",
+    bstable_columns = ["jd", "year", "doy", "hour", "min", "sec",
+                       "freq", "stokesid", "bandid", "ifid", "ch",
                        "u12", "v12", "w12", "uvdist12",
                        "u23", "v23", "w23", "uvdist23",
                        "u31", "v31", "w31", "uvdist31",
                        "uvdistmin", "uvdistmax", "uvdistave",
                        "st1", "st2", "st3", "ch", "amp", "phase", "sigma"]
     bstable_types = [np.asarray, np.float64,
+    bstable_types = [np.float64, np.int32, np.int32, np.int32, np.int32, np.float64,
                      np.float64, np.int32, np.int32, np.int32, np.int32,
                      np.float64, np.float64, np.float64, np.float64,
                      np.float64, np.float64, np.float64, np.float64,
@@ -2140,12 +2807,15 @@ class BSTable(_UVTable):
         # Default Averaging alldata
         doif = True
         doch = True
+        doband = True
         if np.int64(dofreq) > 0:
             doif = False
             ifset = set(tmpbs.ifid)
         if np.int64(dofreq) > 1:
             doch = False
             chset = set(tmpbs.chid)
+            doband = False
+            bandset = set(tmpbs.bandid)
 
         # make non redundant sets of each parameter
         stokesset = set(tmpbs.stokesid)
@@ -2175,6 +2845,8 @@ class BSTable(_UVTable):
         # Case dofreq = 2
         if doch == False and doif == False:
             for stokesid, chid, ifid, blid in itertools.product(stokesset, chset, ifset, blidset):
+        if doband == False and doif == False:
+            for stokesid, bandid, ifid, blid in itertools.product(stokesset, bandset, ifset, blidset):
                 st1 = blid % 1000 % 1000
                 st2 = blid // 1000 % 1000
                 st3 = blid // 1000 // 1000
@@ -2182,6 +2854,7 @@ class BSTable(_UVTable):
                 # selecting data
                 idx = (tmpbs.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpbs.loc[:,"chid"]==chid)
+                idx &= (tmpbs.loc[:,"bandid"]==bandid)
                 idx &= (tmpbs.loc[:,"ifid"]==ifid)
                 idx &= (tmpbs.loc[:,"st1"]==st1)
                 idx &= (tmpbs.loc[:,"st2"]==st2)
@@ -2213,8 +2886,10 @@ class BSTable(_UVTable):
                 Freq = tuvw.freq
                 Stokesid = np.repeat(stokesid,len(Freq))
                 chid = np.repeat(chid,len(Freq))
+                Bandid = np.repeat(bandid,len(Freq))
                 Ifid = np.repeat(ifid,len(Freq))
                 Ch = Ifid + chid * len(ifset)
+                Ch = Ifid + Bandid * len(ifset)
                 St1 = np.repeat(st1,len(Freq))
                 St2 = np.repeat(st2,len(Freq))
                 St3 = np.repeat(st3,len(Freq))
@@ -2234,6 +2909,7 @@ class BSTable(_UVTable):
                 collist = [
                     'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'chid', 'ifid', 'ch',
+                    'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u12', 'v12', 'w12', 'uvdist12',
                     'u23', 'v23', 'w23', 'uvdist23',
                     'u31', 'v31', 'w31', 'uvdist31',
@@ -2243,21 +2919,27 @@ class BSTable(_UVTable):
                     ]
 
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,chid,Ifid,Ch,
+                table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U12,V12,W12,UVDIST12,U23,V23,W23,UVDIST23,U31,V31,W31,UVDIST31,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
                                                 St1,St2,St3,Amp,Phase,Weight,Sigma]).T,columns=collist)
                 table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['chid'] = outtable.chid.astype(np.int32)
+            outtable['bandid'] = outtable.bandid.astype(np.int32)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
 
             # Case dofreq = 1
         if doch == True and doif == False:
+        if doband == True and doif == False:
             # Make strings
             chid = ""
             for i in tmpbs.chid.unique():
                 chid = chid + str(tmpbs.chid.unique()[i])
+            bandid = ""
+            for i in tmpbs.bandid.unique():
+                bandid = bandid + str(tmpbs.bandid.unique()[i])
             for stokesid, ifid, blid in itertools.product(stokesset, ifset, blidset):
                 st1 = blid % 1000 % 1000
                 st2 = blid // 1000 % 1000
@@ -2296,6 +2978,7 @@ class BSTable(_UVTable):
                 Freq = tuvw.freq
                 Stokesid = np.repeat(stokesid,len(Freq))
                 chid = np.repeat(chid,len(Freq))
+                Bandid = np.repeat(bandid,len(Freq))
                 Ifid = np.repeat(ifid,len(Freq))
                 Ch = Ifid
                 St1 = np.repeat(st1,len(Freq))
@@ -2317,6 +3000,7 @@ class BSTable(_UVTable):
                 collist = [
                     'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'chid', 'ifid', 'ch',
+                    'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u12', 'v12', 'w12', 'uvdist12',
                     'u23', 'v23', 'w23', 'uvdist23',
                     'u31', 'v31', 'w31', 'uvdist31',
@@ -2326,21 +3010,27 @@ class BSTable(_UVTable):
                     ]
 
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,chid,Ifid,Ch,
+                table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U12,V12,W12,UVDIST12,U23,V23,W23,UVDIST23,U31,V31,W31,UVDIST31,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
                                                 St1,St2,St3,Amp,Phase,Weight,Sigma]).T,columns=collist)
                 table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['chid'] = outtable.chid.astype(np.str)
+            outtable['bandid'] = outtable.bandid.astype(np.str)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
 
         # Case dofreq = 0
         if doch == True and doif == True:
+        if doband == True and doif == True:
             # Make strings
             chid = ""
             for i in tmpbs.chid.unique():
                 chid = chid + str(tmpbs.chid.unique()[i])
+            bandid = ""
+            for i in tmpbs.bandid.unique():
+                bandid = bandid + str(tmpbs.bandid.unique()[i])
             ifid = ""
             for i in tmpbs.ifid.unique():
                 ifid = ifid + str(tmpbs.ifid.unique()[i])
@@ -2384,6 +3074,7 @@ class BSTable(_UVTable):
                 Freq = tuvw.freq
                 Stokesid = np.repeat(stokesid,len(Freq))
                 chid = np.repeat(chid,len(Freq))
+                Bandid = np.repeat(bandid,len(Freq))
                 Ifid = np.repeat(ifid,len(Freq))
                 Ch = np.repeat(ch,len(Freq))
                 St1 = np.repeat(st1,len(Freq))
@@ -2405,6 +3096,7 @@ class BSTable(_UVTable):
                 collist = [
                     'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'chid', 'ifid', 'ch',
+                    'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u12', 'v12', 'w12', 'uvdist12',
                     'u23', 'v23', 'w23', 'uvdist23',
                     'u31', 'v31', 'w31', 'uvdist31',
@@ -2414,12 +3106,14 @@ class BSTable(_UVTable):
                     ]
 
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,chid,Ifid,Ch,
+                table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U12,V12,W12,UVDIST12,U23,V23,W23,UVDIST23,U31,V31,W31,UVDIST31,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
                                                 St1,St2,St3,Amp,Phase,Weight,Sigma]).T,columns=collist)
                 table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['chid'] = outtable['chid'].astype(np.str)
+            outtable['bandid'] = outtable['bandid'].astype(np.str)
             outtable['ifid'] = outtable['ifid'].astype(np.str)
             outtable['ch'] = outtable['ch'].astype(np.str)
 
@@ -2587,6 +3281,8 @@ class CATable(_UVTable):
 
     catable_columns = ["utc", "gsthour",
                        "freq", "stokesid", "ifid", "chid", "ch",
+    catable_columns = ["jd", "year", "doy", "hour", "min", "sec",
+                       "freq", "stokesid", "bandid", "ifid", "ch",
                        "u1", "v1", "w1", "uvdist1",
                        "u2", "v2", "w2", "uvdist2",
                        "u3", "v3", "w3", "uvdist3",
@@ -2594,6 +3290,7 @@ class CATable(_UVTable):
                        "uvdistmin", "uvdistmax", "uvdistave",
                        "st1", "st2", "st3", "st4", "amp", "sigma", "logamp", "logsigma"]
     catable_types = [np.asarray, np.float64,
+    catable_types = [np.float64, np.int32, np.int32, np.int32, np.int32, np.float64,
                      np.float64, np.int32, np.int32, np.int32, np.int32,
                      np.float64, np.float64, np.float64, np.float64,
                      np.float64, np.float64, np.float64, np.float64,
@@ -2651,12 +3348,15 @@ class CATable(_UVTable):
         # Default Averaging alldata
         doif = True
         doch = True
+        doband = True
         if np.int64(dofreq) > 0:
             doif = False
             ifset = set(tmpca.ifid)
         if np.int64(dofreq) > 1:
             doch = False
             chset = set(tmpca.chid)
+            doband = False
+            bandset = set(tmpca.bandid)
 
         # make non redundant sets of each parameter
         stokesset = set(tmpca.stokesid)
@@ -2686,6 +3386,8 @@ class CATable(_UVTable):
         # Case dofreq = 2
         if doch == False and doif == False:
             for stokesid, chid, ifid, blid in itertools.product(stokesset, chset, ifset, blidset):
+        if doband == False and doif == False:
+            for stokesid, bandid, ifid, blid in itertools.product(stokesset, bandset, ifset, blidset):
                 st1 = blid % 1000 % 1000 % 1000
                 st2 = blid // 1000 % 1000 % 1000
                 st3 = blid // 1000 // 1000 % 1000
@@ -2694,6 +3396,7 @@ class CATable(_UVTable):
                 # selecting data
                 idx = (tmpca.loc[:,"stokesid"]==stokesid)
                 idx &= (tmpca.loc[:,"chid"]==chid)
+                idx &= (tmpca.loc[:,"bandid"]==bandid)
                 idx &= (tmpca.loc[:,"ifid"]==ifid)
                 idx &= (tmpca.loc[:,"st1"]==st1)
                 idx &= (tmpca.loc[:,"st2"]==st2)
@@ -2727,8 +3430,10 @@ class CATable(_UVTable):
                 Freq = tuvw.freq
                 Stokesid = np.repeat(stokesid,len(Freq))
                 chid = np.repeat(chid,len(Freq))
+                Bandid = np.repeat(bandid,len(Freq))
                 Ifid = np.repeat(ifid,len(Freq))
                 Ch = Ifid + chid * len(ifset)
+                Ch = Ifid + Bandid * len(ifset)
                 St1 = np.repeat(st1,len(Freq))
                 St2 = np.repeat(st2,len(Freq))
                 St3 = np.repeat(st3,len(Freq))
@@ -2748,6 +3453,7 @@ class CATable(_UVTable):
                 collist = [
                     'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'chid', 'ifid', 'ch',
+                    'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u1', 'v1', 'w1', 'uvdist1', 'u2', 'v2', 'w2', 'uvdist2',
                     'u3', 'v3', 'w3', 'uvdist3', 'u4', 'v4', 'w4', 'uvdist4',
                     'uvdistmin','uvdistmax','uvdistave',
@@ -2756,21 +3462,27 @@ class CATable(_UVTable):
                     ]
 
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,chid,Ifid,Ch,
+                table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U1,V1,W1,UVDIST1,U2,V2,W2,UVDIST2,U3,V3,W3,UVDIST3,U4,V4,W4,UVDIST4,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
                                                 St1,St2,St3,St4,Amp, Weight,Sigma]).T,columns=collist)
                 table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['chid'] = outtable.chid.astype(np.int32)
+            outtable['bandid'] = outtable.bandid.astype(np.int32)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
 
             # Case dofreq = 1
         if doch == True and doif == False:
+        if doband == True and doif == False:
             # Make strings
             chid = ""
             for i in tmpca.chid.unique():
                 chid = chid + str(tmpca.chid.unique()[i])
+            bandid = ""
+            for i in tmpca.bandid.unique():
+                bandid = bandid + str(tmpca.bandid.unique()[i])
             for stokesid, ifid, blid in itertools.product(stokesset, ifset, blidset):
                 st1 = blid % 1000 % 1000 % 1000
                 st2 = blid // 1000 % 1000 % 1000
@@ -2812,6 +3524,7 @@ class CATable(_UVTable):
                 Freq = tuvw.freq
                 Stokesid = np.repeat(stokesid,len(Freq))
                 chid = np.repeat(chid,len(Freq))
+                Bandid = np.repeat(bandid,len(Freq))
                 Ifid = np.repeat(ifid,len(Freq))
                 Ch = Ifid
                 St1 = np.repeat(st1,len(Freq))
@@ -2833,6 +3546,7 @@ class CATable(_UVTable):
                 collist = [
                     'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'chid', 'ifid', 'ch',
+                    'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u1', 'v1', 'w1', 'uvdist1', 'u2', 'v2', 'w2', 'uvdist2',
                     'u3', 'v3', 'w3', 'uvdist3', 'u4', 'v4', 'w4', 'uvdist4',
                     'uvdistmin','uvdistmax','uvdistave',
@@ -2841,21 +3555,27 @@ class CATable(_UVTable):
                     ]
 
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,chid,Ifid,Ch,
+                table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U1,V1,W1,UVDIST1,U2,V2,W2,UVDIST2,U3,V3,W3,UVDIST3,U4,V4,W4,UVDIST4,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
                                                 St1,St2,St3,St4,Amp, Weight,Sigma]).T,columns=collist)
                 table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['chid'] = outtable.chid.astype(np.str)
+            outtable['bandid'] = outtable.bandid.astype(np.str)
             outtable['ifid'] = outtable.ifid.astype(np.int32)
             outtable['ch'] = outtable.ch.astype(np.int64)
 
         # Case dofreq = 0
         if doch == True and doif == True:
+        if doband == True and doif == True:
             # Make strings
             chid = ""
             for i in tmpca.chid.unique():
                 chid = chid + str(tmpca.chid.unique()[i])
+            bandid = ""
+            for i in tmpca.bandid.unique():
+                bandid = bandid + str(tmpca.bandid.unique()[i])
             ifid = ""
             for i in tmpca.ifid.unique():
                 ifid = ifid + str(tmpca.ifid.unique()[i])
@@ -2902,6 +3622,7 @@ class CATable(_UVTable):
                 Freq = tuvw.freq
                 Stokesid = np.repeat(stokesid,len(Freq))
                 chid = np.repeat(chid,len(Freq))
+                Bandid = np.repeat(bandid,len(Freq))
                 Ifid = np.repeat(ifid,len(Freq))
                 Ch = np.repeat(ch,len(Freq))
                 St1 = np.repeat(st1,len(Freq))
@@ -2923,6 +3644,7 @@ class CATable(_UVTable):
                 collist = [
                     'jd', 'year', 'doy', 'hour', 'min', 'sec',
                     'freq', 'stokesid', 'chid', 'ifid', 'ch',
+                    'freq', 'stokesid', 'bandid', 'ifid', 'ch',
                     'u1', 'v1', 'w1', 'uvdist1', 'u2', 'v2', 'w2', 'uvdist2',
                     'u3', 'v3', 'w3', 'uvdist3', 'u4', 'v4', 'w4', 'uvdist4',
                     'uvdistmin','uvdistmax','uvdistave',
@@ -2931,12 +3653,14 @@ class CATable(_UVTable):
                     ]
 
                 table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,chid,Ifid,Ch,
+                table3 = pd.DataFrame(np.array([Jd,Year,Doy,Hour,Minute,Sec,Freq,Stokesid,Bandid,Ifid,Ch,
                                                 U1,V1,W1,UVDIST1,U2,V2,W2,UVDIST2,U3,V3,W3,UVDIST3,U4,V4,W4,UVDIST4,
                                                 UVDISTMIN,UVDISTMAX,UVDISTAVE,
                                                 St1,St2,St3,St4,Amp, Weight,Sigma]).T,columns=collist)
                 table3 = table3[N >= minpoint]
                 outtable = outtable.append(table3,ignore_index=True)
             outtable['chid'] = outtable['chid'].astype(np.str)
+            outtable['bandid'] = outtable['bandid'].astype(np.str)
             outtable['ifid'] = outtable['ifid'].astype(np.str)
             outtable['ch'] = outtable['ch'].astype(np.str)
 
@@ -3125,6 +3849,15 @@ class _VisSeries(_UVSeries):
     def _constructor_expanddim(self):
         return VisTable
 
+class _GVisSeries(_UVSeries):
+
+    @property
+    def _constructor(self):
+        return _GVisSeries
+
+    @property
+    def _constructor_expanddim(self):
+        return GVisTable
 
 class _BSSeries(_UVSeries):
 
@@ -3327,12 +4060,32 @@ def _getblid(st1, st2, Nst):
 def _isnontrivial(baselines, redundant):
     if redundant is None:
         return True
+def _calc_caamp(vistable, catable, idx,
+                stid1, stid2, stid3, stid4, sts, Nsts, Nbl,
+                matrix, rank, Nca, Ncamax):
+    '''
+    This is a sub function for uvdata.VisTable.make_catable, which calculates
+    a closure amplitude on a given combination of stations at a given time
+    '''
+    # if we already found the maximum number of triangles, skip the process
+    if Nca >= Ncamax:
+        return None
 
     flag = False
     for baseline in baselines:
         flag |= baseline in redundant
     return not flag
+    # station number
+    st1 = sts[stid1]
+    st2 = sts[stid2]
+    st3 = sts[stid3]
+    st4 = sts[stid4]
 
+    # baseline ids
+    blid1 = _getblid(stid1, stid2, Nsts)
+    blid2 = _getblid(stid3, stid4, Nsts)
+    blid3 = _getblid(stid1, stid3, Nsts)
+    blid4 = _getblid(stid2, stid4, Nsts)
 
 def _isbaselines(baselines, blset):
     flag = True
@@ -3343,6 +4096,7 @@ def _isbaselines(baselines, blset):
 
 def _calc_matrix_ca(matrix, blid1, blid2, blid3, blid4, Nbl):
     # New row
+    # calculate conversion matrix
     row = np.zeros(Nbl)
     row[blid1] = 1
     row[blid2] = 1
@@ -3352,14 +4106,43 @@ def _calc_matrix_ca(matrix, blid1, blid2, blid3, blid4, Nbl):
     # add New row
     if matrix is None:
         newmatrix = np.asarray([row])
+        tmpmatrix = np.asarray([row])
     else:
         nrow,ncol = matrix.shape
         newmatrix = np.append(matrix, row).reshape(nrow+1, Nbl)
+        tmpmatrix = np.append(matrix, row).reshape(Nca + 1, Nbl)
 
     # calc rank of the new matrix
     newrank = np.linalg.matrix_rank(newmatrix)
     return newrank, newmatrix
+    # Check if this triangle is redundant
+    tmprank = np.linalg.matrix_rank(tmpmatrix)
+    if rank == tmprank:
+        return None
 
+    # Check if corresponding baseline data exist
+    isbl1 = True
+    isbl2 = True
+    isbl3 = True
+    isbl4 = True
+    bl1idx = idx & (vistable["st1"] == np.min([st1, st2])) & (
+        vistable["st2"] == np.max([st1, st2]))
+    bl2idx = idx & (vistable["st1"] == np.min([st3, st4])) & (
+        vistable["st2"] == np.max([st3, st4]))
+    bl3idx = idx & (vistable["st1"] == np.min([st1, st3])) & (
+        vistable["st2"] == np.max([st1, st3]))
+    bl4idx = idx & (vistable["st1"] == np.min([st2, st4])) & (
+        vistable["st2"] == np.max([st2, st4]))
+    if np.where(bl1idx)[0].shape[0] == 0:
+        isbl1 = False
+    if np.where(bl2idx)[0].shape[0] == 0:
+        isbl2 = False
+    if np.where(bl3idx)[0].shape[0] == 0:
+        isbl3 = False
+    if np.where(bl4idx)[0].shape[0] == 0:
+        isbl4 = False
+    if False in [isbl1, isbl2, isbl3, isbl4]:
+        return None
 
 def _calc_matrix_bs(matrix, blid1, blid2, blid3, Nbl):
     # New row
@@ -3367,6 +4150,11 @@ def _calc_matrix_bs(matrix, blid1, blid2, blid3, Nbl):
     row[blid1] = 1
     row[blid2] = 1
     row[blid3] = -1
+    # calculate bi-spectrum
+    bl1data = vistable.loc[bl1idx, :].reset_index(drop=True).loc[0, :]
+    bl2data = vistable.loc[bl2idx, :].reset_index(drop=True).loc[0, :]
+    bl3data = vistable.loc[bl3idx, :].reset_index(drop=True).loc[0, :]
+    bl4data = vistable.loc[bl4idx, :].reset_index(drop=True).loc[0, :]
 
     # add New row
     if matrix is None:
@@ -3374,10 +4162,58 @@ def _calc_matrix_bs(matrix, blid1, blid2, blid3, Nbl):
     else:
         nrow,ncol = matrix.shape
         newmatrix = np.append(matrix, row).reshape(nrow+1, Nbl)
+    ratio_1 = bl1data.loc["sigma"] / bl1data.loc["amp"]
+    ratio_2 = bl2data.loc["sigma"] / bl2data.loc["amp"]
+    ratio_3 = bl3data.loc["sigma"] / bl3data.loc["amp"]
+    ratio_4 = bl4data.loc["sigma"] / bl4data.loc["amp"]
+    amp = bl1data.loc["amp"] * bl2data.loc["amp"] / \
+        bl3data.loc["amp"] / bl4data.loc["amp"]
+    logamp = np.log(amp)
+    logsigma = np.sqrt((ratio_1)**2 + (ratio_2)**2 +
+                       (ratio_3)**2 + (ratio_4)**2)
+    sigma = amp * logsigma
 
     # calc rank of the new matrix
     newrank = np.linalg.matrix_rank(newmatrix)
     return newrank, newmatrix
+    catable["jd"].append(bl1data.loc["jd"])
+    catable["year"].append(bl1data.loc["year"])
+    catable["doy"].append(bl1data.loc["doy"])
+    catable["hour"].append(bl1data.loc["hour"])
+    catable["min"].append(bl1data.loc["min"])
+    catable["sec"].append(bl1data.loc["sec"])
+    catable["u1"].append(bl1data.loc["u"])
+    catable["v1"].append(bl1data.loc["v"])
+    catable["w1"].append(bl1data.loc["w"])
+    catable["u2"].append(bl2data.loc["u"])
+    catable["v2"].append(bl2data.loc["v"])
+    catable["w2"].append(bl2data.loc["w"])
+    catable["u3"].append(bl3data.loc["u"])
+    catable["v3"].append(bl3data.loc["v"])
+    catable["w3"].append(bl3data.loc["w"])
+    catable["u4"].append(bl4data.loc["u"])
+    catable["v4"].append(bl4data.loc["v"])
+    catable["w4"].append(bl4data.loc["w"])
+    catable["st1"].append(st1)
+    catable["st2"].append(st2)
+    catable["st3"].append(st3)
+    catable["st4"].append(st4)
+    catable["freq"].append(bl1data.loc["freq"])
+    catable["stokesid"].append(bl1data.loc["stokesid"])
+    catable["bandid"].append(bl1data.loc["bandid"])
+    catable["ifid"].append(bl1data.loc["ifid"])
+    catable["ch"].append(bl1data.loc["ch"])
+    catable["amp"].append(amp)
+    catable["logamp"].append(logamp)
+    catable["sigma"].append(sigma)
+    catable["logsigma"].append(logsigma)
+
+    # update rank and matrix
+    rank += 1
+    Nca += 1
+    matrix = tmpmatrix.copy()
+
+    return catable, rank, Nca, matrix
 
 
 def _calc_dbeam(fitsdata, vistable, errweight=0, ftsign=+1):
@@ -3435,6 +4271,8 @@ def _calc_dbeam(fitsdata, vistable, errweight=0, ftsign=+1):
     dbeam = dbeam.reshape((outfitsdata.header["ny"], outfitsdata.header["nx"]))
     for idxs in xrange(outfitsdata.header["ns"]):
         for idxf in xrange(outfitsdata.header["nf"]):
+    for idxs in np.arange(outfitsdata.header["ns"]):
+        for idxf in np.arange(outfitsdata.header["nf"]):
             outfitsdata.data[idxs, idxf] = dbeam[:]
 
     outfitsdata.update_fits()
@@ -3525,6 +4363,7 @@ def _fit_chisq(parms, X, Y, dbeam):
 '''
 def _calc_uvw(Tim, u, v, w, freq, fact, tbin, k ):
 ''''''
+    '''
       This function is to calculate U, V, and W in ave_vistable function.
       In this function, the U, V, and W are interpolated by spline interpolation.
       Tim: time
@@ -3537,9 +4376,11 @@ def _calc_uvw(Tim, u, v, w, freq, fact, tbin, k ):
       minpoint: minimum number of data point
       k: degree for spline interpolation
 ''''''
+    '''
     sTim = len(Tim); su = len(u); sv = len(v); sw = len(w); sf = len(freq)
     if (sTim == su and sTim == sv and sTim == sw and sTim == sf):
         import fortlib
+        from . import fortlib
         from scipy.interpolate import splrep,splev
         Input = pd.DataFrame()
         Input['jd'], Input['du'], Input['dv'], Input['dw'] = Tim, u/freq, v/freq, w/freq
@@ -3564,8 +4405,10 @@ def _calc_uvw(Tim, u, v, w, freq, fact, tbin, k ):
 
 def _calc_coherent(Tim, amp, phase, weight, fact, tbin, flagweight):
 ''''''
+    '''
       This function calculates averages of full complex visibility coherently
 ''''''
+    '''
     sTim = len(Tim); samp = len(amp); sphase = len(phase)
     if (sTim == samp and sTim == sphase):
         # calculate visibility
@@ -3600,8 +4443,10 @@ def _calc_coherent(Tim, amp, phase, weight, fact, tbin, flagweight):
 
 def _calc_incoherent(Tim, Amp, Weight, fact, tbin, flagweight):
 ''''''
+    '''
       This function calculates averages of full complex visibility incoherently
 ''''''
+    '''
     sTim = len(Tim); samp = len(Amp)
     if (sTim == samp):
         out = pd.DataFrame()
@@ -3637,6 +4482,7 @@ def _calc_bs_uvw(Tim, u12, v12, w12, u23, v23, w23, u31, v31, w31, freq, fact, t
     sTim = len(Tim); su = len(u12); sv = len(v23); sw = len(w31); sf = len(freq)
     if (sTim == su and sTim == sv and sTim == sw and sTim == sf):
         import fortlib
+        from . import fortlib
         from scipy.interpolate import splrep,splev
         Input = pd.DataFrame()
         Input['jd'], Input['du12'], Input['dv12'], Input['dw12'] = Tim, u12/freq, v12/freq, w12/freq
@@ -3674,6 +4520,8 @@ def _calc_bs_uvw(Tim, u12, v12, w12, u23, v23, w23, u31, v31, w31, freq, fact, t
     else:
         print("not equal the size of time, u, v, w arrays")
         return np.array([-1])
+
+
 
 def _calc_bsave(Tim, amp, phase, sigma, fact, tbin, flagweight):
     sTim = len(Tim); samp = len(amp); sphase = len(phase); ssigma = len(sigma)
@@ -3715,6 +4563,7 @@ def _calc_ca_uvw(Tim, u1, v1, w1, u2, v2, w2, u3, v3, w3, u4, v4, w4, freq, fact
     sTim = len(Tim); su = len(u1); sv = len(v2); sw = len(w3); sw4 = len(w4); sf = len(freq)
     if (sTim == su and sTim == sv and sTim == sw and sTim == sw4 and sTim == sf):
         import fortlib
+        from . import fortlib
         from scipy.interpolate import splrep,splev
         Input = pd.DataFrame()
         Input['jd'], Input['du1'], Input['dv1'], Input['dw1'] = Tim, u1/freq, v1/freq, w1/freq
@@ -3758,6 +4607,7 @@ def _calc_ca_uvw(Tim, u1, v1, w1, u2, v2, w2, u3, v3, w3, u4, v4, w4, freq, fact
     else:
         print("not equal the size of time, u, v, w arrays")
         return np.array([-1])
+
 
 def _calc_caave(Tim, amp, sigma, fact, tbin, flagweight):
     sTim = len(Tim); samp = len(amp)

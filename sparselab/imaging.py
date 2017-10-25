@@ -25,9 +25,9 @@ from matplotlib.ticker import NullFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # internal modules
-import util
-import fortlib
-import imdata
+from . import util
+from . import fortlib
+from . import imdata
 
 #-------------------------------------------------------------------------
 # Default Parameters
