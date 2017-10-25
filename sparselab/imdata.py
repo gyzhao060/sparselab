@@ -24,7 +24,7 @@ from astropy.convolution import convolve_fft
 import matplotlib.pyplot as plt
 
 # internal
-import fortlib
+from . import fortlib
 
 #-------------------------------------------------------------------------
 # IMAGEFITS (Manupulating FITS FILES)
