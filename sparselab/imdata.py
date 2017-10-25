@@ -1600,11 +1600,11 @@ def calc_metric(fitsdata, reffitsdata, metric="NRMSE", istokes1=0, ifreq1=0, ist
     # adjust resolution and FOV
     fitsdata2 = copy.deepcopy(fitsdata)
     reffitsdata2 = copy.deepcopy(reffitsdata)
-    fitsdata2 = cpimage(fitsdata2, reffitsdata2)
+    fitsdata2 = reffitsdata2.cpimage(fitsdata2)
     # edge detection
     if edgeflag:
-        fitsdata2 = edge_detect(fitsdata2, method="sobel")
-        reffitsdata2 = edge_detect(reffitsdata2, method="sobel")
+        fitsdata2 = fitsdata2.edge_detect(method="sobel")
+        reffitsdata2 = reffitsdata2.edge_detect(method="sobel")
     # get image data
     inpimage = fitsdata2.data[istokes1, ifreq1]
     refimage = reffitsdata2.data[istokes2, ifreq2]
