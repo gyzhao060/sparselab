@@ -36,7 +36,8 @@ class IMFITS(object):
 
     # Initialization
     def __init__(self, fitsfile=None, uvfitsfile=None, source=None,
-                 fov=None, nx=100, ny=None, angunit="mas", **args):
+                 dx=2., dy=None, nx=100, ny=None, nxref=None, nyref=None,
+                 angunit="uas", **args):
         '''
         This is a class to handle image data, in particular, a standard image
         FITS data sets.
@@ -45,7 +46,7 @@ class IMFITS(object):
             1 uvfitsfile (strongest),
             2 source
             3 fitsfile
-            4 fov
+            4 dx, dy, nx, ny
             5 other parameters (weakest).
 
         Args:
@@ -55,30 +56,30 @@ class IMFITS(object):
                 input uv-fits file
             source (string):
                The source of the image RA and Dec will be obtained from CDS
-            fov(array-like):
-                Field of View of the image [xmin, xmax, ymin, ymax]
+            dx (float):
+               The pixel size along the RA axis. If dx > 0, the sign of dx
+               will be switched.
+            dy (float; default=abs(dx)):
+               The pixel size along the Dec axis.
             nx (integer):
                 the number of pixels in the RA axis.
-            ny (integer):
+            ny (integer; default=ny):
                 the number of pixels in the Dec axis.
                 Default value is same to nx.
+            nxref (float, default=(nx+1)/2.):
+                The reference pixel in RA direction.
+                "1" will be the left-most pixel.
+            nyref (float, default=(ny+1)/2.):
+                the reference pixel of the DEC axis.
+                "1" will be the bottom pixel.
             angunit (string):
                 angular unit for fov, x, y, dx and dy.
 
             **args: you can also specify other header information.
                 x (float):
                     The source RA at the reference pixel.
-                nxref (float):
-                    The reference pixel in RA direction.
-                    "1" will be the left-most pixel.
-                dx (float):
-                    The grid size of the RA axis.
-                    **MUST BE NEGATIVE** for the astronomical image.
                 y (float):
                     The source DEC at the reference pixel.
-                nyref (float):
-                    the reference pixel of the DEC axis.
-                    "1" will be the bottom pixel.
                 dy (float):
                     the grid size in the DEC axis.
                     MUST BE POSITIVE for the astronomical image.
@@ -120,10 +121,24 @@ class IMFITS(object):
         self.data = None
 
         # set pixel size
+        if dy is None:
+            dy = np.abs(dx)
+        self.header["dx"] = -np.abs(dx)
+        self.header["dy"] = dy
+
+        # set pixel size
         if ny is None:
             ny = nx
         self.header["nx"] = nx
         self.header["ny"] = ny
+
+        # ref pixel
+        if nxref is None:
+            nxref = (nx+1.)/2
+        if nyref is None:
+            nyref = (ny+1.)/2
+        self.header["nxref"] = nxref
+        self.header["nyref"] = nyref
 
         # read header from arguments
         for argkey in argkeys:
@@ -131,20 +146,13 @@ class IMFITS(object):
             if argkey in headerkeys:
                 self.header[argkey] = self.header_dtype[argkey](args[argkey])
 
-        # Initialize from FOV
-        if fov is not None:
-            fovarr = np.float64(np.asarray(fov))
-            self.header["dx"] = - np.abs(fovarr[0] - fovarr[1]) / (self.header["nx"] - 1)
-            self.header["dy"] = np.abs(
-                fovarr[2] - fovarr[3]) / (self.header["ny"] - 1)
-            self.header["nxref"] = 1. - fovarr[0:2].max() / self.header["dx"]
-            self.header["nyref"] = 1. - fovarr[2:4].min() / self.header["dy"]
-
         self.header["x"] *= angconv
         self.header["y"] *= angconv
         self.header["dx"] *= angconv
         self.header["dy"] *= angconv
-
+        self.data = np.zeros([self.header["ns"], self.header["nf"],
+                              self.header["ny"], self.header["nx"]])
+        
         # Initialize from fitsfile
         if fitsfile is not None:
             self.read_fits(fitsfile)
@@ -156,11 +164,6 @@ class IMFITS(object):
         # copy headers from uvfits file
         if uvfitsfile is not None:
             self.read_uvfitsheader(uvfitsfile)
-
-        # initiliza image data
-        if self.data is None:
-            self.data = np.zeros([self.header["ns"], self.header["nf"],
-                                  self.header["ny"], self.header["nx"]])
 
         # initialize fitsdata
         self.update_fits()
@@ -571,24 +574,24 @@ class IMFITS(object):
                 print("Warning: does not overwrite %s" % (outfitsfile))
         else:
             self.hdulist.writeto(outfitsfile)
-    
+
     def winmod(self, imagewin, save_totalflux=False):
         # create output fits
         outfits = copy.deepcopy(self)
-        
+
         for idxs in np.arange(self.header["ns"]):
             for idxf in np.arange(self.header["nf"]):
                 image = outfits.data[idxs, idxf]
                 masked = imagewin == False
                 image[np.where(masked)] = 0
-                outfits.data[idxs, idxf] = image                
+                outfits.data[idxs, idxf] = image
                 if save_totalflux:
                     totalflux = self.totalflux(istokes=idxs, ifreq=idxf)
                     outfits.data[idxs, idxf] *= totalflux / image.sum()
         # Update and Return
         outfits.update_fits()
         return outfits
-    
+
     def angconv(self, unit1="deg", unit2="deg"):
         '''
         return a conversion factor from unit1 to unit2
@@ -982,7 +985,7 @@ class IMFITS(object):
         if pos=="rel":
             x0 += Imxref
             y0 += Imyref
-        
+
         X, Y = outfits.get_xygrid(angunit=angunit, twodim=True)
         cospa = np.cos(np.deg2rad(pa))
         sinpa = np.sin(np.deg2rad(pa))
