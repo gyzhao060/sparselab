@@ -1001,7 +1001,6 @@ class IMFITS(object):
 
         # Convolusion (except:gauss is zero array)
         if np.any(gauss != 0):
-            gauss /= gauss.sum()
             for idxs in np.arange(outfits.header["ns"]):
                 for idxf in np.arange(outfits.header["nf"]):
                     orgimage = outfits.data[idxs, idxf]
