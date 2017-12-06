@@ -29,19 +29,18 @@
 #include <math.h>
 #include <time.h>
 #include <limits.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 #include "blas.h"
 #include "lapack.h"
+#include <complex.h>
+#include <fftw3.h>
 
 #define CINIT     10000
 #define MAXITER   50000
 #define MINITER   100
 #define FGPITER   100
-#define TD         50
-#define ETA        1.1
-#define EPS        1.0e-5
+#define TD        50
+#define ETA       1.1
+#define EPS       1.0e-5
 
 /* result format */
 
@@ -62,14 +61,27 @@ struct RESULT{
   double l1cost;
   double tvcost;
   double tsvcost;
-  double looe;
+  double looe_m;
+  double looe_std;
   double Hessian_positive;
   double finalcost;
+  double comp_time;
+  double *model;
   double *residual;
+};
+
+struct IO_FNAMES{
+  unsigned int fft;
+  char *fft_fname;
+  char *v_fname;
+  char *A_fname;
+  char *in_fname;
+  char *out_fname;
 };
 
 /* memory allocation of matrix and vectors */
 
+extern int    *alloc_int_vector(int length);
 extern double *alloc_vector(int length);
 extern double *alloc_matrix(int height, int width);
 extern void    clear_matrix(double *matrix, int height, int width);
@@ -78,111 +90,177 @@ extern void    clear_matrix(double *matrix, int height, int width);
 
 extern FILE* fopenr(char* fn);
 extern FILE* fopenw(char* fn);
+extern int read_int_vector(char *fname, int length, int *vector);
+extern int read_V_vector(char *fname, int length, double *vector);
+extern unsigned long read_A_matrix(char *fname, int height, int width,
+				   double *matrix);
+extern int write_X_vector(char *fname, int length, double *vector);
 
 /* simple matrix operations */
 
 extern void transpose_matrix(double *matrix, int origheight, int origwidth);
 
+extern void calc_Az(int *M, int *N,
+	           double *Amat, double *zvec, double *Az);
+
 extern void calc_yAz(int *M, int *N,
-                     double *yvec, double *Amat, double *zvec,
-                     int *inc, double *yAz);
+                     double *yvec, double *Amat, double *zvec, double *yAz);
 
 extern double calc_F_part(int *M, int *N,
 			  double *yvec, double *Amatrix,
-			  double *xvec, int *inc, double *buffvec);
+			  double *xvec, double *buffvec);
 
-extern double calc_Q_part(int *N,
-			  double *xvec1, double *xvec2,
-			  double c, int *inc,
-			  double *AyAz, double *buffxvec1);
-
+extern double calc_Q_part(int *N, double *xvec1, double *xvec2,
+			  double c, double *AyAz, double *buffxvec1);
 /* thresholding */
 
-extern void soft_threshold(double *vector, int length, double eta,
-			   double *newvec);
+extern void soft_threshold(double *vec, int length, double eta, double *nvec);
 
-extern void soft_threshold_nonneg(double *vector, int length, double eta,
-				  double *newvec);
+extern void soft_threshold_nonneg(double *vec, int length, double eta,
+				  double *nvec);
 
-extern int find_active_set(int N, double *xvec, int *indx_list);
+/* Some routines for TV */
 
-/* index transform */
+extern double TV(int NX, int NY, double *xvec);
 
-extern int i2r(int i, int NX);
+/* Some routines for TSV */
 
-extern int i2c(int i, int NX);
+extern double TSV(int NX, int NY, double *xvec);
 
-extern int rc2i(int r, int c, int NX);
-
-/* Some routines for computing LOOE */
-
-extern double *shrink_A(int M, int N, int N_active, int *indx_list,
-			double *Amat);
-
-extern int solve_lin_looe(int *NA, int *NB, double *Hessian, double *B);
-
-extern double compute_LOOE_core(int *M, int N_active,
-				double *yvec, double *Amat, double *xvec,
-				double *yAx,  double *Amat_s, double *Hessian);
+extern void d_TSV(int NX, int NY, double *xvec, double *dvec);
 
 /* subroutines for mfista_L1 */
 
-extern void mfista_L1_core(double *yvec, double *Amat, int *M, int *N,
-			   double lambda, double cinit,
-			   double *xvec, int nonneg_flag, int looe_flag,
-			   struct RESULT *mfista_result);
+extern int mfista_L1_core(double *yvec, double *Amat, int *M, int *N,
+			  double lambda, double cinit,
+			  double *xvec, int nonneg_flag);
 
-/* subroutines for mfista_L1_TV_nonneg */
+/* subroutines for mfista_L1_TV */
 
-extern void mfista_L1_TV_core(double *yvec, double *Amat,
+extern void FGP_L1(int *N, int NX, int NY,
+		   double *bvec, double lambda_l1, double lambda_tv, int ITER,
+		   double *pmat, double *qmat, double *rmat, double *smat,
+		   double *npmat, double *nqmat, double *xvec);
+
+extern void FGP_nonneg(int *N, int NX, int NY,
+		       double *bvec, double lambda_tv, int ITER,
+		       double *pmat, double *qmat, double *rmat, double *smat,
+		       double *npmat, double *nqmat, double *xvec);
+
+extern int mfista_L1_TV_core(double *yvec, double *Amat,
+			     int *M, int *N, int NX, int NY,
+			     double lambda, double lambda_tv, double cinit,
+			     double *xvec, int nonneg_flag);
+
+extern int mfista_L1_TSV_core(double *yvec, double *Amat,
 			      int *M, int *N, int NX, int NY,
 			      double lambda, double lambda_tv, double cinit,
-			      double *xvec,
-			      struct RESULT *mfista_result);
+			      double *xvec, int nonneg_flag);
 
-/* subroutines for mfista_L1_TV_nonneg */
+/* subroutines for mfista_L1_TSV_fftw */
 
-extern void mfista_L1_TV_core_nonneg(double *yvec, double *Amat,
-				     int *M, int *N, int NX, int NY,
-				     double lambda, double lambda_tv, double cinit,
-				     double *xvec,
-				     struct RESULT *mfista_result);
+extern void idx2mat(int M, int NX, int NY,
+		    int *u_idx, int *v_idx, double *y_r, double *y_i, double *noise_stdev,
+		    fftw_complex *yf, double *mk);
 
-/* subroutines for mfista_L1_sqTV_nonneg */
 
-extern void mfista_L1_TSV_core(double *yvec, double *Amat,
+extern int mfista_L1_TV_core_fft(int NX, int NY, fftw_complex *yf, double *mask,
+				 double lambda_l1, double lambda_tv,
+				 double cinit, double *xinit, double *xout,
+				 int nonneg_flag, unsigned int fftw_plan_flag);
+
+extern int mfista_L1_TSV_core_fft(int NX, int NY, fftw_complex *yf, double *mask,
+				  double lambda_l1, double lambda_tsv,
+				  double cinit, double *xinit, double *xout,
+				  int nonneg_flag, unsigned int fftw_plan_flag);
+
+/* for mfista_imaging_dft */
+
+extern void mfista_core(double *y, double *A,
 				int *M, int *N, int NX, int NY,
-				double lambda, double lambda_tv, double cinit,
-				double *xvec, int nonneg_flag, int looe_flag,
+				double lambda_l1, double lambda_tv, double lambda_tsv,
+				double cinit, double *xinit, double *xout,
+				int nonneg_flag, int looe_flag,
 				struct RESULT *mfista_result);
 
-extern int mfista_L1_TSV_imag_core(double *yvec, double *Amat,
-				   int *M, int *N, int NX, int NY,
-				   double lambda, double lambda_tv,
-				   double cinit,
-				   double *xvec, int nonneg_flag,
-				   int looe_flag);
+extern void mfista_imaging(
+			 double *y,
+			 int M, int NX, int NY,
+			 int dftsign, double *u,double *v,double *xpix,double *ypix, double *yerr,
+			 double lambda_l1, double lambda_tv, double lambda_tsv,
+			 double cinit, double *xinit, double *xout,
+			 int nonneg_flag, int looe_flag,
+			 struct RESULT *mfista_result);
 
-extern void mfista_L1_TSV_result(double *yvec, double *Amat,
-				 int *M, int *N, int NX, int NY,
-				 double lambda_l1, double lambda_tsv, int iter,
-				 double *xvec, int nonneg_flag, int looe_flag,
-				 struct RESULT *mfista_result);
+extern void mfista_imaging_results(
+			 double *y,
+			 int M, int NX, int NY,
+			 int dftsign, double *u,double *v,double *xpix,double *ypix, double *yerr,
+			 double lambda_l1, double lambda_tv, double lambda_tsv,
+			 double cinit, double *xinit,
+			 int nonneg_flag, int looe_flag,
+			 struct RESULT *mfista_result);
 
-/* subroutines for calculating A matrix */
-extern void calc_A(int M, int N, int dftsign,
-		   double *u, double *v, double *x, double *y,
-		   double *A, double *Verr);
+extern void calc_A_imaging(
+        int M,int N,int dftsign,
+        double *u,double *v,double *xpix,double *ypix,double *A,double *yerr);
 
-/* subroutines for mfista */
-extern void mfista_imaging(double* Iin, double* Iout,
-			   double* x,double* y, int NX, int NY,
-			   double* u, double* v, double* V, double* Vsigma,
-			   int M, int dftsign,
-			   double lambda_l1, double lambda_tv, double lambda_tsv,
-			   int nonneg_flag, int looe_flag, double cinit,
-			   struct RESULT *mfista_result);
+extern void mfista_ft(
+			 double *y,
+		   int M,int N, double *lambsq,double *phi,double *yerr,
+			 double lambda_l1, double lambda_tv, double lambda_tsv,
+			 double cinit, double *xinit, double *xout,
+			 int nonneg_flag, int looe_flag,
+			 struct RESULT *mfista_result);
+
+extern void mfista_ft_results(
+			 double *y,
+		   int M,int N, double *lambsq,double *phi,double *yerr,
+			 double lambda_l1, double lambda_tv, double lambda_tsv,
+			 double cinit, double *xinit, 
+			 int nonneg_flag, int looe_flag,
+			 struct RESULT *mfista_result);
+
+extern void calc_A_ft(
+  int M,int N, double *lambsq,double *phi,double *A,double *yerr);
+
+/* for mfista_imaging_fft */
+
+extern void mfista_imaging_core_fft(int *u_idx, int *v_idx,
+				    double *y_r, double *y_i, double *noise_stdev,
+				    int M, int NX, int NY,
+				    double lambda_l1, double lambda_tv, double lambda_tsv,
+				    double cinit, double *xinit, double *xout,
+				    int nonneg_flag, unsigned int fftw_plan_flag,
+				    struct RESULT *mfista_result);
+
+/* looe */
+
+extern double compute_LOOE_L1(int *M, int *N, double lambda_l1,
+			      double *yvec, double *Amat, double *xvec, double *yAx,
+			      double *looe_m, double *looe_std);
+
+extern double compute_LOOE_L1_TSV(int *M, int *N, int NX, int NY,
+				  double lambda_l1, double lambda_tsv,
+				  double *yvec, double *Amat, double *xvec, double *yAx,
+				  double *looe_m, double *looe_std);
 
 /* output */
 
+extern void calc_result(double *yvec, double *Amat,
+			int *M, int *N, int NX, int NY,
+			double lambda_l1, double lambda_tv, double lambda_tsv,
+			double *xvec, int nonneg_flag, int looe_flag,
+			struct RESULT *mfista_result);
+
+extern void calc_result_fft(int M, int NX, int NY,
+			    fftw_complex *yf, double *mask,
+			    double lambda_l1, double lambda_tv, double lambda_tsv,
+			    double *xvec,
+			    struct RESULT *mfista_result);
+
+extern void show_io_fnames(FILE *fid, char *fname, struct IO_FNAMES *mfista_io);
+
 extern void show_result(FILE *fid, char *fname, struct RESULT *mfista_result);
+
+extern void get_current_time(struct timespec *t);

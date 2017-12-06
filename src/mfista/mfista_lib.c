@@ -22,130 +22,25 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */ 
-
 #include "mfista.h" 
-
-/* file i_o*/
-
-FILE* fopenr(char* fn){
-  FILE *fp;
-
-  fp = fopen(fn,"r");
-  if (fp==NULL){
-    fprintf(stderr," --- Can't fopen(r) %s\n",fn);
-    exit(1);
-  }
-  return(fp);
-}
-
-FILE* fopenw(char* fn){
-  FILE *fp;
-
-  fp = fopen(fn,"w");
-  if (fp==NULL){
-    fprintf(stderr," --- Can't fopen(r) %s\n",fn);
-    exit(1);
-  }
-  return(fp);
-}
 
 /* subroutines for mfista*/
 
-double calc_F(int *M, int *N,
-	      double *yvec, double *Amatrix,
-	      double *xvec, double lambda,
-	      int *inc, double *buffvec)
+void dL_dx(int *M, int *N, double *yAx, double *Amatrix, double *dfdx)
 {
-  double term1, term2, alpha = -1, beta = 1;
-
-  dcopy_(M, yvec, inc, buffvec, inc);
-
-  dgemv_("N", M, N, &alpha, Amatrix, M, 
-	 xvec, inc, &beta, buffvec, inc);
-
-  term1 = ddot_(M, buffvec, inc, buffvec, inc);
-  term2 = dasum_(N, xvec, inc);
-
-  return(term1/2+lambda*term2);
-}
-
-
-void df_dx(int *M, int *N,
-	   double *yvec, double *Amatrix, 
-	   double *xvec, 
-	   int *inc, double *buffyvec1, double *dfdx)
-{
-  double alpha = -1, beta = 1, gamma = 0;
-  /* y - A x */
-  dcopy_(M, yvec, inc, buffyvec1, inc);
-  dgemv_("N", M, N, &alpha, Amatrix, M, 
-	 xvec, inc, &beta, buffyvec1, inc);
+  int inc = 1;
+  double beta = 1, gamma = 0;
 
   /* A' (y - A x) */
-  dgemv_("T", M, N, &beta, Amatrix, M, 
-	 buffyvec1, inc, &gamma, dfdx, inc);
+  dgemv_("T", M, N, &beta, Amatrix, M, yAx, &inc, &gamma, dfdx, &inc);
 
 }
 
-double *compute_Hessian_L1(int *M,  int *indx_list,
-			   double *Amat_s, int N_active)
+int mfista_L1_core(double *yvec, double *Amat, int *M, int *N, 
+		   double lambda, double cinit,
+		   double *xvec, int nonneg_flag)
 {
-  int i,j;
-  double *Hessian, alpha = 1, beta = 0;
-
-  printf("The size of Hessian is %d x %d. ",N_active,N_active);
-
-  Hessian = alloc_matrix(N_active,N_active);
-
-  for(i=0;i<N_active;i++)
-    for(j=0;j<N_active;j++)
-      Hessian[i*N_active+j]=0;
-
-  dsyrk_("L", "T", &N_active, M, &alpha, Amat_s, M,
-	 &beta, Hessian, &N_active);
-
-  printf("Done.\n");
-  return(Hessian);
-}
-
-double compute_LOOE_L1(int *M, int *N, double lambda1, 
-		       double *yvec, double *Amat, double *xvec, double *yAx)
-{
-  double *Amat_s, *Hessian, LOOE;
-  int    N_active, *indx_list;
-
-  /* computing LOOE */
-
-  indx_list = (int *)malloc(sizeof(int)*(*N));
-
-  N_active = find_active_set(*N, xvec, indx_list);
-
-  Amat_s = shrink_A(*M, *N, N_active, indx_list, Amat);
-
-  printf("The number of active components is %d\n",N_active);
-
-  printf("Computing Hessian matrix.\n");
-  Hessian = compute_Hessian_L1(M, indx_list, Amat_s, N_active);
-
-  printf("\n");
-  LOOE = compute_LOOE_core(M, N_active, yvec, Amat, xvec, yAx, Amat_s, Hessian);
-
-  printf("LOOE = %lg\n",LOOE);
-
-  free(Amat_s);
-  free(Hessian);
-  free(indx_list);
-
-  return(LOOE);
-}
-
-
-void mfista_L1_core(double *yvec, double *Amat, int *M, int *N, 
-		    double lambda, double cinit,
-		    double *xvec, int nonneg_flag, int looe_flag,
-		    struct RESULT *mfista_result)
-{
-  double *ytmp, *dfdx, *zvec, *xtmp, *xnew, *yAx,
+  double *ytmp, *dfdx, *zvec, *xtmp, *xnew,
     Qcore, Fval, Qval, c, cinv, costtmp, *cost, l1cost,
     mu=1, munew, alpha = 1, tmpa;
   int i, iter, inc = 1;
@@ -170,7 +65,7 @@ void mfista_L1_core(double *yvec, double *Amat, int *M, int *N,
     soft_th=soft_threshold_nonneg;
   else {
     printf("nonneg_flag must be chosen properly.\n");
-    return;
+    return(0);
   }
   
   /* initialize xvec */
@@ -178,8 +73,12 @@ void mfista_L1_core(double *yvec, double *Amat, int *M, int *N,
 
   c = cinit;
 
-  costtmp = calc_F(M, N, yvec, Amat, xvec, lambda, &inc, ytmp);
+  calc_yAz(M, N, yvec, Amat, xvec, ytmp);
+  costtmp = ddot_(M, ytmp, &inc, ytmp, &inc)/2;
 
+  l1cost = dasum_(N, xvec, &inc);
+  costtmp += lambda*l1cost;
+  
   for(iter = 0; iter < MAXITER; iter++){
 
     cost[iter] = costtmp;
@@ -187,9 +86,11 @@ void mfista_L1_core(double *yvec, double *Amat, int *M, int *N,
     if((iter % 100) == 0)
       printf("%d cost = %lf\n",(iter+1), cost[iter]);
 
-    df_dx(M, N, yvec, Amat, zvec, &inc, ytmp, dfdx);
+    calc_yAz(M, N, yvec, Amat, zvec, ytmp);
 
-    Qcore = calc_F_part(M, N, yvec, Amat, zvec, &inc, ytmp);
+    dL_dx(M, N, ytmp, Amat, dfdx);
+
+    Qcore = ddot_(M, ytmp, &inc, ytmp, &inc)/2;
 
     for( i = 0; i < MAXITER; i++){
       dcopy_(N, dfdx, &inc, xtmp, &inc);
@@ -197,8 +98,11 @@ void mfista_L1_core(double *yvec, double *Amat, int *M, int *N,
       dscal_(N, &cinv, xtmp, &inc);
       daxpy_(N, &alpha, zvec, &inc, xtmp, &inc); 
       soft_th(xtmp, *N, lambda/c, xnew);
-      Fval = calc_F_part(M, N, yvec, Amat, xnew, &inc, ytmp);
-      Qval = calc_Q_part(N, xnew, zvec, c, &inc, dfdx, xtmp);
+
+      calc_yAz(M, N, yvec, Amat, xnew, ytmp);
+      Fval = ddot_(M, ytmp, &inc, ytmp, &inc)/2;
+      
+      Qval = calc_Q_part(N, xnew, zvec, c, dfdx, xtmp);
       Qval += Qcore;
 
       if(Fval<=Qval) break;
@@ -261,70 +165,7 @@ void mfista_L1_core(double *yvec, double *Amat, int *M, int *N,
   else
     printf("%d cost = %f \n",(iter+1), cost[iter]);
     
-  /* sending summary of results */
-
   printf("\n");
-
-  mfista_result->M = (*M);
-  mfista_result->N = (*N);
-  mfista_result->NX = 0;
-  mfista_result->NY = 0;
-  mfista_result->ITER = iter+1;
-  mfista_result->maxiter = MAXITER;
-	    
-  mfista_result->lambda_l1 = lambda;
-  mfista_result->lambda_tv = 0;
-  mfista_result->lambda_tsv = 0;
-
-  yAx  = alloc_vector(*M);
-  calc_yAz(M, N, yvec, Amat, xvec, &inc, yAx);
-
-  /* mean square error */
-  mfista_result->sq_error = 0;
-
-  for(i = 0;i< (*M);i++){
-    mfista_result->sq_error += yAx[i]*yAx[i];
-  }
-
-  /* average of mean square error */
-
-  mfista_result->mean_sq_error = mfista_result->sq_error/((double)(*M));
-
-  mfista_result->l1cost   = 0;
-  mfista_result->N_active = 0;
-
-  for(i = 0;i < (*N);i++){
-    tmpa = fabs(xvec[i]);
-    if(tmpa > 0){
-      mfista_result->l1cost += tmpa;
-      ++ mfista_result->N_active;
-    }
-  }
-
-  mfista_result->tvcost  = 0;
-  mfista_result->tsvcost = 0;
-  mfista_result->finalcost = (mfista_result->sq_error)/2
-    + lambda*(mfista_result->l1cost);
-
-  /* computing LOOE */
-
-  if(looe_flag == 1){
-    mfista_result->looe = compute_LOOE_L1(M, N, lambda,
-					  yvec, Amat, xvec, yAx);
-    if(mfista_result->looe == -1){
-      mfista_result->Hessian_positive = 0;
-      mfista_result->looe = 0;
-    }
-    else{
-      mfista_result->Hessian_positive = 1;
-    }
-  }
-  else{
-    mfista_result->looe = 0;
-    mfista_result->Hessian_positive = -1;
-  }
-    
-  free(yAx);
 
   /* clear memory */
 
@@ -334,4 +175,5 @@ void mfista_L1_core(double *yvec, double *Amat, int *M, int *N,
   free(xnew);
   free(ytmp);
   free(zvec);
+  return(iter+1);
 }

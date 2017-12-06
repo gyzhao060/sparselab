@@ -1420,7 +1420,7 @@ class VisTable(_UVTable):
         return outtab
 
 
-    def gridding(self, fitsdata, fgfov, mu=1, mv=1, c=1):
+    def gridding(self, fitsdata, fgfov=1, mu=1, mv=1, c=1):
         '''
         Args:
           vistable (pandas.Dataframe object):
@@ -1456,12 +1456,13 @@ class VisTable(_UVTable):
             np.exp(1j * np.radians(vistable["phase"]))
         Ntable = len(vistable)
 
+        x,y = fitsdata.get_xygrid(angunit="rad")
+        xmax = np.max(np.abs(x))
+        ymax = np.max(np.abs(y))
+
         # Calculate du and dv
-        du = 1 / \
-            np.radians(np.abs(fitsdata.header["dx"])
-                       * fitsdata.header["nx"] * fgfov)
-        dv = 1 / np.radians(fitsdata.header["dy"]
-                            * fitsdata.header["ny"] * fgfov)
+        du = 1 / (xmax * 2 * fgfov)
+        dv = 1 / (ymax * 2 * fgfov)
 
         # Calculate index of uv for gridding
         vistable["ugidx"] = np.int64(np.around(np.array(vistable["u"] / du)))
@@ -1534,7 +1535,7 @@ class VisTable(_UVTable):
         # Output as pandas.DataFrame
         outtable = pd.DataFrame(outlist, columns=[
             "ugidx", "vgidx", "u", "v", "uvdist", "amp", "phase", "weight", "sigma"])
-        return outtable
+        return GVisTable(outtable)
 
     def ave_vistable(self, coherent=False, Integ=300.,dofreq=2, flagweight=True, minpoint=2,uvwsep=1, k=1):
         '''
@@ -2096,7 +2097,7 @@ class GVisTable(_UVTable):
 
         # Shift vistable
         vistable.loc[vistable["vgidx"] < 0, "vgidx"] += Nvpix
-        
+
         # Create new list for shift
         outlist = {
             "ugidx": [],
