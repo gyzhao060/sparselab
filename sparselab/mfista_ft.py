@@ -536,8 +536,8 @@ def mfista_pipeline(
                     cvfdfnew = ft.read_fdftable(filename)
 
                 # save model
-                filename = header + ".t.model.csv"
-                filename = os.path.join(workdir, filename)
+                filename = cvheader + ".t.model.csv"
+                filename = os.path.join(cvworkdir, filename)
                 modelptable = ptables["t%d"%(icv)].copy()
                 modelptable.observe(cvfdfnew)
                 modelptable.to_csv(filename)
@@ -552,8 +552,8 @@ def mfista_pipeline(
 
                 # Check validating data
                 # save model
-                filename = header + ".v.model.csv"
-                filename = os.path.join(workdir, filename)
+                filename = cvheader + ".v.model.csv"
+                filename = os.path.join(cvworkdir, filename)
                 modelptable = ptables["v%d"%(icv)].copy()
                 modelptable.observe(cvfdfnew)
                 modelptable.to_csv(filename)
