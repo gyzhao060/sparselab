@@ -97,7 +97,7 @@ class PTable(pd.DataFrame):
         ax = axs[0]
         plt.sca(ax)
         if ploterror:
-            plt.errorbar(self["lambsq"],self["P"],self["sigma"],
+            plt.errorbar(self["lambsq"],self["P"],self["sigma"]/np.sqrt(2),
                          ls=ls,marker=marker,**plotargs)
         else:
             plt.plot(self["lambsq"],self["P"],ls=ls,marker=marker,**plotargs)
@@ -250,12 +250,13 @@ class FDFTable(pd.DataFrame):
         Nrm = len(self)
         RM = np.array(self["RM"])
         lambsq = np.array(ptable["lambsq"])
-        P = np.array(ptable["Q"]+1j*ptable["U"])
-        P2 = np.arange(Ndata)
-        P2[:] = 1
+        dlambsq = np.abs(np.mean(np.diff(lambsq)))
+        P = np.array(ptable["Q"]+1j*ptable["U"])*dlambsq*2/np.pi/np.pi
+        #P2 = np.arange(Ndata)
+        #P2[:] = 1
 
         A = np.exp(-1j*2*RM.reshape([Nrm,1]).dot(lambsq.reshape([1,Ndata])))
-        P = A.dot(P)/np.abs(A.dot(P2)).max()
+        P = A.dot(P) #/np.abs(A.dot(P2)).max()
 
         outfdf["Q"] = np.real(P)
         outfdf["U"] = np.imag(P)
