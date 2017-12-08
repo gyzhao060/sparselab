@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 
 # internal LoadLibrary
-from . import util
+from . import util, ft
 
 #-------------------------------------------------------------------------
 # Default Parameters
@@ -479,8 +479,8 @@ def mfista_pipeline(
 
         filename = header + ".fit.pdf"
         filename = os.path.join(workdir, filename)
-        mfista_plots(fdfnew, pdata, filename=filename)
-        newstats = mfista_stats(fdfnew, pdata, fulloutput=False, **ftprm)
+        mfista_plots(fdfnew, ptable, filename=filename)
+        newstats = mfista_stats(fdfnew, ptable, fulloutput=False, **ftprm)
 
         # Make Summary
         tmpsum = collections.OrderedDict()
@@ -530,7 +530,7 @@ def mfista_pipeline(
                 filename = cvheader + ".t.csv"
                 filename = os.path.join(cvworkdir, filename)
                 if (skip is False) or (os.path.isfile(filename) is False):
-                    cvfdfnew = mfista_ft(newfdf, ptables["t%d"%(icv)], **cvftprm)
+                    cvfdfnew = mfista_ft(fdfnew, ptables["t%d"%(icv)], **cvftprm)
                     cvfdfnew.to_csv(filename)
                 else:
                     cvfdfnew = ft.read_fdftable(filename)

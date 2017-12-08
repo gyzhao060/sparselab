@@ -25,7 +25,6 @@ from matplotlib.ticker import NullFormatter
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # internal modules
-from . import mfista_ft
 from . import util
 
 class PTable(pd.DataFrame):
