@@ -182,8 +182,8 @@ void calc_A_imaging(
   for (i=0; i<N; ++i) {
     for (j=0; j<halfM; ++j) {
       k = i*M;
-      A[k+j+halfM] = sin(A[k+j])/yerr[j]*2/sqrt(halfM);
-      A[k+j] = cos(A[k+j])/yerr[j]*2/sqrt(halfM);
+      A[k+j+halfM] = sin(A[k+j])/yerr[j]*2/sqrt(M);
+      A[k+j] = cos(A[k+j])/yerr[j]*2/sqrt(M);
     }
   }
 }
@@ -270,8 +270,8 @@ void calc_A_ft(
 	for (i=0; i<halfN; ++i) {
 	  for (j=0; j<halfM; ++j) {
 			factor1 = 2*phi[i]*lambsq[j];
-			factor2 = cos(factor1)/yerr[j]*2/sqrt(halfM);
-			factor3 = sin(factor1)/yerr[j]*2/sqrt(halfM);
+			factor2 = cos(factor1)/yerr[j]*2/sqrt(M);
+			factor3 = sin(factor1)/yerr[j]*2/sqrt(M);
 
 			k = i*M;
       A[k+j] = factor2; /* cos */

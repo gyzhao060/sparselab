@@ -667,7 +667,7 @@ def mfista_pipeline(
         else:
             newimage = imdata.IMFITS(filename)
         previmage = newimage
-        
+
         filename = header + ".summary.pdf"
         filename = os.path.join(workdir, filename)
         mfista_plots(newimage, imageprm, filename=filename,
