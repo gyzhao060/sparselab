@@ -109,7 +109,7 @@ class PTable(pd.DataFrame):
         ax = axs[1]
         plt.sca(ax)
         if ploterror:
-            plt.errorbar(self["lambsq"],self["chi"],np.rad2deg(self["sigma"]/self["P"]),
+            plt.errorbar(self["lambsq"],self["chi"],np.rad2deg(self["sigma"]/self["P"])/2,
                          ls=ls,marker=marker,**plotargs)
         else:
             plt.plot(self["lambsq"],self["chi"],ls=ls,marker=marker,**plotargs)
