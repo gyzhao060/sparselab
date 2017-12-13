@@ -218,7 +218,6 @@ def mfista_stats(
     FDFQ = np.asarray(fdfin["Q"],dtype=np.float64)
     FDFU = np.asarray(fdfin["U"],dtype=np.float64)
     FDFPin = np.concatenate([FDFQ*dRM,FDFU*dRM])
-    FDFPout = copy.deepcopy(FDFPin)
 
     # get ptable
     M = len(ptable)*2
@@ -228,7 +227,6 @@ def mfista_stats(
     Perr = np.asarray(ptable["sigma"],dtype=np.float64)
     PP = np.concatenate([PQ/Perr,PU/Perr])
     PP *= 2/np.sqrt(M)
-    print(np.square(PP).sum())
 
     # scale lambda
     if normlambda:

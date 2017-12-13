@@ -251,7 +251,7 @@ class FDFTable(pd.DataFrame):
         RM = np.array(self["RM"])
         lambsq = np.array(ptable["lambsq"])
         dlambsq = np.abs(np.mean(np.diff(lambsq)))
-        P = np.array(ptable["Q"]+1j*ptable["U"])*dlambsq*2/np.pi/np.pi
+        P = np.array(ptable["Q"]+1j*ptable["U"])*dlambsq*2/np.pi
         #P2 = np.arange(Ndata)
         #P2[:] = 1
 

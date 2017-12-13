@@ -120,13 +120,13 @@ def mfista_imaging(
     if looe:
         looe_flag=1
     else:
-        looe_flag=-1
+        looe_flag=0
 
     # Nonneg condition
     if nonneg:
         nonneg_flag=1
     else:
-        nonneg_flag=-1
+        nonneg_flag=0
 
     # get initial images
     Iin = np.float64(initimage.data[istokes, ifreq])
@@ -260,13 +260,13 @@ def mfista_stats(
     if looe:
         looe_flag=1
     else:
-        looe_flag=-1
+        looe_flag=0
 
     # Nonneg condition
     if nonneg:
         nonneg_flag=1
     else:
-        nonneg_flag=-1
+        nonneg_flag=0
 
     # get initial images
     Iin = np.float64(initimage.data[istokes, ifreq])
