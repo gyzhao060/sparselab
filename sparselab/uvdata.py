@@ -1171,6 +1171,7 @@ class VisTable(_UVTable):
         return outtab
 
     def make_catable(self, redundant=None):
+        from scipy.special import expi
         # Number of Stations
         Ndata = len(self["ch"])
 
@@ -1361,15 +1362,25 @@ class VisTable(_UVTable):
                 bl3tab = tmptab.loc[tmptab["bl"]==cblset[iset][2],:].reset_index(drop=True)
                 bl4tab = tmptab.loc[tmptab["bl"]==cblset[iset][3],:].reset_index(drop=True)
                 #
-                ratio_1 = bl1tab.loc[0,"sigma"] / bl1tab.loc[0,"amp"]
-                ratio_2 = bl2tab.loc[0,"sigma"] / bl2tab.loc[0,"amp"]
-                ratio_3 = bl3tab.loc[0,"sigma"] / bl3tab.loc[0,"amp"]
-                ratio_4 = bl4tab.loc[0,"sigma"] / bl4tab.loc[0,"amp"]
+                # 1 sigma debiasing of snr
+                rhosq_1 = np.nanmax([1,np.square(bl1tab.loc[0,"amp"] / bl1tab.loc[0,"sigma"])-1])
+                rhosq_2 = np.nanmax([1,np.square(bl2tab.loc[0,"amp"] / bl2tab.loc[0,"sigma"])-1])
+                rhosq_3 = np.nanmax([1,np.square(bl3tab.loc[0,"amp"] / bl3tab.loc[0,"sigma"])-1])
+                rhosq_4 = np.nanmax([1,np.square(bl4tab.loc[0,"amp"] / bl4tab.loc[0,"sigma"])-1])
+                #
+                # bias estimator
+                bias = expi(-rhosq_1/2.)
+                bias+= expi(-rhosq_2/2.)
+                bias-= expi(-rhosq_3/2.)
+                bias-= expi(-rhosq_4/2.)
+                bias*= 0.5
+
+                # closure amplitudes
                 amp = bl1tab.loc[0,"amp"] * bl2tab.loc[0,"amp"] / \
                       bl3tab.loc[0,"amp"] / bl4tab.loc[0,"amp"]
-                logamp = np.log(amp)
-                logsigma = np.sqrt((ratio_1)**2 + (ratio_2)**2 +
-                                   (ratio_3)**2 + (ratio_4)**2)
+                logamp = np.log(amp) + bias
+                logsigma = np.sqrt(rhosq_1**-1 + rhosq_2**-1 +
+                                   rhosq_3**-1 + rhosq_4**-1)
                 sigma = amp * logsigma
                 #
                 outtab["utc"].append(utc)
